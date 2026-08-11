@@ -518,7 +518,7 @@
 
   <div class="app-main">
     <div class="panel-header">
-      <h1>Today's Attendance</h1>
+      <h1>Clock System</h1>
       <div class="date-tag" id="dateTag">Loading date…</div>
     </div>
 
@@ -852,7 +852,7 @@
       const result = await jsonp({ action: 'getAttendanceToday' });
       if (!result.success) { showToast(result.message || 'Could not load attendance.', 'error'); return; }
       currentData = result;
-      document.getElementById('dateTag').textContent = result.date;
+      document.getElementById('dateTag').textContent = formatFullDate(result.date);
       renderGrid();
       if (activeEmployee) renderPunchLog(currentData.records[activeEmployee] || []);
     } catch (err) {
