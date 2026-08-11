@@ -821,7 +821,7 @@
     activeEmployee = name;
     document.getElementById('modalAvatar').innerHTML = PERSON_ICON_SVG;
     document.getElementById('modalName').textContent = name;
-    document.getElementById('modalDate').textContent = currentData.date;
+    document.getElementById('modalDate').textContent = formatFullDate(currentData.date);
     document.getElementById('noteInput').value = '';
     renderPunchLog(currentData.records[name] || []);
     document.getElementById('modalOverlay').classList.add('open');
@@ -844,6 +844,15 @@
     el.textContent = message;
     el.className = 'toast show' + (kind ? (' ' + kind) : '');
     setTimeout(() => { el.className = 'toast'; }, 4000);
+  }
+
+  function formatFullDate(isoDate) {
+    // isoDate is "yyyy-MM-dd" — parse manually to avoid timezone shifting
+    // (new Date("2026-08-11") is parsed as UTC midnight, which can roll
+    // back a day depending on the viewer's local timezone).
+    const [year, month, day] = isoDate.split('-').map(Number);
+    const d = new Date(year, month - 1, day);
+    return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   }
 
   async function loadAttendance() {
