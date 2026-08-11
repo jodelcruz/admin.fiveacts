@@ -502,6 +502,10 @@
   }
 
   loadAttendance();
+
+  // Auto-refresh so everyone viewing the dashboard sees each other's
+  // time in/out changes too, not just their own after punching.
+  setInterval(loadAttendance, 15000);
 </script>
 </body>
 </html>
