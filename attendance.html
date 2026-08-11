@@ -84,16 +84,19 @@
   /* ── EMPLOYEE GRID ── */
   .emp-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 14px;
   }
   .emp-card {
     background: #fff;
     border-radius: 14px;
-    padding: 18px 14px;
+    padding: 16px 18px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.06);
     cursor: pointer;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-align: left;
     transition: transform 0.15s, box-shadow 0.15s;
     border: 2px solid transparent;
   }
@@ -101,19 +104,19 @@
   .emp-card.status-in { border-color: var(--green); }
   .emp-card.status-out { border-color: var(--gray-light); }
   .emp-avatar {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
     border-radius: 50%;
     background: var(--green-light);
     color: var(--green-dark);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 20px;
-    font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 10px;
   }
+  .emp-avatar svg { width: 24px; height: 24px; }
+  .emp-card.status-out .emp-avatar { background: var(--gray-light); color: var(--gray-mid); }
+  .emp-info { flex: 1; min-width: 0; }
   .emp-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
   .emp-status { font-size: 11px; color: var(--gray-mid); }
   .emp-status .dot {
@@ -170,13 +173,11 @@
     border-radius: 50%;
     background: var(--green-light);
     color: var(--green-dark);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 24px;
-    font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
   }
+  .modal-avatar svg { width: 30px; height: 30px; }
   .modal-header h2 {
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 24px;
@@ -375,9 +376,11 @@
     });
   }
 
-  function initials(name) {
-    return name.slice(0, 2).toUpperCase();
-  }
+  const PERSON_ICON_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+    '<circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/>' +
+    '<path d="M4.5 20c1-3.8 4.2-6 7.5-6s6.5 2.2 7.5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' +
+    '</svg>';
 
   function latestPunch(entries) {
     if (!entries || entries.length === 0) return null;
@@ -396,9 +399,11 @@
       const card = document.createElement('div');
       card.className = 'emp-card ' + statusClass;
       card.innerHTML =
-        '<div class="emp-avatar">' + initials(name) + '</div>' +
+        '<div class="emp-avatar">' + PERSON_ICON_SVG + '</div>' +
+        '<div class="emp-info">' +
         '<div class="emp-name">' + name + '</div>' +
-        '<div class="emp-status"><span class="dot"></span>' + statusText + '</div>';
+        '<div class="emp-status"><span class="dot"></span>' + statusText + '</div>' +
+        '</div>';
       card.addEventListener('click', () => openModal(name));
       grid.appendChild(card);
     });
@@ -429,7 +434,7 @@
 
   function openModal(name) {
     activeEmployee = name;
-    document.getElementById('modalAvatar').textContent = initials(name);
+    document.getElementById('modalAvatar').innerHTML = PERSON_ICON_SVG;
     document.getElementById('modalName').textContent = name;
     document.getElementById('modalDate').textContent = currentData.date;
     document.getElementById('noteInput').value = '';
