@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+  // If someone arrives via a bookmark/shared link ending in /index.html,
+  // tidy the address bar to the clean root URL — no reload, no redirect,
+  // just a cosmetic history replace so it always reads portal.fiveactsservices.com/
+  if (/\/index\.html$/i.test(window.location.pathname)) {
+    const cleanPath = window.location.pathname.replace(/index\.html$/i, '');
+    window.history.replaceState(null, '', cleanPath + window.location.search + window.location.hash);
+  }
+</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex, nofollow" />
