@@ -193,12 +193,15 @@
     z-index: 50;
   }
   .app-nav-inner {
-    max-width: 1040px;
+    max-width: 1280px;
     margin: 0 auto;
     padding: 10px 20px;
+    position: relative;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 16px;
+    min-height: 48px;
   }
   .app-brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .app-brand img { height: 30px; }
@@ -212,8 +215,11 @@
     align-items: center;
     gap: 8px;
     flex-wrap: nowrap;
-    flex: 1;
-    justify-content: center;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    max-width: calc(100% - 340px);
     overflow-x: auto;
     scrollbar-width: none;
   }
@@ -244,7 +250,6 @@
     align-items: center;
     gap: 10px;
     flex-shrink: 0;
-    margin-left: auto;
     background: #f7faf7;
     border: 1px solid var(--gray-light);
     border-radius: 24px;
@@ -288,7 +293,7 @@
   .app-logout:hover { background: var(--certiverse-red); color: #fff; }
 
   .app-main {
-    max-width: 960px;
+    max-width: 1280px;
     margin: 0 auto;
     padding: 24px 20px 60px;
   }
@@ -489,8 +494,15 @@
 
   @media (max-width: 640px) {
     .app-nav-inner { flex-direction: column; align-items: stretch; }
-    .app-nav-links { justify-content: flex-start; }
-    .app-nav-right { justify-content: space-between; margin-left: 0; }
+    .app-nav-links {
+      position: static;
+      transform: none;
+      left: auto;
+      top: auto;
+      max-width: 100%;
+      justify-content: flex-start;
+    }
+    .app-nav-right { justify-content: space-between; }
   }
 </style>
 </head>
