@@ -1317,6 +1317,20 @@
     return div.innerHTML;
   }
 
+  // Grey out whichever modal button doesn't apply to the employee's
+  // current status — already timed in? "Time In" is disabled (can't
+  // double-punch in); already timed out (or no activity yet)? "Time
+  // Out" is disabled. Keeps people from logging a duplicate/out-of-order
+  // punch by mistake.
+  function updateModalPunchButtons(name) {
+    const btnIn = document.getElementById('btnTimeIn');
+    const btnOut = document.getElementById('btnTimeOut');
+    if (!btnIn || !btnOut) return;
+    const currentlyIn = isPunchIn(latestPunch(getEntriesForName(name)));
+    btnIn.disabled = currentlyIn;
+    btnOut.disabled = !currentlyIn;
+  }
+
   function openModal(name) {
     activeEmployee = name;
     document.getElementById('modalAvatar').innerHTML = PERSON_ICON_SVG;
@@ -1324,6 +1338,7 @@
     document.getElementById('modalDate').textContent = formatFullDate(currentData.date);
     document.getElementById('noteInput').value = '';
     renderPunchLog(getEntriesForName(name));
+    updateModalPunchButtons(name);
     document.getElementById('modalOverlay').classList.add('open');
   }
 
@@ -1365,7 +1380,10 @@
       document.getElementById('dateTag').textContent = formatFullDate(result.date);
       renderGrid();
       renderMyStatus();
-      if (activeEmployee) renderPunchLog(getEntriesForName(activeEmployee));
+      if (activeEmployee) {
+        renderPunchLog(getEntriesForName(activeEmployee));
+        updateModalPunchButtons(activeEmployee);
+      }
     } catch (err) {
       console.error('[Attendance] getAttendanceToday failed:', err);
       showToast(err.message, 'error');
@@ -1384,15 +1402,16 @@
       if (result.success) {
         showToast(activeEmployee + (type === 'in' ? ' timed in at ' : ' timed out at ') + result.time, 'info');
         document.getElementById('noteInput').value = '';
-        await loadAttendance();
+        await loadAttendance(); // re-derives correct disabled state from fresh data
       } else {
         showToast(result.message, 'error');
+        updateModalPunchButtons(activeEmployee); // restore correct state after a failed attempt
       }
     } catch (err) {
       console.error('[Attendance] punch failed:', err);
       showToast(err.message, 'error');
+      updateModalPunchButtons(activeEmployee);
     }
-    btnIn.disabled = false; btnOut.disabled = false;
   }
 
   /* ---------- "My Status" — signed-in employee's own card, pinned beside the clock ---------- */
@@ -1449,9 +1468,10 @@
 
       const entries = getEntriesForName(name);
       const last = latestPunch(entries);
-      const statusClass = last ? (isPunchIn(last) ? 'status-in' : 'status-out') : '';
+      const currentlyIn = isPunchIn(last);
+      const statusClass = last ? (currentlyIn ? 'status-in' : 'status-out') : '';
       const statusText = last
-        ? ((isPunchIn(last) ? 'Timed in at ' : 'Timed out at ') + last.time)
+        ? ((currentlyIn ? 'Timed in at ' : 'Timed out at ') + last.time)
         : 'No activity yet today';
 
       card.className = 'my-status-card ' + statusClass;
@@ -1464,8 +1484,8 @@
         '<div class="my-status-line"><span class="dot"></span>' + statusText + '</div>' +
         '</div>' +
         '<div class="my-status-actions">' +
-        '<button type="button" class="mini-btn mini-in" id="myMiniIn">Time In</button>' +
-        '<button type="button" class="mini-btn mini-out" id="myMiniOut">Time Out</button>' +
+        '<button type="button" class="mini-btn mini-in" id="myMiniIn"' + (currentlyIn ? ' disabled' : '') + '>Time In</button>' +
+        '<button type="button" class="mini-btn mini-out" id="myMiniOut"' + (!currentlyIn ? ' disabled' : '') + '>Time Out</button>' +
         '</div>';
 
       const miniIn = document.getElementById('myMiniIn');
@@ -1496,16 +1516,16 @@
       console.debug('[Attendance] quick punch response:', result);
       if (result.success) {
         showToast(myEmployeeName + (type === 'in' ? ' timed in at ' : ' timed out at ') + result.time, 'info');
-        await loadAttendance();
+        await loadAttendance(); // rebuilds the card with the correct disabled state
       } else {
         showToast(result.message, 'error');
+        renderMyStatus(); // restore correct state after a failed attempt
       }
     } catch (err) {
       console.error('[Attendance] quick punch failed:', err);
       showToast(err.message, 'error');
+      renderMyStatus();
     }
-    if (miniIn) miniIn.disabled = false;
-    if (miniOut) miniOut.disabled = false;
   }
 </script>
 </body>
