@@ -552,40 +552,6 @@
     color: rgba(255,255,255,0.45);
   }
 
-  /* ── STATS ROW (quick summary, sits between the header and the grid) ── */
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 18px;
-  }
-  .stat-card {
-    background: #fff;
-    border-radius: 14px;
-    padding: 16px 18px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
-    border-left: 4px solid var(--gray-light);
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .stat-card.stat-total { border-left-color: var(--gray-dark); }
-  .stat-card.stat-in { border-left-color: var(--green); }
-  .stat-card.stat-out { border-left-color: var(--certiverse-red); }
-  .stat-card.stat-none { border-left-color: #d9a441; }
-  .stat-value {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 30px;
-    font-weight: 700;
-    color: var(--black);
-    line-height: 1;
-  }
-  .stat-label {
-    font-size: 12px;
-    color: var(--gray-mid);
-    font-weight: 600;
-  }
-
   /* ── SECTION HEADING (introduces the attendance grid below the stats) ── */
   .section-heading {
     display: flex;
@@ -772,6 +738,60 @@
   }
   .modal-header .modal-date { font-size: 12px; color: var(--gray-mid); }
 
+  /* ── PIN SECTION (shown above the punch buttons in the profile modal) ── */
+  .pin-section {
+    background: var(--green-light);
+    border: 1px solid #b7e6c1;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+  .pin-section.pin-enter { background: #f7faf7; border-color: var(--gray-light); }
+  .pin-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gray-dark);
+    margin-bottom: 4px;
+  }
+  .pin-section-sub {
+    font-size: 11.5px;
+    color: var(--gray-mid);
+    margin-bottom: 10px;
+  }
+  .pin-inputs { display: flex; gap: 8px; margin-bottom: 10px; }
+  .pin-inputs input, .pin-single-input input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--gray-light);
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    letter-spacing: 3px;
+    text-align: center;
+  }
+  .pin-inputs input:focus, .pin-single-input input:focus { outline: none; border-color: var(--green); }
+  .pin-single-input { margin-bottom: 0; }
+  .pin-section-btn {
+    width: 100%;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    padding: 10px 0;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .pin-section-btn:hover { background: var(--green-dark); }
+  .pin-section-error {
+    font-size: 11.5px;
+    color: var(--certiverse-red);
+    margin-top: 8px;
+    display: none;
+  }
+  .pin-section-error.show { display: block; }
+
   .punch-actions { display: flex; gap: 10px; margin-bottom: 16px; }
   .punch-actions button {
     flex: 1;
@@ -868,7 +888,6 @@
     .my-status-card { min-width: 220px; padding: 12px 16px; gap: 12px; }
     .my-status-avatar { width: 40px; height: 40px; min-width: 40px; }
     .my-status-avatar svg { width: 22px; height: 22px; }
-    .stats-row { grid-template-columns: repeat(2, 1fr); }
   }
 
   /* ---------- Hamburger takes over the top nav ---------- */
@@ -963,11 +982,6 @@
 
     .modal-box { padding: 22px; max-height: 90vh; }
     .punch-actions { flex-direction: column; }
-
-    .stats-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .stat-card { padding: 12px 14px; }
-    .stat-value { font-size: 24px; }
-    .stat-label { font-size: 10.5px; }
 
     .section-heading h2 { font-size: 17px; }
     .section-heading .section-sub { display: none; }
@@ -1091,25 +1105,6 @@
       </div>
     </div>
 
-    <div class="stats-row" id="statsRow">
-      <div class="stat-card stat-total">
-        <div class="stat-value" id="statTotal">–</div>
-        <div class="stat-label">Total Staff</div>
-      </div>
-      <div class="stat-card stat-in">
-        <div class="stat-value" id="statIn">–</div>
-        <div class="stat-label">Timed In</div>
-      </div>
-      <div class="stat-card stat-out">
-        <div class="stat-value" id="statOut">–</div>
-        <div class="stat-label">Timed Out</div>
-      </div>
-      <div class="stat-card stat-none">
-        <div class="stat-value" id="statNone">–</div>
-        <div class="stat-label">Not Yet In</div>
-      </div>
-    </div>
-
     <div class="section-heading">
       <h2>Team Attendance</h2>
       <span class="section-sub">Tap any card to view their log or add a note</span>
@@ -1146,6 +1141,8 @@
       </div>
     </div>
 
+    <div class="pin-section" id="pinSection"></div>
+
     <div class="punch-actions">
       <button class="btn-time-in" id="btnTimeIn" onclick="handlePunch('in')">Time In</button>
       <button class="btn-time-out" id="btnTimeOut" onclick="handlePunch('out')">Time Out</button>
@@ -1181,7 +1178,7 @@
      swap in the real URL whenever you have it.
      ========================================================= */
 
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw8fo6B39cuY7rSY1XNS585o-p5cQI3TKneqva_gRTAznnjL44b5X6m7nasPWnXOEKt/exec";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyVKfFJGK3XknmRdKshkCZWiZcYgg-tFYVuiFPf5fyVf8W7ExGg78j8ILme3Im1_Jk/exec";
   const SESSION_KEY = "fa_staff_session";
 
   // Identity of the signed-in staff member, used to pin their own
@@ -1530,7 +1527,7 @@
     '<path d="M4.5 20c1-3.8 4.2-6 7.5-6s6.5 2.2 7.5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' +
     '</svg>';
 
-  let currentData = { date: '', names: [], records: {} };
+  let currentData = { date: '', names: [], records: {}, pinStatus: {} };
   let activeEmployee = null;
 
   // Attendance-grid search box + status filter pills state.
@@ -1574,24 +1571,6 @@
       btn.classList.toggle('active', btn.getAttribute('data-filter') === filter);
     });
     renderGrid();
-  }
-
-  // Quick summary counts shown above the grid — recomputed every time
-  // attendance data refreshes, independent of the search/filter state
-  // below (the stats always reflect everyone, not just what's visible).
-  function updateStats() {
-    let inCount = 0, outCount = 0, noneCount = 0;
-    currentData.names.forEach(name => {
-      const last = latestPunch(getEntriesForName(name));
-      if (!last) noneCount++;
-      else if (isPunchIn(last)) inCount++;
-      else outCount++;
-    });
-    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-    setText('statTotal', currentData.names.length);
-    setText('statIn', inCount);
-    setText('statOut', outCount);
-    setText('statNone', noneCount);
   }
 
   function renderGrid() {
@@ -1672,6 +1651,85 @@
     btnOut.disabled = !currentlyIn;
   }
 
+  /* ---------- PIN protection (every profile needs one before it can punch) ---------- */
+
+  // Renders either a "create your PIN" form (first time) or a single
+  // "enter your PIN" field (every time after) into the modal, based on
+  // whether the backend already has a PIN on file for this name.
+  function renderPinSection(name) {
+    const section = document.getElementById('pinSection');
+    if (!section) return;
+    const hasPin = !!(currentData.pinStatus && currentData.pinStatus[name]);
+
+    if (!hasPin) {
+      section.className = 'pin-section pin-create';
+      section.innerHTML =
+        '<div class="pin-section-title">Set up a PIN for ' + escapeHtml(name) + '</div>' +
+        '<div class="pin-section-sub">Create a 4–6 digit PIN once — it\'ll be asked for every time this profile times in or out, so no one else can punch on their behalf.</div>' +
+        '<div class="pin-inputs">' +
+        '<input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="pinCreateInput" placeholder="New PIN">' +
+        '<input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="pinCreateConfirm" placeholder="Confirm PIN">' +
+        '</div>' +
+        '<button type="button" class="pin-section-btn" id="pinCreateBtn">Save PIN</button>' +
+        '<div class="pin-section-error" id="pinCreateError"></div>';
+      const btn = document.getElementById('pinCreateBtn');
+      if (btn) btn.addEventListener('click', () => setupPin(name));
+    } else {
+      section.className = 'pin-section pin-enter';
+      section.innerHTML =
+        '<div class="pin-section-title">Enter PIN to confirm</div>' +
+        '<div class="pin-single-input">' +
+        '<input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="pinEnterInput" placeholder="••••">' +
+        '</div>' +
+        '<div class="pin-section-error" id="pinEnterError"></div>';
+    }
+  }
+
+  function showPinError(id, message) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = message;
+    el.classList.add('show');
+  }
+
+  async function setupPin(name) {
+    const pinInput = document.getElementById('pinCreateInput');
+    const confirmInput = document.getElementById('pinCreateConfirm');
+    const btn = document.getElementById('pinCreateBtn');
+    const errorEl = document.getElementById('pinCreateError');
+    if (errorEl) errorEl.classList.remove('show');
+
+    const pin = pinInput ? pinInput.value.trim() : '';
+    const confirm = confirmInput ? confirmInput.value.trim() : '';
+
+    if (!/^\d{4,6}$/.test(pin)) {
+      showPinError('pinCreateError', 'PIN must be 4–6 digits.');
+      return;
+    }
+    if (pin !== confirm) {
+      showPinError('pinCreateError', 'PINs do not match.');
+      return;
+    }
+
+    if (btn) btn.disabled = true;
+    try {
+      const pinHash = await sha256Hex(name + ':' + pin);
+      const result = await jsonp({ action: 'setPin', name, pinHash });
+      console.debug('[Attendance] setPin response:', result);
+      if (result.success) {
+        showToast('PIN created for ' + name + '.', 'info');
+        await loadAttendance();
+        if (activeEmployee === name) renderPinSection(name);
+      } else {
+        showPinError('pinCreateError', result.message || 'Could not save PIN.');
+      }
+    } catch (err) {
+      console.error('[Attendance] setPin failed:', err);
+      showPinError('pinCreateError', err.message);
+    }
+    if (btn) btn.disabled = false;
+  }
+
   function openModal(name) {
     activeEmployee = name;
     document.getElementById('modalAvatar').innerHTML = PERSON_ICON_SVG;
@@ -1680,6 +1738,7 @@
     document.getElementById('noteInput').value = '';
     renderPunchLog(getEntriesForName(name));
     updateModalPunchButtons(name);
+    renderPinSection(name);
     document.getElementById('modalOverlay').classList.add('open');
   }
 
@@ -1719,12 +1778,22 @@
       if (!result.success) { showToast(result.message || 'Could not load attendance.', 'error'); return; }
       currentData = result;
       document.getElementById('dateTag').textContent = formatFullDate(result.date);
-      updateStats();
       renderGrid();
       renderMyStatus();
       if (activeEmployee) {
         renderPunchLog(getEntriesForName(activeEmployee));
         updateModalPunchButtons(activeEmployee);
+
+        // Only re-render the PIN section if its state actually flipped
+        // (e.g. a PIN just got created from elsewhere) — never blindly
+        // rebuild it on every poll, since that would wipe out a PIN
+        // someone's mid-way through typing into the "enter PIN" field.
+        const pinSection = document.getElementById('pinSection');
+        const hasPinNow = !!(currentData.pinStatus && currentData.pinStatus[activeEmployee]);
+        const wasShowingCreateForm = pinSection && pinSection.classList.contains('pin-create');
+        if (pinSection && wasShowingCreateForm && hasPinNow) {
+          renderPinSection(activeEmployee);
+        }
       }
     } catch (err) {
       console.error('[Attendance] getAttendanceToday failed:', err);
@@ -1734,19 +1803,42 @@
 
   async function handlePunch(type) {
     if (!activeEmployee) return;
+
+    const pinInput = document.getElementById('pinEnterInput');
+    if (!pinInput) {
+      // Profile has no PIN on file yet — the "create a PIN" form is
+      // showing instead of the punch buttons' usual PIN field. Nudge
+      // toward that instead of silently failing.
+      showToast('Set up a PIN for ' + activeEmployee + ' first.', 'error');
+      return;
+    }
+    const pin = pinInput.value.trim();
+    if (!/^\d{4,6}$/.test(pin)) {
+      showPinError('pinEnterError', 'Enter your 4–6 digit PIN.');
+      return;
+    }
+
     const note = document.getElementById('noteInput').value.trim();
     const btnIn = document.getElementById('btnTimeIn');
     const btnOut = document.getElementById('btnTimeOut');
     btnIn.disabled = true; btnOut.disabled = true;
     try {
-      const result = await jsonp({ action: 'punch', name: activeEmployee, type, note });
+      const pinHash = await sha256Hex(activeEmployee + ':' + pin);
+      const result = await jsonp({ action: 'punch', name: activeEmployee, type, note, pinHash });
       console.debug('[Attendance] punch response:', result);
       if (result.success) {
         showToast(activeEmployee + (type === 'in' ? ' timed in at ' : ' timed out at ') + result.time, 'info');
         document.getElementById('noteInput').value = '';
+        pinInput.value = '';
         await loadAttendance(); // re-derives correct disabled state from fresh data
       } else {
-        showToast(result.message, 'error');
+        pinInput.value = '';
+        pinInput.focus();
+        if (result.needsPinSetup) {
+          renderPinSection(activeEmployee); // switch to the "create PIN" form
+        } else {
+          showPinError('pinEnterError', result.message || 'Incorrect PIN.');
+        }
         updateModalPunchButtons(activeEmployee); // restore correct state after a failed attempt
       }
     } catch (err) {
@@ -1832,8 +1924,12 @@
 
       const miniIn = document.getElementById('myMiniIn');
       const miniOut = document.getElementById('myMiniOut');
-      if (miniIn) miniIn.addEventListener('click', e => { e.stopPropagation(); handleQuickPunch('in'); });
-      if (miniOut) miniOut.addEventListener('click', e => { e.stopPropagation(); handleQuickPunch('out'); });
+      // These now open the profile modal (rather than punching directly)
+      // since every punch requires a PIN — the modal is where that PIN
+      // field lives. Keeping two buttons (each greyed to match current
+      // status) still gives a quick visual hint of which action applies.
+      if (miniIn) miniIn.addEventListener('click', e => { e.stopPropagation(); openModal(name); });
+      if (miniOut) miniOut.addEventListener('click', e => { e.stopPropagation(); openModal(name); });
     } else {
       myEmployeeName = null;
       card.className = 'my-status-card unmatched';
@@ -1844,29 +1940,6 @@
         '<div class="my-status-name">' + escapeHtml(currentUserEmail || 'Signed in') + '</div>' +
         '<div class="my-status-line muted">Not linked to an attendance profile yet</div>' +
         '</div>';
-    }
-  }
-
-  async function handleQuickPunch(type) {
-    if (!myEmployeeName) return;
-    const miniIn = document.getElementById('myMiniIn');
-    const miniOut = document.getElementById('myMiniOut');
-    if (miniIn) miniIn.disabled = true;
-    if (miniOut) miniOut.disabled = true;
-    try {
-      const result = await jsonp({ action: 'punch', name: myEmployeeName, type, note: '' });
-      console.debug('[Attendance] quick punch response:', result);
-      if (result.success) {
-        showToast(myEmployeeName + (type === 'in' ? ' timed in at ' : ' timed out at ') + result.time, 'info');
-        await loadAttendance(); // rebuilds the card with the correct disabled state
-      } else {
-        showToast(result.message, 'error');
-        renderMyStatus(); // restore correct state after a failed attempt
-      }
-    } catch (err) {
-      console.error('[Attendance] quick punch failed:', err);
-      showToast(err.message, 'error');
-      renderMyStatus();
     }
   }
 </script>
