@@ -290,6 +290,16 @@
     border-color: var(--green);
     transform: translateY(-1px);
   }
+  .app-nav-links a.admin-nav-link {
+    border-color: #d8b23a;
+    color: #8a6d1a;
+    background: #fdf7e6;
+  }
+  .app-nav-links a.admin-nav-link:hover {
+    background: #fbeec3;
+    color: #6b5514;
+    border-color: #b6912a;
+  }
   .app-nav-right { position: relative; flex-shrink: 0; }
   .app-user-trigger {
     display: flex;
@@ -621,6 +631,128 @@
   .filter-pill:hover { border-color: var(--green); }
   .filter-pill.active { background: var(--green); border-color: var(--green); color: #fff; }
   .filter-pill.active:hover { background: var(--green-dark); border-color: var(--green-dark); }
+
+  /* ── ADMIN DASHBOARD (manager/HR only) ── */
+  .admin-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .back-to-dashboard-btn {
+    background: #fff;
+    border: 1.5px solid var(--gray-light);
+    color: var(--gray-dark);
+    padding: 9px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    margin-bottom: 16px;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .back-to-dashboard-btn:hover { border-color: var(--green); color: var(--green-dark); }
+
+  .admin-toolbar {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    flex-wrap: wrap;
+    background: #fff;
+    border-radius: 14px;
+    padding: 16px 18px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    margin-bottom: 16px;
+  }
+  .admin-filter-group { display: flex; flex-direction: column; gap: 5px; }
+  .admin-filter-group label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gray-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .admin-filter-group select, .admin-filter-group input[type="date"] {
+    padding: 9px 12px;
+    border: 1.5px solid var(--gray-light);
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    background: #fff;
+    min-width: 150px;
+  }
+  .admin-filter-group select:focus, .admin-filter-group input[type="date"]:focus { outline: none; border-color: var(--green); }
+  .admin-apply-btn, .admin-export-btn {
+    border: none;
+    padding: 10px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .admin-apply-btn { background: var(--green); color: #fff; }
+  .admin-apply-btn:hover { background: var(--green-dark); }
+  .admin-export-btn { background: #fff; border: 1.5px solid var(--gray-light); color: var(--gray-dark); }
+  .admin-export-btn:hover { border-color: var(--green); color: var(--green-dark); }
+
+  .admin-truncated-notice {
+    display: none;
+    background: #fff6e5;
+    border: 1px solid #f0c36d;
+    color: #7a5b00;
+    font-size: 12.5px;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+  }
+  .admin-truncated-notice.show { display: block; }
+
+  .admin-table-wrap {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    overflow-x: auto;
+  }
+  .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .admin-table th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--gray-mid);
+    padding: 14px 16px;
+    border-bottom: 2px solid var(--gray-light);
+    white-space: nowrap;
+  }
+  .admin-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--gray-light);
+    color: var(--gray-dark);
+    white-space: nowrap;
+  }
+  .admin-table tbody tr:last-child td { border-bottom: none; }
+  .admin-table tbody tr:hover { background: #fafcfa; }
+  .admin-table-loading, .admin-table-empty {
+    text-align: center;
+    color: var(--gray-mid);
+    padding: 24px !important;
+    white-space: normal !important;
+  }
+  .admin-type-chip {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--gray-light);
+    color: var(--gray-mid);
+  }
+  .admin-type-chip.in { background: var(--green-light); color: var(--green-dark); }
+  .admin-type-chip.out { background: #fdeaee; color: var(--certiverse-red); }
 
   /* ── EMPLOYEE GRID ── */
   .emp-grid {
@@ -1084,6 +1216,7 @@
         <a href="https://docs.google.com/document/d/1QP23KXJugBAa09UYCPyDWuO1CJ1bnr6A/edit" target="_blank" rel="noopener"><span class="nav-icon">📘</span>Employee Handbook</a>
         <a href="https://sites.google.com/fiveactsservices.com/portal/five-acts-employee-portal?pli=1" target="_blank" rel="noopener"><span class="nav-icon">💚</span>Benefits Guide</a>
         <a href="https://portal.fiveactsservices.com/#" target="_blank" rel="noopener"><span class="nav-icon">🎓</span>Proctoring Guide</a>
+        <a href="#" id="adminNavLink" class="admin-nav-link" style="display:none;" onclick="event.preventDefault(); showAdminPage();"><span class="nav-icon">🛡️</span>Admin</a>
       </div>
 
       <div class="app-nav-right">
@@ -1102,45 +1235,87 @@
   </nav>
 
   <div class="app-main">
-    <div class="panel-header">
-      <div class="panel-header-left">
-        <h1>Clock System</h1>
-        <div class="date-tag" id="dateTag">Loading date…</div>
-      </div>
-
-      <div class="my-status-card" id="myStatusCard">
-        <div class="my-status-loading">Loading your status…</div>
-      </div>
-
-      <div class="digital-clock-wrap">
-        <div class="digital-date" id="digitalDate">Loading date…</div>
-        <div class="digital-time" id="digitalTime">
-          <span id="digitalTimeText">--:--:--</span><span class="ampm" id="digitalAmPm"></span>
+    <div id="dashboardView">
+      <div class="panel-header">
+        <div class="panel-header-left">
+          <h1>Clock System</h1>
+          <div class="date-tag" id="dateTag">Loading date…</div>
         </div>
-        <div class="tz-label" id="tzLabel"></div>
+
+        <div class="my-status-card" id="myStatusCard">
+          <div class="my-status-loading">Loading your status…</div>
+        </div>
+
+        <div class="digital-clock-wrap">
+          <div class="digital-date" id="digitalDate">Loading date…</div>
+          <div class="digital-time" id="digitalTime">
+            <span id="digitalTimeText">--:--:--</span><span class="ampm" id="digitalAmPm"></span>
+          </div>
+          <div class="tz-label" id="tzLabel"></div>
+        </div>
+      </div>
+
+      <div class="section-heading">
+        <h2>Team Attendance</h2>
+        <span class="section-sub">Tap any card to view their log or add a note</span>
+      </div>
+
+      <div class="grid-toolbar">
+        <div class="grid-search">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="empSearchInput" placeholder="Search employee…" oninput="handleGridFilterChange()">
+        </div>
+        <div class="grid-filter-pills" id="gridFilterPills">
+          <button type="button" class="filter-pill active" data-filter="all" onclick="setGridFilter('all')">All</button>
+          <button type="button" class="filter-pill" data-filter="in" onclick="setGridFilter('in')">Timed In</button>
+          <button type="button" class="filter-pill" data-filter="out" onclick="setGridFilter('out')">Timed Out</button>
+          <button type="button" class="filter-pill" data-filter="none" onclick="setGridFilter('none')">Not Yet In</button>
+        </div>
+      </div>
+
+      <div class="emp-grid" id="empGrid">
+        <div class="loading">Loading attendance…</div>
       </div>
     </div>
 
-    <div class="section-heading">
-      <h2>Team Attendance</h2>
-      <span class="section-sub">Tap any card to view their log or add a note</span>
-    </div>
-
-    <div class="grid-toolbar">
-      <div class="grid-search">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="empSearchInput" placeholder="Search employee…" oninput="handleGridFilterChange()">
+    <div id="adminView" style="display:none;">
+      <div class="panel-header admin-panel-header">
+        <div class="panel-header-left">
+          <h1>Admin Dashboard</h1>
+          <div class="date-tag">Full attendance history — manager/HR only</div>
+        </div>
+        <button type="button" class="back-to-dashboard-btn" onclick="showDashboardPage()">&larr; Back to Dashboard</button>
       </div>
-      <div class="grid-filter-pills" id="gridFilterPills">
-        <button type="button" class="filter-pill active" data-filter="all" onclick="setGridFilter('all')">All</button>
-        <button type="button" class="filter-pill" data-filter="in" onclick="setGridFilter('in')">Timed In</button>
-        <button type="button" class="filter-pill" data-filter="out" onclick="setGridFilter('out')">Timed Out</button>
-        <button type="button" class="filter-pill" data-filter="none" onclick="setGridFilter('none')">Not Yet In</button>
-      </div>
-    </div>
 
-    <div class="emp-grid" id="empGrid">
-      <div class="loading">Loading attendance…</div>
+      <div class="admin-toolbar">
+        <div class="admin-filter-group">
+          <label for="adminNameFilter">Employee</label>
+          <select id="adminNameFilter"><option value="">All Employees</option></select>
+        </div>
+        <div class="admin-filter-group">
+          <label for="adminFromDate">From</label>
+          <input type="date" id="adminFromDate">
+        </div>
+        <div class="admin-filter-group">
+          <label for="adminToDate">To</label>
+          <input type="date" id="adminToDate">
+        </div>
+        <button type="button" class="admin-apply-btn" onclick="loadAdminHistory()">Apply Filters</button>
+        <button type="button" class="admin-export-btn" onclick="exportAdminCSV()">⬇ Export CSV</button>
+      </div>
+
+      <div class="admin-truncated-notice" id="adminTruncatedNotice"></div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table" id="adminTable">
+          <thead>
+            <tr><th>Date</th><th>Name</th><th>Type</th><th>Time</th><th>Note</th></tr>
+          </thead>
+          <tbody id="adminTableBody">
+            <tr><td colspan="5" class="admin-table-loading">Loading attendance history…</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -1194,7 +1369,7 @@
      swap in the real URL whenever you have it.
      ========================================================= */
 
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzVIQ-ort6xk7XyMYBtEOvPAX9RcUE7FL45XvLtvhFy3PRG1npk4RKAQkCcgdajutlX/exec";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxbDhiO8RZG611I8lpZrLQjzp-6Gm3N-uftChRcnYmBObku-fNr3c8W6IZUvZMEn1yx/exec";
   const SESSION_KEY = "fa_staff_session";
 
   // Identity of the signed-in staff member, used to pin their own
@@ -1204,6 +1379,14 @@
   let currentUserEmail = null;
   let trustedNameHint = null;
   let myEmployeeName = null;
+
+  // Admin dashboard access. `currentAdminToken` is a short-lived,
+  // server-issued token (see issueAdminToken/verifyAdminToken in
+  // Code.gs) required for every getAttendanceHistory call — showing/
+  // hiding the nav link is just a UI convenience, the token is the
+  // actual gate enforced on the backend.
+  let currentIsAdmin = false;
+  let currentAdminToken = null;
 
   function isConfigured() {
     return GAS_WEB_APP_URL && !GAS_WEB_APP_URL.startsWith("REPLACE_");
@@ -1316,7 +1499,12 @@
       const passwordHash = await sha256Hex(password);
       const result = await jsonp({ action: 'login', email, passwordHash });
       if (result.success) {
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify({ email: result.email, matchedName: result.name || null }));
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+          email: result.email,
+          matchedName: result.name || null,
+          isAdmin: !!result.isAdmin,
+          adminToken: result.adminToken || null
+        }));
         showApp(result.email);
       } else if (result.needsVerification) {
         document.getElementById('verifyBox').classList.add('show');
@@ -1367,12 +1555,19 @@
 
     currentUserEmail = email;
     trustedNameHint = null;
+    currentIsAdmin = false;
+    currentAdminToken = null;
     try {
       const existing = JSON.parse(sessionStorage.getItem(SESSION_KEY));
-      if (existing && existing.email === email && existing.matchedName) {
-        trustedNameHint = existing.matchedName;
+      if (existing && existing.email === email) {
+        if (existing.matchedName) trustedNameHint = existing.matchedName;
+        currentIsAdmin = !!existing.isAdmin;
+        currentAdminToken = existing.adminToken || null;
       }
     } catch (e) { /* no-op */ }
+
+    const adminLink = document.getElementById('adminNavLink');
+    if (adminLink) adminLink.style.display = currentIsAdmin ? 'flex' : 'none';
 
     loadAttendance();
     if (!window.__attendancePollStarted) {
@@ -1391,10 +1586,15 @@
     clearStatus();
     closeMobileNav();
     closeUserMenu();
+    showDashboardPage();
 
     currentUserEmail = null;
     trustedNameHint = null;
     myEmployeeName = null;
+    currentIsAdmin = false;
+    currentAdminToken = null;
+    const adminLink = document.getElementById('adminNavLink');
+    if (adminLink) adminLink.style.display = 'none';
     const card = document.getElementById('myStatusCard');
     if (card) {
       card.className = 'my-status-card';
@@ -1888,6 +2088,140 @@
       console.error('[Attendance] getAttendanceToday failed:', err);
       showToast(err.message, 'error');
     }
+  }
+
+  /* ---------- Admin dashboard (manager/HR only) ---------- */
+
+  let adminHistoryRows = []; // last-loaded rows, reused by exportAdminCSV
+
+  function showAdminPage() {
+    if (!currentIsAdmin) {
+      showToast('Admin access required.', 'error');
+      return;
+    }
+    document.getElementById('dashboardView').style.display = 'none';
+    document.getElementById('adminView').style.display = 'block';
+    closeMobileNav();
+    populateAdminNameFilter();
+    loadAdminHistory();
+  }
+
+  function showDashboardPage() {
+    document.getElementById('adminView').style.display = 'none';
+    document.getElementById('dashboardView').style.display = 'block';
+  }
+
+  function populateAdminNameFilter() {
+    const select = document.getElementById('adminNameFilter');
+    if (!select || select.dataset.populated === '1') return;
+    const names = (currentData && currentData.names) || [];
+    names.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      select.appendChild(opt);
+    });
+    select.dataset.populated = '1';
+  }
+
+  function formatAdminDate(isoDate) {
+    const parts = (isoDate || '').split('-').map(Number);
+    if (parts.length !== 3 || parts.some(isNaN)) return isoDate || '';
+    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  async function loadAdminHistory() {
+    if (!currentIsAdmin || !currentAdminToken) {
+      showToast('Admin access required.', 'error');
+      return;
+    }
+    const tbody = document.getElementById('adminTableBody');
+    tbody.innerHTML = '<tr><td colspan="5" class="admin-table-loading">Loading attendance history…</td></tr>';
+
+    const name = document.getElementById('adminNameFilter').value;
+    const from = document.getElementById('adminFromDate').value;
+    const to = document.getElementById('adminToDate').value;
+
+    try {
+      const result = await jsonp({
+        action: 'getAttendanceHistory',
+        email: currentUserEmail,
+        adminToken: currentAdminToken,
+        name: name,
+        from: from,
+        to: to
+      });
+      console.debug('[Admin] getAttendanceHistory response:', result);
+      if (!result.success) {
+        tbody.innerHTML = '<tr><td colspan="5" class="admin-table-empty">' + escapeHtml(result.message || 'Could not load history.') + '</td></tr>';
+        return;
+      }
+      adminHistoryRows = result.rows || [];
+      renderAdminTable(adminHistoryRows);
+
+      const notice = document.getElementById('adminTruncatedNotice');
+      if (result.truncated) {
+        notice.textContent = 'Showing the most recent 500 entries out of ' + result.totalMatched + '. Use the date filters above to narrow this down further.';
+        notice.classList.add('show');
+      } else {
+        notice.classList.remove('show');
+      }
+    } catch (err) {
+      console.error('[Admin] getAttendanceHistory failed:', err);
+      tbody.innerHTML = '<tr><td colspan="5" class="admin-table-empty">' + escapeHtml(err.message) + '</td></tr>';
+    }
+  }
+
+  function renderAdminTable(rows) {
+    const tbody = document.getElementById('adminTableBody');
+    if (!rows || rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="admin-table-empty">No attendance records match these filters.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(r => {
+      const isIn = (r.type || '').toLowerCase() === 'in';
+      const chip = '<span class="admin-type-chip ' + (isIn ? 'in' : 'out') + '">' + (isIn ? 'IN' : 'OUT') + '</span>';
+      return '<tr>' +
+        '<td>' + escapeHtml(formatAdminDate(r.date)) + '</td>' +
+        '<td>' + escapeHtml(r.name) + '</td>' +
+        '<td>' + chip + '</td>' +
+        '<td>' + escapeHtml(r.time) + '</td>' +
+        '<td>' + escapeHtml(r.note) + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  function exportAdminCSV() {
+    if (!adminHistoryRows || adminHistoryRows.length === 0) {
+      showToast('Nothing to export yet — load some records first.', 'error');
+      return;
+    }
+    const escapeCsvField = (val) => {
+      const s = val == null ? '' : String(val);
+      return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    };
+    const header = ['Date', 'Name', 'Type', 'Time', 'Note'];
+    const lines = [header.join(',')];
+    adminHistoryRows.forEach(r => {
+      lines.push([r.date, r.name, r.type, r.time, r.note].map(escapeCsvField).join(','));
+    });
+    const csv = lines.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'attendance-history-' + todayIsoForFilename() + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function todayIsoForFilename() {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
   }
 
   async function handlePunch(type) {
