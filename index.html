@@ -747,6 +747,8 @@
     margin-bottom: 16px;
   }
   .pin-section.pin-enter { background: #f7faf7; border-color: var(--gray-light); }
+  .pin-section.pin-locked { background: #f2f3f5; border-color: var(--gray-light); }
+  .pin-section.pin-locked .pin-section-sub { margin-bottom: 0; }
   .pin-section-title {
     font-size: 12px;
     font-weight: 700;
@@ -1178,7 +1180,7 @@
      swap in the real URL whenever you have it.
      ========================================================= */
 
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzUs30UZsuMs9j-qQQGXA2yt9l19p0XMr0mFCnst3Pa5bEZ2-1PZcB3MqqcXb_Fb0pe/exec";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyXS3pCUUoy0hF9eFPsiDA7M4GkqK6CbJ-EXPFs683iqhGm0wPUEhYRM9uwXiV3Xn0D/exec";
   const SESSION_KEY = "fa_staff_session";
 
   // Identity of the signed-in staff member, used to pin their own
@@ -1653,12 +1655,33 @@
 
   /* ---------- PIN protection (every profile needs one before it can punch) ---------- */
 
+  // A signed-in account can only manage the ONE attendance profile it
+  // resolved to (see resolveMyName/myEmployeeName above) — never a
+  // colleague's, even though the dashboard shows everyone's status for
+  // team visibility. If the account isn't linked to any profile yet,
+  // myEmployeeName is null, so this is false for every card.
+  function isOwnProfile(name) {
+    return !!myEmployeeName && name === myEmployeeName;
+  }
+
   // Renders either a "create your PIN" form (first time) or a single
   // "enter your PIN" field (every time after) into the modal, based on
-  // whether the backend already has a PIN on file for this name.
+  // whether the backend already has a PIN on file for this name — but
+  // only for the signed-in person's OWN profile. Anyone else's profile
+  // shows a locked notice instead: no PIN form, no way to even see
+  // whether a PIN exists yet, since that's this person's own business.
   function renderPinSection(name) {
     const section = document.getElementById('pinSection');
     if (!section) return;
+
+    if (!isOwnProfile(name)) {
+      section.className = 'pin-section pin-locked';
+      section.innerHTML =
+        '<div class="pin-section-title">🔒 This is ' + escapeHtml(name) + '\u2019s profile</div>' +
+        '<div class="pin-section-sub">Only ' + escapeHtml(name) + ' can set up a PIN or time in/out here. Sign in as ' + escapeHtml(name) + ' to manage it — you can still view today\u2019s log below.</div>';
+      return;
+    }
+
     const hasPin = !!(currentData.pinStatus && currentData.pinStatus[name]);
 
     if (!hasPin) {
@@ -1693,6 +1716,10 @@
   }
 
   async function setupPin(name) {
+    if (!isOwnProfile(name)) {
+      showToast('You can only set up your own PIN.', 'error');
+      return;
+    }
     const pinInput = document.getElementById('pinCreateInput');
     const confirmInput = document.getElementById('pinCreateConfirm');
     const btn = document.getElementById('pinCreateBtn');
@@ -1730,6 +1757,16 @@
     if (btn) btn.disabled = false;
   }
 
+  // Punching (and the note field that goes with it) is only meaningful
+  // on your own profile — everyone else's card is view-only.
+  function applyProfileAccessState(name) {
+    const own = isOwnProfile(name);
+    const punchActions = document.querySelector('.punch-actions');
+    const noteField = document.querySelector('.note-field');
+    if (punchActions) punchActions.style.display = own ? 'flex' : 'none';
+    if (noteField) noteField.style.display = own ? 'block' : 'none';
+  }
+
   function openModal(name) {
     activeEmployee = name;
     document.getElementById('modalAvatar').innerHTML = PERSON_ICON_SVG;
@@ -1739,6 +1776,7 @@
     renderPunchLog(getEntriesForName(name));
     updateModalPunchButtons(name);
     renderPinSection(name);
+    applyProfileAccessState(name);
     document.getElementById('modalOverlay').classList.add('open');
   }
 
@@ -1803,6 +1841,10 @@
 
   async function handlePunch(type) {
     if (!activeEmployee) return;
+    if (!isOwnProfile(activeEmployee)) {
+      showToast('You can only time in/out on your own profile.', 'error');
+      return;
+    }
 
     const pinInput = document.getElementById('pinEnterInput');
     if (!pinInput) {
