@@ -414,7 +414,7 @@
   .panel-header-left { flex: 1; min-width: 180px; }
   .panel-header h1 {
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 28px;
+    font-size: 36px;
     color: var(--black);
   }
   .panel-header .date-tag {
@@ -575,10 +575,6 @@
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 20px;
     color: var(--black);
-  }
-  .section-heading .section-sub {
-    font-size: 12px;
-    color: var(--gray-mid);
   }
 
   /* ── GRID TOOLBAR (search + status filter pills) ── */
@@ -747,18 +743,7 @@
     padding: 24px !important;
     white-space: normal !important;
   }
-  .admin-type-chip {
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    padding: 4px 10px;
-    border-radius: 20px;
-    background: var(--gray-light);
-    color: var(--gray-mid);
-  }
-  .admin-type-chip.in { background: var(--green-light); color: var(--green-dark); }
-  .admin-type-chip.out { background: #fdeaee; color: var(--certiverse-red); }
+  .admin-cell-muted { color: var(--gray-mid); font-style: italic; }
 
   /* ── EMPLOYEE GRID ── */
   .emp-grid {
@@ -1033,7 +1018,7 @@
   @media (max-width: 1024px) {
     .app-main { padding: 20px 16px 48px; }
     .panel-header { padding: 20px 20px 6px; }
-    .panel-header h1 { font-size: 24px; }
+    .panel-header h1 { font-size: 30px; }
     .emp-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
     .digital-clock-wrap { padding: 12px 22px; }
     .digital-time { font-size: 40px; }
@@ -1117,7 +1102,7 @@
 
     .login-card { padding: 30px 22px; }
     .panel-header { flex-direction: row; align-items: center; }
-    .panel-header h1 { font-size: 21px; }
+    .panel-header h1 { font-size: 26px; }
     .emp-grid { grid-template-columns: 1fr; }
 
     .digital-clock-wrap { gap: 3px; padding: 10px 18px; margin-bottom: 0; }
@@ -1138,7 +1123,6 @@
     .punch-actions { flex-direction: column; }
 
     .section-heading h2 { font-size: 17px; }
-    .section-heading .section-sub { display: none; }
 
     .grid-toolbar { gap: 8px; }
     .grid-search { max-width: none; min-width: 100%; order: 1; }
@@ -1263,7 +1247,6 @@
 
       <div class="section-heading">
         <h2>Team Attendance</h2>
-        <span class="section-sub">Tap any card to view their log or add a note</span>
       </div>
 
       <div class="grid-toolbar">
@@ -1315,10 +1298,10 @@
       <div class="admin-table-wrap">
         <table class="admin-table" id="adminTable">
           <thead>
-            <tr><th>Date</th><th>Name</th><th>Type</th><th>Time</th><th>Note</th></tr>
+            <tr><th>Date</th><th>Name</th><th>Time In</th><th>Time Out</th><th>Hours</th><th>Note</th></tr>
           </thead>
           <tbody id="adminTableBody">
-            <tr><td colspan="5" class="admin-table-loading">Loading attendance history…</td></tr>
+            <tr><td colspan="6" class="admin-table-loading">Loading attendance history…</td></tr>
           </tbody>
         </table>
       </div>
@@ -2149,7 +2132,7 @@
       return;
     }
     const tbody = document.getElementById('adminTableBody');
-    tbody.innerHTML = '<tr><td colspan="5" class="admin-table-loading">Loading attendance history…</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="admin-table-loading">Loading attendance history…</td></tr>';
 
     const name = document.getElementById('adminNameFilter').value;
     const from = document.getElementById('adminFromDate').value;
@@ -2166,7 +2149,7 @@
       });
       console.debug('[Admin] getAttendanceHistory response:', result);
       if (!result.success) {
-        tbody.innerHTML = '<tr><td colspan="5" class="admin-table-empty">' + escapeHtml(result.message || 'Could not load history.') + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="admin-table-empty">' + escapeHtml(result.message || 'Could not load history.') + '</td></tr>';
         return;
       }
       adminHistoryRows = result.rows || [];
@@ -2181,25 +2164,99 @@
       }
     } catch (err) {
       console.error('[Admin] getAttendanceHistory failed:', err);
-      tbody.innerHTML = '<tr><td colspan="5" class="admin-table-empty">' + escapeHtml(err.message) + '</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="admin-table-empty">' + escapeHtml(err.message) + '</td></tr>';
     }
+  }
+
+  // ---- Pair consecutive IN/OUT punches into "sessions" ----
+  // Punches can happen any number of times per day (lunch breaks, etc.),
+  // so rather than either (a) one row per punch — hard to scan for
+  // matching pairs — or (b) cramming a whole day into one row — which
+  // either loses the break detail or gets cluttered with multiple time
+  // ranges crammed into one cell — this groups by Date+Name and pairs
+  // up each IN with the next OUT into its own row, complete with hours
+  // worked for that session. A day with a lunch break naturally becomes
+  // two clean rows (morning session, afternoon session) instead of one
+  // crowded cell or four hard-to-match separate rows.
+  function timeToMinutes(timeStr) {
+    const m = (timeStr || '').match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (!m) return 0;
+    let h = parseInt(m[1], 10);
+    const min = parseInt(m[2], 10);
+    const ap = m[3].toUpperCase();
+    if (ap === 'PM' && h !== 12) h += 12;
+    if (ap === 'AM' && h === 12) h = 0;
+    return h * 60 + min;
+  }
+
+  function computeSessionHours(timeIn, timeOut) {
+    if (!timeIn || !timeOut) return null;
+    let diff = timeToMinutes(timeOut) - timeToMinutes(timeIn);
+    if (diff < 0) diff += 24 * 60; // defensive: shouldn't happen for a same-day session, but don't show a negative
+    return (diff / 60).toFixed(2);
+  }
+
+  function groupIntoSessions(rows) {
+    const groups = {};
+    const groupOrder = [];
+    (rows || []).forEach(r => {
+      const key = r.date + '|' + r.name;
+      if (!groups[key]) { groups[key] = []; groupOrder.push(key); }
+      groups[key].push(r);
+    });
+
+    const sessions = [];
+    groupOrder.forEach(key => {
+      const [date, name] = key.split('|');
+      // Chronological order within the day so INs pair with the very
+      // next OUT, regardless of what order the backend returned them in.
+      const punches = groups[key].slice().sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
+      let openIn = null;
+      punches.forEach(p => {
+        const isIn = (p.type || '').toLowerCase() === 'in';
+        if (isIn) {
+          if (openIn) sessions.push({ date, name, timeIn: openIn.time, timeOut: null, note: openIn.note });
+          openIn = p;
+        } else if (openIn) {
+          sessions.push({ date, name, timeIn: openIn.time, timeOut: p.time, note: [openIn.note, p.note].filter(Boolean).join(' / ') });
+          openIn = null;
+        } else {
+          // An OUT with no preceding IN in this date's data — a data
+          // oddity rather than something to hide or crash on.
+          sessions.push({ date, name, timeIn: null, timeOut: p.time, note: p.note });
+        }
+      });
+      if (openIn) sessions.push({ date, name, timeIn: openIn.time, timeOut: null, note: openIn.note }); // still clocked in
+    });
+
+    // Most recent day first, then alphabetical by name, then most
+    // recent session first within that day+name.
+    sessions.sort((a, b) => {
+      if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+      if (a.name !== b.name) return a.name.localeCompare(b.name);
+      const aKey = timeToMinutes(a.timeIn || a.timeOut);
+      const bKey = timeToMinutes(b.timeIn || b.timeOut);
+      return bKey - aKey;
+    });
+    return sessions;
   }
 
   function renderAdminTable(rows) {
     const tbody = document.getElementById('adminTableBody');
-    if (!rows || rows.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="admin-table-empty">No attendance records match these filters.</td></tr>';
+    const sessions = groupIntoSessions(rows);
+    if (!sessions || sessions.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="admin-table-empty">No attendance records match these filters.</td></tr>';
       return;
     }
-    tbody.innerHTML = rows.map(r => {
-      const isIn = (r.type || '').toLowerCase() === 'in';
-      const chip = '<span class="admin-type-chip ' + (isIn ? 'in' : 'out') + '">' + (isIn ? 'IN' : 'OUT') + '</span>';
+    tbody.innerHTML = sessions.map(s => {
+      const hours = computeSessionHours(s.timeIn, s.timeOut);
       return '<tr>' +
-        '<td>' + escapeHtml(formatAdminDate(r.date)) + '</td>' +
-        '<td>' + escapeHtml(r.name) + '</td>' +
-        '<td>' + chip + '</td>' +
-        '<td>' + escapeHtml(r.time) + '</td>' +
-        '<td>' + escapeHtml(r.note) + '</td>' +
+        '<td>' + escapeHtml(formatAdminDate(s.date)) + '</td>' +
+        '<td>' + escapeHtml(s.name) + '</td>' +
+        '<td>' + (s.timeIn ? escapeHtml(s.timeIn) : '<span class="admin-cell-muted">—</span>') + '</td>' +
+        '<td>' + (s.timeOut ? escapeHtml(s.timeOut) : '<span class="admin-cell-muted">still in</span>') + '</td>' +
+        '<td>' + (hours !== null ? escapeHtml(hours) : '<span class="admin-cell-muted">—</span>') + '</td>' +
+        '<td>' + escapeHtml(s.note) + '</td>' +
         '</tr>';
     }).join('');
   }
@@ -2213,10 +2270,19 @@
       const s = val == null ? '' : String(val);
       return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
     };
-    const header = ['Date', 'Name', 'Type', 'Time', 'Note'];
+    const sessions = groupIntoSessions(adminHistoryRows);
+    const header = ['Date', 'Name', 'Time In', 'Time Out', 'Hours', 'Note'];
     const lines = [header.join(',')];
-    adminHistoryRows.forEach(r => {
-      lines.push([r.date, r.name, r.type, r.time, r.note].map(escapeCsvField).join(','));
+    sessions.forEach(s => {
+      const hours = computeSessionHours(s.timeIn, s.timeOut);
+      lines.push([
+        s.date,
+        s.name,
+        s.timeIn || '',
+        s.timeOut || (s.timeIn ? 'still in' : ''),
+        hours !== null ? hours : '',
+        s.note
+      ].map(escapeCsvField).join(','));
     });
     const csv = lines.join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
