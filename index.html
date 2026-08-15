@@ -282,7 +282,18 @@
     transition: background 0.18s, color 0.18s, transform 0.15s;
     white-space: nowrap;
   }
-  .app-nav-links a .nav-icon { font-size: 15px; line-height: 1; }
+  .app-nav-links a .nav-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .app-nav-links a .nav-icon svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+    flex-shrink: 0;
+  }
   .nav-drawer-header { display: none; }
   .app-nav-links a:hover {
     background: var(--green-light);
@@ -627,6 +638,45 @@
   .filter-pill:hover { border-color: var(--green); }
   .filter-pill.active { background: var(--green); border-color: var(--green); color: #fff; }
   .filter-pill.active:hover { background: var(--green-dark); border-color: var(--green-dark); }
+
+  /* ── COMING SOON / UNDER CONSTRUCTION VIEW ── */
+  .coming-soon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    padding: 20px;
+  }
+  .coming-soon-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 48px 40px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    text-align: center;
+    max-width: 420px;
+    width: 100%;
+    border-top: 4px solid var(--green);
+  }
+  .coming-soon-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 20px;
+    color: var(--green);
+  }
+  .coming-soon-icon svg { width: 100%; height: 100%; }
+  .coming-soon-card h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 24px;
+    color: var(--black);
+    margin-bottom: 10px;
+  }
+  .coming-soon-card p {
+    font-size: 14px;
+    color: var(--gray-mid);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .coming-soon-card .back-to-dashboard-btn { margin-bottom: 0; }
 
   /* ── ADMIN DASHBOARD (manager/HR only) ── */
   .admin-panel-header {
@@ -1202,11 +1252,21 @@
           <span>Quick Links</span>
           <button type="button" class="nav-drawer-close" onclick="closeMobileNav()" aria-label="Close menu">&times;</button>
         </div>
-        <a href="https://sites.google.com/fiveactsservices.com/portal/pto-request?authuser=0" target="_blank" rel="noopener"><span class="nav-icon">🗓️</span>PTO Request</a>
-        <a href="https://docs.google.com/document/d/1QP23KXJugBAa09UYCPyDWuO1CJ1bnr6A/edit" target="_blank" rel="noopener"><span class="nav-icon">📘</span>Employee Handbook</a>
-        <a href="https://sites.google.com/fiveactsservices.com/portal/five-acts-employee-portal?pli=1" target="_blank" rel="noopener"><span class="nav-icon">💚</span>Benefits Guide</a>
-        <a href="https://portal.fiveactsservices.com/#" target="_blank" rel="noopener"><span class="nav-icon">🎓</span>Proctoring Guide</a>
-        <a href="#" id="adminNavLink" class="admin-nav-link" style="display:none;" onclick="event.preventDefault(); showAdminPage();"><span class="nav-icon">🛡️</span>Admin</a>
+        <a href="https://sites.google.com/fiveactsservices.com/portal/pto-request?authuser=0" target="_blank" rel="noopener">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg></span>PTO Request
+        </a>
+        <a href="https://docs.google.com/document/d/1QP23KXJugBAa09UYCPyDWuO1CJ1bnr6A/edit" target="_blank" rel="noopener">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7c-1.6-1.2-4-1.8-6.3-1.8-.7 0-1.2.05-1.2.05v13.5s.5-.05 1.2-.05c2.3 0 4.7.6 6.3 1.8"/><path d="M12 7c1.6-1.2 4-1.8 6.3-1.8.7 0 1.2.05 1.2.05v13.5s-.5-.05-1.2-.05c-2.3 0-4.7.6-6.3 1.8V7Z"/></svg></span>Employee Handbook
+        </a>
+        <a href="https://sites.google.com/fiveactsservices.com/portal/five-acts-employee-portal?pli=1" target="_blank" rel="noopener">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.2s-7.2-4.4-9.6-9A5 5 0 0 1 12 6.3 5 5 0 0 1 21.6 11c-2.4 4.6-9.6 9-9.6 9Z"/></svg></span>Benefits Guide
+        </a>
+        <a href="#" id="proctoringNavLink" onclick="event.preventDefault(); showComingSoonPage();">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 9 12 4.3 21.5 9 12 13.7 2.5 9Z"/><path d="M6.5 11.2v4c0 1.2 2.5 2.1 5.5 2.1s5.5-.9 5.5-2.1v-4"/><path d="M21.5 9v5.5"/></svg></span>Proctoring Guide
+        </a>
+        <a href="#" id="adminNavLink" class="admin-nav-link" style="display:none;" onclick="event.preventDefault(); showAdminPage();">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.3 5 6v5.5c0 4.6 3 7.9 7 9.2 4-1.3 7-4.6 7-9.2V6l-7-2.7Z"/></svg></span>Admin
+        </a>
       </div>
 
       <div class="app-nav-right">
@@ -1306,6 +1366,22 @@
         </table>
       </div>
     </div>
+
+    <div id="comingSoonView" style="display:none;">
+      <div class="coming-soon-wrap">
+        <div class="coming-soon-card">
+          <div class="coming-soon-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
+            </svg>
+          </div>
+          <h1>This feature is under construction</h1>
+          <p>The Proctoring Guide isn't ready yet — we're still building it out. Check back soon.</p>
+          <button type="button" class="back-to-dashboard-btn" onclick="showDashboardPage()">&larr; Back to Dashboard</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1348,14 +1424,13 @@
      ---------------------------------------------------------
      Login/signup (Apps Script + Sheets backend) same as before.
      After sign-in, the main view IS the Attendance dashboard —
-     no separate attendance.html anymore. Top nav has the four
-     external links (PTO / Handbook / Benefits / Proctoring Guide).
+     no separate attendance.html anymore. Top nav has three
+     external links (PTO / Handbook / Benefits) plus Proctoring
+     Guide, which opens an in-app "under construction" view
+     instead of an external link until that content is ready.
 
      On narrow screens (<= 860px) the nav links collapse into a
      slide-in drawer toggled by the hamburger button.
-
-     NOTE: Proctoring Guide's href is still a "#" placeholder —
-     swap in the real URL whenever you have it.
      ========================================================= */
 
   const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxbDhiO8RZG611I8lpZrLQjzp-6Gm3N-uftChRcnYmBObku-fNr3c8W6IZUvZMEn1yx/exec";
@@ -2085,6 +2160,22 @@
     }
   }
 
+  /* ---------- Main content view switching (dashboard / admin / coming-soon) ---------- */
+
+  const MAIN_VIEW_IDS = ['dashboardView', 'adminView', 'comingSoonView'];
+
+  function showMainView(viewId) {
+    MAIN_VIEW_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = (id === viewId) ? 'block' : 'none';
+    });
+  }
+
+  function showComingSoonPage() {
+    showMainView('comingSoonView');
+    closeMobileNav();
+  }
+
   /* ---------- Admin dashboard (manager/HR only) ---------- */
 
   let adminHistoryRows = []; // last-loaded rows, reused by exportAdminCSV
@@ -2094,16 +2185,14 @@
       showToast('Admin access required.', 'error');
       return;
     }
-    document.getElementById('dashboardView').style.display = 'none';
-    document.getElementById('adminView').style.display = 'block';
+    showMainView('adminView');
     closeMobileNav();
     populateAdminNameFilter();
     loadAdminHistory();
   }
 
   function showDashboardPage() {
-    document.getElementById('adminView').style.display = 'none';
-    document.getElementById('dashboardView').style.display = 'block';
+    showMainView('dashboardView');
   }
 
   function populateAdminNameFilter() {
