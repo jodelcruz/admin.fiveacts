@@ -793,6 +793,20 @@
     display: none;
   }
   .pin-section-error.show { display: block; }
+  .pin-forgot-link {
+    display: block;
+    margin-top: 10px;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--gray-mid);
+    font-size: 11.5px;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .pin-forgot-link:hover { color: var(--certiverse-red); }
+  .pin-forgot-link:disabled { opacity: 0.6; cursor: not-allowed; text-decoration: none; }
 
   .punch-actions { display: flex; gap: 10px; margin-bottom: 16px; }
   .punch-actions button {
@@ -1180,7 +1194,7 @@
      swap in the real URL whenever you have it.
      ========================================================= */
 
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyqyn6TFW-UaNohkAaybqDY8gvAXjEXrG7CBHlaep2OE1uOK3YTrv23OtiloK3IXr2d/exec";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzVIQ-ort6xk7XyMYBtEOvPAX9RcUE7FL45XvLtvhFy3PRG1npk4RKAQkCcgdajutlX/exec";
   const SESSION_KEY = "fa_staff_session";
 
   // Identity of the signed-in staff member, used to pin their own
@@ -1704,7 +1718,10 @@
         '<div class="pin-single-input">' +
         '<input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="pinEnterInput" placeholder="••••">' +
         '</div>' +
-        '<div class="pin-section-error" id="pinEnterError"></div>';
+        '<div class="pin-section-error" id="pinEnterError"></div>' +
+        '<button type="button" class="pin-forgot-link" id="pinForgotBtn">Forgot your PIN?</button>';
+      const forgotBtn = document.getElementById('pinForgotBtn');
+      if (forgotBtn) forgotBtn.addEventListener('click', () => confirmResetPin(name));
     }
   }
 
@@ -1713,6 +1730,40 @@
     if (!el) return;
     el.textContent = message;
     el.classList.add('show');
+  }
+
+  // A lightweight confirm step before wiping a working PIN — this isn't
+  // a security boundary (the real one is callerOwnsProfile() on the
+  // backend), just guarding against an accidental click.
+  function confirmResetPin(name) {
+    if (window.confirm('Reset the PIN for ' + name + '? You\u2019ll need to set up a new one right after.')) {
+      resetMyPin(name);
+    }
+  }
+
+  async function resetMyPin(name) {
+    if (!isOwnProfile(name)) {
+      showToast('You can only reset your own PIN.', 'error');
+      return;
+    }
+    const forgotBtn = document.getElementById('pinForgotBtn');
+    if (forgotBtn) { forgotBtn.disabled = true; forgotBtn.textContent = 'Resetting\u2026'; }
+    try {
+      const result = await jsonp({ action: 'resetPin', name, email: currentUserEmail });
+      console.debug('[Attendance] resetPin response:', result);
+      if (result.success) {
+        showToast('PIN reset for ' + name + ' — set up a new one below.', 'info');
+        await loadAttendance();
+        if (activeEmployee === name) renderPinSection(name);
+      } else {
+        showToast(result.message || 'Could not reset PIN.', 'error');
+        if (forgotBtn) { forgotBtn.disabled = false; forgotBtn.textContent = 'Forgot your PIN?'; }
+      }
+    } catch (err) {
+      console.error('[Attendance] resetPin failed:', err);
+      showToast(err.message, 'error');
+      if (forgotBtn) { forgotBtn.disabled = false; forgotBtn.textContent = 'Forgot your PIN?'; }
+    }
   }
 
   async function setupPin(name) {
@@ -1741,7 +1792,7 @@
     if (btn) btn.disabled = true;
     try {
       const pinHash = await sha256Hex(name + ':' + pin);
-      const result = await jsonp({ action: 'setPin', name, pinHash });
+      const result = await jsonp({ action: 'setPin', name, pinHash, email: currentUserEmail });
       console.debug('[Attendance] setPin response:', result);
       if (result.success) {
         showToast('PIN created for ' + name + '.', 'info');
