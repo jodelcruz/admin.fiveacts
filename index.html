@@ -715,14 +715,20 @@
     border-radius: 14px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.06);
     overflow-x: auto;
+    overflow-y: auto;
+    max-height: 60vh;
   }
   .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .admin-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
     text-align: left;
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.4px;
     color: var(--gray-mid);
+    background: #fff;
     padding: 14px 16px;
     border-bottom: 2px solid var(--gray-light);
     white-space: nowrap;
@@ -1579,7 +1585,13 @@
   function handleLogout() {
     sessionStorage.removeItem(SESSION_KEY);
     document.getElementById('appPage').classList.remove('open');
-    document.getElementById('loginWrap').style.display = 'block';
+    // Clearing the inline override (rather than hardcoding 'block')
+    // lets .login-wrap's own `display: flex` — which is what actually
+    // centers the card vertically — take over again, exactly like on
+    // first page load. Setting 'block' here previously fought that
+    // rule and left the login screen stuck at the top of the page
+    // after every sign-out.
+    document.getElementById('loginWrap').style.display = '';
     document.getElementById('signInForm').reset();
     document.getElementById('createForm').reset();
     hideVerifyBox();
