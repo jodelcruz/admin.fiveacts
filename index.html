@@ -2324,7 +2324,18 @@
       myEmployeeName = name;
       trustedNameHint = name;
       try {
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify({ email: currentUserEmail, matchedName: name }));
+        // Merge into the existing session object rather than replacing
+        // it outright — this used to overwrite the whole thing with
+        // just {email, matchedName}, silently dropping isAdmin/
+        // adminToken that login had just set. Invisible during the
+        // same page session (the in-memory JS variables were still
+        // correct), but on the next refresh, restoreSession() would
+        // re-read this now-incomplete object and the Admin nav link
+        // would vanish.
+        const existing = JSON.parse(sessionStorage.getItem(SESSION_KEY)) || {};
+        existing.email = currentUserEmail;
+        existing.matchedName = name;
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(existing));
       } catch (e) { /* no-op */ }
 
       const entries = getEntriesForName(name);
