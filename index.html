@@ -283,21 +283,29 @@
     white-space: nowrap;
   }
   .app-nav-links a .nav-icon { font-size: 15px; line-height: 1; }
+  .nav-drawer-header { display: none; }
   .app-nav-links a:hover {
     background: var(--green-light);
     color: var(--green-dark);
     border-color: var(--green);
     transform: translateY(-1px);
   }
-  .app-nav-right {
+  .app-nav-right { position: relative; flex-shrink: 0; }
+  .app-user-trigger {
     display: flex;
     align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
+    gap: 8px;
     background: #f7faf7;
     border: 1px solid var(--gray-light);
     border-radius: 24px;
-    padding: 5px 6px 5px 6px;
+    padding: 5px 12px 5px 6px;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .app-user-trigger:hover { border-color: var(--green); }
+  .app-user-trigger[aria-expanded="true"] {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(58,181,74,0.15);
   }
   .app-user-avatar {
     width: 26px;
@@ -322,15 +330,55 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  .user-caret {
+    font-size: 9px;
+    color: var(--gray-mid);
+    transition: transform 0.18s ease;
+    line-height: 1;
+  }
+  .app-user-trigger[aria-expanded="true"] .user-caret { transform: rotate(180deg); }
+
+  .user-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 220px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+    padding: 14px;
+    z-index: 80;
+  }
+  .user-dropdown.open { display: block; }
+  .user-dropdown-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--gray-mid);
+    margin-bottom: 3px;
+  }
+  .user-dropdown-email {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--black);
+    word-break: break-all;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--gray-light);
+  }
   .app-logout {
+    display: block;
+    width: 100%;
     background: #fff;
     border: 1px solid var(--certiverse-red);
     color: var(--certiverse-red);
-    padding: 6px 13px;
-    border-radius: 18px;
+    padding: 9px 0;
+    border-radius: 9px;
     cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 700;
     white-space: nowrap;
     transition: background 0.15s, color 0.15s;
   }
@@ -504,6 +552,109 @@
     color: rgba(255,255,255,0.45);
   }
 
+  /* ── STATS ROW (quick summary, sits between the header and the grid) ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .stat-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 16px 18px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    border-left: 4px solid var(--gray-light);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .stat-card.stat-total { border-left-color: var(--gray-dark); }
+  .stat-card.stat-in { border-left-color: var(--green); }
+  .stat-card.stat-out { border-left-color: var(--certiverse-red); }
+  .stat-card.stat-none { border-left-color: #d9a441; }
+  .stat-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--black);
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 12px;
+    color: var(--gray-mid);
+    font-weight: 600;
+  }
+
+  /* ── SECTION HEADING (introduces the attendance grid below the stats) ── */
+  .section-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .section-heading h2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px;
+    color: var(--black);
+  }
+  .section-heading .section-sub {
+    font-size: 12px;
+    color: var(--gray-mid);
+  }
+
+  /* ── GRID TOOLBAR (search + status filter pills) ── */
+  .grid-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .grid-search {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+    max-width: 320px;
+  }
+  .grid-search .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  .grid-search input {
+    width: 100%;
+    padding: 10px 14px 10px 36px;
+    border: 1.5px solid var(--gray-light);
+    border-radius: 22px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    background: #fff;
+    transition: border-color 0.15s;
+  }
+  .grid-search input:focus { outline: none; border-color: var(--green); }
+  .grid-filter-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter-pill {
+    background: #fff;
+    border: 1.5px solid var(--gray-light);
+    color: var(--gray-dark);
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .filter-pill:hover { border-color: var(--green); }
+  .filter-pill.active { background: var(--green); border-color: var(--green); color: #fff; }
+  .filter-pill.active:hover { background: var(--green-dark); border-color: var(--green-dark); }
 
   /* ── EMPLOYEE GRID ── */
   .emp-grid {
@@ -552,6 +703,19 @@
   }
   .emp-card.status-in .emp-status .dot { background: var(--green); }
   .emp-card.status-out .emp-status .dot { background: var(--certiverse-red); }
+  .emp-status-chip {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--gray-light);
+    color: var(--gray-mid);
+    flex-shrink: 0;
+  }
+  .emp-status-chip.in { background: var(--green-light); color: var(--green-dark); }
+  .emp-status-chip.out { background: #fdeaee; color: var(--certiverse-red); }
 
   /* ── PROFILE MODAL ── */
   .modal-overlay {
@@ -704,6 +868,7 @@
     .my-status-card { min-width: 220px; padding: 12px 16px; gap: 12px; }
     .my-status-avatar { width: 40px; height: 40px; min-width: 40px; }
     .my-status-avatar svg { width: 22px; height: 22px; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
   }
 
   /* ---------- Hamburger takes over the top nav ---------- */
@@ -725,7 +890,7 @@
       align-items: stretch;
       justify-content: flex-start;
       gap: 10px;
-      padding: 88px 18px 24px;
+      padding: 20px 18px 24px;
       box-shadow: 6px 0 30px rgba(0,0,0,0.18);
       transition: transform 0.25s ease;
       overflow-x: hidden;
@@ -733,6 +898,35 @@
       z-index: 60;
     }
     .app-nav-links.open { transform: translateX(0); }
+    .nav-drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 14px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--gray-light);
+    }
+    .nav-drawer-header span {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: var(--gray-mid);
+    }
+    .nav-drawer-close {
+      background: var(--gray-light);
+      border: none;
+      width: 30px;
+      height: 30px;
+      min-width: 30px;
+      border-radius: 50%;
+      font-size: 18px;
+      line-height: 1;
+      color: var(--gray-dark);
+      cursor: pointer;
+    }
+    .nav-drawer-close:hover { background: #e2e2e2; }
     .app-nav-links a {
       width: 100%;
       justify-content: flex-start;
@@ -747,7 +941,6 @@
     .app-nav-inner { flex-wrap: nowrap; }
     .app-brand span { font-size: 15px; }
     .app-user-tag { max-width: 90px; }
-    .app-logout { padding: 6px 10px; }
 
     .login-card { padding: 30px 22px; }
     .panel-header { flex-direction: row; align-items: center; }
@@ -770,6 +963,19 @@
 
     .modal-box { padding: 22px; max-height: 90vh; }
     .punch-actions { flex-direction: column; }
+
+    .stats-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .stat-card { padding: 12px 14px; }
+    .stat-value { font-size: 24px; }
+    .stat-label { font-size: 10.5px; }
+
+    .section-heading h2 { font-size: 17px; }
+    .section-heading .section-sub { display: none; }
+
+    .grid-toolbar { gap: 8px; }
+    .grid-search { max-width: none; min-width: 100%; order: 1; }
+    .grid-filter-pills { width: 100%; order: 2; }
+    .filter-pill { flex: 1; text-align: center; padding: 8px 6px; }
   }
 
   @media (max-width: 400px) {
@@ -840,6 +1046,10 @@
       </button>
 
       <div class="app-nav-links" id="navLinks">
+        <div class="nav-drawer-header">
+          <span>Quick Links</span>
+          <button type="button" class="nav-drawer-close" onclick="closeMobileNav()" aria-label="Close menu">&times;</button>
+        </div>
         <a href="https://sites.google.com/fiveactsservices.com/portal/pto-request?authuser=0" target="_blank" rel="noopener"><span class="nav-icon">🗓️</span>PTO Request</a>
         <a href="https://docs.google.com/document/d/1QP23KXJugBAa09UYCPyDWuO1CJ1bnr6A/edit" target="_blank" rel="noopener"><span class="nav-icon">📘</span>Employee Handbook</a>
         <a href="https://sites.google.com/fiveactsservices.com/portal/five-acts-employee-portal?pli=1" target="_blank" rel="noopener"><span class="nav-icon">💚</span>Benefits Guide</a>
@@ -847,9 +1057,16 @@
       </div>
 
       <div class="app-nav-right">
-        <span class="app-user-avatar" id="userAvatar"></span>
-        <span class="app-user-tag" id="userLabel"></span>
-        <button type="button" class="app-logout" onclick="handleLogout()">Sign Out</button>
+        <button type="button" class="app-user-trigger" id="userMenuTrigger" onclick="toggleUserMenu()" aria-haspopup="true" aria-expanded="false">
+          <span class="app-user-avatar" id="userAvatar"></span>
+          <span class="app-user-tag" id="userLabel"></span>
+          <span class="user-caret">▾</span>
+        </button>
+        <div class="user-dropdown" id="userDropdown">
+          <div class="user-dropdown-label">Signed in as</div>
+          <div class="user-dropdown-email" id="userDropdownEmail"></div>
+          <button type="button" class="app-logout" onclick="handleLogout()">Sign Out</button>
+        </div>
       </div>
     </div>
   </nav>
@@ -871,6 +1088,43 @@
           <span id="digitalTimeText">--:--:--</span><span class="ampm" id="digitalAmPm"></span>
         </div>
         <div class="tz-label" id="tzLabel"></div>
+      </div>
+    </div>
+
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card stat-total">
+        <div class="stat-value" id="statTotal">–</div>
+        <div class="stat-label">Total Staff</div>
+      </div>
+      <div class="stat-card stat-in">
+        <div class="stat-value" id="statIn">–</div>
+        <div class="stat-label">Timed In</div>
+      </div>
+      <div class="stat-card stat-out">
+        <div class="stat-value" id="statOut">–</div>
+        <div class="stat-label">Timed Out</div>
+      </div>
+      <div class="stat-card stat-none">
+        <div class="stat-value" id="statNone">–</div>
+        <div class="stat-label">Not Yet In</div>
+      </div>
+    </div>
+
+    <div class="section-heading">
+      <h2>Team Attendance</h2>
+      <span class="section-sub">Tap any card to view their log or add a note</span>
+    </div>
+
+    <div class="grid-toolbar">
+      <div class="grid-search">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="empSearchInput" placeholder="Search employee…" oninput="handleGridFilterChange()">
+      </div>
+      <div class="grid-filter-pills" id="gridFilterPills">
+        <button type="button" class="filter-pill active" data-filter="all" onclick="setGridFilter('all')">All</button>
+        <button type="button" class="filter-pill" data-filter="in" onclick="setGridFilter('in')">Timed In</button>
+        <button type="button" class="filter-pill" data-filter="out" onclick="setGridFilter('out')">Timed Out</button>
+        <button type="button" class="filter-pill" data-filter="none" onclick="setGridFilter('none')">Not Yet In</button>
       </div>
     </div>
 
@@ -927,7 +1181,7 @@
      swap in the real URL whenever you have it.
      ========================================================= */
 
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw8fo6B39cuY7rSY1XNS585o-p5cQI3TKneqva_gRTAznnjL44b5X6m7nasPWnXOEKt/exec";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyQ7GvEQWERRbrnZAlLQsTQp37SbSE7vp1iS2tswM5aDT3ulxx5g5XZxItYAQc933Jl/exec";
   const SESSION_KEY = "fa_staff_session";
 
   // Identity of the signed-in staff member, used to pin their own
@@ -1094,6 +1348,7 @@
   function showApp(email) {
     document.getElementById('userLabel').textContent = email;
     document.getElementById('userAvatar').textContent = (email || '?').charAt(0).toUpperCase();
+    document.getElementById('userDropdownEmail').textContent = email;
     document.getElementById('loginWrap').style.display = 'none';
     document.getElementById('appPage').classList.add('open');
 
@@ -1122,6 +1377,7 @@
     hideVerifyBox();
     clearStatus();
     closeMobileNav();
+    closeUserMenu();
 
     currentUserEmail = null;
     trustedNameHint = null;
@@ -1132,6 +1388,35 @@
       card.innerHTML = '<div class="my-status-loading">Loading your status…</div>';
     }
   }
+
+  /* ---------- User menu (avatar dropdown) ---------- */
+
+  function toggleUserMenu() {
+    const dropdown = document.getElementById('userDropdown');
+    if (dropdown.classList.contains('open')) closeUserMenu(); else openUserMenu();
+  }
+  function openUserMenu() {
+    closeMobileNav();
+    document.getElementById('userDropdown').classList.add('open');
+    document.getElementById('userMenuTrigger').setAttribute('aria-expanded', 'true');
+  }
+  function closeUserMenu() {
+    const dropdown = document.getElementById('userDropdown');
+    const trigger = document.getElementById('userMenuTrigger');
+    if (dropdown) dropdown.classList.remove('open');
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+  }
+  document.addEventListener('click', function (e) {
+    const dropdown = document.getElementById('userDropdown');
+    const trigger = document.getElementById('userMenuTrigger');
+    if (!dropdown || !trigger) return;
+    if (dropdown.classList.contains('open') && !dropdown.contains(e.target) && !trigger.contains(e.target)) {
+      closeUserMenu();
+    }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeUserMenu();
+  });
 
   (function restoreSession() {
     try {
@@ -1209,6 +1494,7 @@
     if (isOpen) closeMobileNav(); else openMobileNav();
   }
   function openMobileNav() {
+    closeUserMenu();
     document.getElementById('navLinks').classList.add('open');
     document.getElementById('navBackdrop').classList.add('open');
     document.getElementById('hamburgerBtn').classList.add('open');
@@ -1247,6 +1533,10 @@
   let currentData = { date: '', names: [], records: {} };
   let activeEmployee = null;
 
+  // Attendance-grid search box + status filter pills state.
+  let gridSearchTerm = '';
+  let gridStatusFilter = 'all'; // 'all' | 'in' | 'out' | 'none'
+
   function latestPunch(entries) {
     if (!entries || entries.length === 0) return null;
     return entries[entries.length - 1];
@@ -1272,14 +1562,65 @@
     return !!entry && String(entry.type || '').trim().toLowerCase() === 'in';
   }
 
+  function handleGridFilterChange() {
+    const input = document.getElementById('empSearchInput');
+    gridSearchTerm = input ? input.value.trim().toLowerCase() : '';
+    renderGrid();
+  }
+
+  function setGridFilter(filter) {
+    gridStatusFilter = filter;
+    document.querySelectorAll('.filter-pill').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-filter') === filter);
+    });
+    renderGrid();
+  }
+
+  // Quick summary counts shown above the grid — recomputed every time
+  // attendance data refreshes, independent of the search/filter state
+  // below (the stats always reflect everyone, not just what's visible).
+  function updateStats() {
+    let inCount = 0, outCount = 0, noneCount = 0;
+    currentData.names.forEach(name => {
+      const last = latestPunch(getEntriesForName(name));
+      if (!last) noneCount++;
+      else if (isPunchIn(last)) inCount++;
+      else outCount++;
+    });
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setText('statTotal', currentData.names.length);
+    setText('statIn', inCount);
+    setText('statOut', outCount);
+    setText('statNone', noneCount);
+  }
+
   function renderGrid() {
     const grid = document.getElementById('empGrid');
     grid.innerHTML = '';
-    currentData.names.forEach(name => {
+
+    const visibleNames = currentData.names.filter(name => {
+      if (gridSearchTerm && !name.toLowerCase().includes(gridSearchTerm)) return false;
+      if (gridStatusFilter === 'all') return true;
+      const last = latestPunch(getEntriesForName(name));
+      if (gridStatusFilter === 'none') return !last;
+      if (!last) return false;
+      return gridStatusFilter === 'in' ? isPunchIn(last) : !isPunchIn(last);
+    });
+
+    if (visibleNames.length === 0) {
+      grid.innerHTML = '<div class="loading">No employees match your search or filter.</div>';
+      return;
+    }
+
+    visibleNames.forEach(name => {
       const entries = getEntriesForName(name);
       const last = latestPunch(entries);
-      const statusClass = last ? (isPunchIn(last) ? 'status-in' : 'status-out') : '';
-      const statusText = last ? ((isPunchIn(last) ? 'In ' : 'Out ') + last.time) : 'No activity today';
+      const currentlyIn = isPunchIn(last);
+      const statusClass = last ? (currentlyIn ? 'status-in' : 'status-out') : '';
+      const statusText = last ? ((currentlyIn ? 'In ' : 'Out ') + last.time) : 'No activity today';
+      const chipHtml = last
+        ? '<div class="emp-status-chip ' + (currentlyIn ? 'in' : 'out') + '">' + (currentlyIn ? 'IN' : 'OUT') + '</div>'
+        : '';
 
       const card = document.createElement('div');
       card.className = 'emp-card ' + statusClass;
@@ -1288,7 +1629,7 @@
         '<div class="emp-info">' +
         '<div class="emp-name">' + name + '</div>' +
         '<div class="emp-status"><span class="dot"></span>' + statusText + '</div>' +
-        '</div>';
+        '</div>' + chipHtml;
       card.addEventListener('click', () => openModal(name));
       grid.appendChild(card);
     });
@@ -1378,6 +1719,7 @@
       if (!result.success) { showToast(result.message || 'Could not load attendance.', 'error'); return; }
       currentData = result;
       document.getElementById('dateTag').textContent = formatFullDate(result.date);
+      updateStats();
       renderGrid();
       renderMyStatus();
       if (activeEmployee) {
