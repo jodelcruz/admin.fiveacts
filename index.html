@@ -875,6 +875,113 @@
   .emp-status-chip.in { background: var(--green-light); color: var(--green-dark); }
   .emp-status-chip.out { background: #fdeaee; color: var(--certiverse-red); }
 
+  /* ── OFFICE ANNOUNCEMENT (bottom of dashboard; admin-editable) ── */
+  .announcement-section { margin-top: 20px; }
+  .announcement-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px 22px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    border-left: 4px solid var(--green);
+  }
+  .announcement-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .announcement-icon {
+    width: 22px;
+    height: 22px;
+    color: var(--green);
+    flex-shrink: 0;
+    display: flex;
+  }
+  .announcement-icon svg { width: 100%; height: 100%; }
+  .announcement-header h3 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px;
+    color: var(--black);
+    flex: 1;
+  }
+  .announcement-edit-btn {
+    background: #fff;
+    border: 1.5px solid var(--gray-light);
+    color: var(--gray-dark);
+    padding: 6px 14px;
+    border-radius: 18px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .announcement-edit-btn:hover { border-color: var(--green); color: var(--green-dark); }
+  .announcement-text {
+    font-size: 14px;
+    color: var(--gray-dark);
+    line-height: 1.6;
+    white-space: pre-line;
+  }
+  .announcement-meta {
+    font-size: 11.5px;
+    color: var(--gray-mid);
+    margin-top: 10px;
+  }
+  .announcement-empty {
+    font-size: 13px;
+    color: var(--gray-mid);
+    font-style: italic;
+  }
+  .announcement-textarea {
+    width: 100%;
+    min-height: 90px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--gray-light);
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: vertical;
+  }
+  .announcement-textarea:focus { outline: none; border-color: var(--green); }
+  .announcement-char-count {
+    font-size: 11px;
+    color: var(--gray-mid);
+    text-align: right;
+    margin-top: 4px;
+  }
+  .announcement-edit-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .announcement-save-btn, .announcement-clear-btn, .announcement-cancel-btn {
+    border: none;
+    padding: 9px 18px;
+    border-radius: 18px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .announcement-save-btn { background: var(--green); color: #fff; }
+  .announcement-save-btn:hover { background: var(--green-dark); }
+  .announcement-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .announcement-clear-btn { background: #fff; border: 1.5px solid var(--certiverse-red); color: var(--certiverse-red); }
+  .announcement-clear-btn:hover { background: var(--certiverse-red); color: #fff; }
+  .announcement-clear-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .announcement-cancel-btn { background: #fff; border: 1.5px solid var(--gray-light); color: var(--gray-dark); }
+  .announcement-cancel-btn:hover { border-color: var(--gray-mid); }
+  .announcement-error {
+    font-size: 12px;
+    color: var(--certiverse-red);
+    margin-top: 10px;
+    display: none;
+  }
+  .announcement-error.show { display: block; }
+
   /* ── PROFILE MODAL ── */
   .modal-overlay {
     display: none;
@@ -1431,6 +1538,10 @@
       <div class="emp-grid" id="empGrid">
         <div class="loading">Loading attendance…</div>
       </div>
+
+      <div class="announcement-section" id="announcementSection" style="display:none;">
+        <div class="announcement-card" id="announcementCard"></div>
+      </div>
     </div>
 
     <div id="adminView" style="display:none;">
@@ -1942,7 +2053,7 @@
     return PERSON_ICON_SVG;
   }
 
-  let currentData = { date: '', names: [], records: {}, pinStatus: {}, photos: {}, lastKnownPunch: {} };
+  let currentData = { date: '', names: [], records: {}, pinStatus: {}, photos: {}, lastKnownPunch: {}, announcement: { text: '', updatedBy: '', updatedAt: '' } };
   let activeEmployee = null;
 
   // Attendance-grid search box + status filter pills state.
@@ -2437,6 +2548,7 @@
       document.getElementById('dateTag').textContent = formatFullDate(result.date);
       renderGrid();
       renderMyStatus();
+      renderAnnouncement();
       if (activeEmployee) {
         renderPunchLog(getEntriesForName(activeEmployee));
         updateModalPunchButtons(activeEmployee);
@@ -2854,6 +2966,192 @@
         '<div class="my-status-line muted">Not linked to an attendance profile yet</div>' +
         '</div>';
     }
+  }
+
+  /* ---------- Office announcement (bottom of dashboard, admin-editable) ---------- */
+
+  // Matches Code.gs's ANNOUNCEMENT_MAX_LENGTH — kept in sync so the
+  // character counter and client-side validation match what the
+  // backend will actually accept.
+  const ANNOUNCEMENT_MAX_LENGTH_JS = 500;
+
+  const ANNOUNCEMENT_ICON_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M3 11v2a2 2 0 0 0 2 2h1l3 5V6L6 11H5a2 2 0 0 0-2 2Z"/>' +
+    '<path d="M13 8a4 4 0 0 1 0 8"/>' +
+    '<path d="M17 5a8 8 0 0 1 0 14"/>' +
+    '</svg>';
+
+  let editingAnnouncement = false;
+
+  function formatAnnouncementDate(isoString) {
+    if (!isoString) return '';
+    try {
+      return new Date(isoString).toLocaleString('en-US', {
+        timeZone: 'Asia/Manila', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit'
+      }) + ' PST';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  // Only re-renders when NOT actively being edited — same lesson as the
+  // PIN section: a background poll (every 15s) blindly rebuilding this
+  // would wipe out an admin's in-progress typing in the textarea.
+  function renderAnnouncement() {
+    if (editingAnnouncement) return;
+
+    const section = document.getElementById('announcementSection');
+    const card = document.getElementById('announcementCard');
+    if (!section || !card) return;
+
+    const ann = currentData.announcement || { text: '', updatedBy: '', updatedAt: '' };
+    const hasText = !!(ann.text && ann.text.trim());
+
+    // Regular staff never see an empty announcement card — only admins
+    // need it visible when there's nothing posted yet, so they have a
+    // quick way to add one.
+    if (!hasText && !currentIsAdmin) {
+      section.style.display = 'none';
+      return;
+    }
+    section.style.display = 'block';
+
+    const editBtnHtml = currentIsAdmin
+      ? '<button type="button" class="announcement-edit-btn" id="announcementEditBtn">' + (hasText ? 'Edit' : 'Add Announcement') + '</button>'
+      : '';
+
+    const metaHtml = hasText && ann.updatedAt
+      ? '<div class="announcement-meta">Posted ' + formatAnnouncementDate(ann.updatedAt) + (ann.updatedBy ? ' by ' + escapeHtml(ann.updatedBy) : '') + '</div>'
+      : '';
+
+    const bodyHtml = hasText
+      ? '<div class="announcement-text">' + escapeHtml(ann.text) + '</div>' + metaHtml
+      : '<div class="announcement-empty">No announcements right now.</div>';
+
+    card.innerHTML =
+      '<div class="announcement-header">' +
+      '<span class="announcement-icon">' + ANNOUNCEMENT_ICON_SVG + '</span>' +
+      '<h3>Office Announcement</h3>' + editBtnHtml +
+      '</div>' + bodyHtml;
+
+    const editBtn = document.getElementById('announcementEditBtn');
+    if (editBtn) editBtn.addEventListener('click', startEditAnnouncement);
+  }
+
+  function startEditAnnouncement() {
+    if (!currentIsAdmin) {
+      showToast('Admin access required.', 'error');
+      return;
+    }
+    editingAnnouncement = true;
+
+    const card = document.getElementById('announcementCard');
+    const currentText = (currentData.announcement && currentData.announcement.text) || '';
+    const hasExisting = !!currentText.trim();
+
+    card.innerHTML =
+      '<div class="announcement-header">' +
+      '<span class="announcement-icon">' + ANNOUNCEMENT_ICON_SVG + '</span>' +
+      '<h3>' + (hasExisting ? 'Edit Announcement' : 'Add Announcement') + '</h3>' +
+      '</div>' +
+      '<textarea class="announcement-textarea" id="announcementInput" maxlength="' + ANNOUNCEMENT_MAX_LENGTH_JS + '" placeholder="Write an office announcement…">' + escapeHtml(currentText) + '</textarea>' +
+      '<div class="announcement-char-count" id="announcementCharCount"></div>' +
+      '<div class="announcement-edit-actions">' +
+      '<button type="button" class="announcement-save-btn" id="announcementSaveBtn">Save</button>' +
+      (hasExisting ? '<button type="button" class="announcement-clear-btn" id="announcementClearBtn">Clear</button>' : '') +
+      '<button type="button" class="announcement-cancel-btn" id="announcementCancelBtn">Cancel</button>' +
+      '</div>' +
+      '<div class="announcement-error" id="announcementError"></div>';
+
+    const textarea = document.getElementById('announcementInput');
+    const saveBtn = document.getElementById('announcementSaveBtn');
+    const clearBtn = document.getElementById('announcementClearBtn');
+    const cancelBtn = document.getElementById('announcementCancelBtn');
+    if (textarea) { textarea.addEventListener('input', updateAnnouncementCharCount); textarea.focus(); }
+    if (saveBtn) saveBtn.addEventListener('click', saveAnnouncement);
+    if (clearBtn) clearBtn.addEventListener('click', clearAnnouncement);
+    if (cancelBtn) cancelBtn.addEventListener('click', cancelEditAnnouncement);
+    updateAnnouncementCharCount();
+  }
+
+  function cancelEditAnnouncement() {
+    editingAnnouncement = false;
+    renderAnnouncement();
+  }
+
+  function updateAnnouncementCharCount() {
+    const textarea = document.getElementById('announcementInput');
+    const counter = document.getElementById('announcementCharCount');
+    if (!textarea || !counter) return;
+    counter.textContent = textarea.value.length + ' / ' + ANNOUNCEMENT_MAX_LENGTH_JS;
+  }
+
+  function showAnnouncementError(message) {
+    const el = document.getElementById('announcementError');
+    if (!el) return;
+    el.textContent = message;
+    el.classList.add('show');
+  }
+
+  async function saveAnnouncement() {
+    if (!currentIsAdmin) {
+      showToast('Admin access required.', 'error');
+      return;
+    }
+    const textarea = document.getElementById('announcementInput');
+    const saveBtn = document.getElementById('announcementSaveBtn');
+    const errorEl = document.getElementById('announcementError');
+    if (errorEl) errorEl.classList.remove('show');
+
+    const text = textarea ? textarea.value.trim() : '';
+    if (text.length > ANNOUNCEMENT_MAX_LENGTH_JS) {
+      showAnnouncementError('Announcement must be ' + ANNOUNCEMENT_MAX_LENGTH_JS + ' characters or fewer.');
+      return;
+    }
+
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+    try {
+      const result = await jsonp({ action: 'setAnnouncement', email: currentUserEmail, adminToken: currentAdminToken, text: text });
+      console.debug('[Announcement] setAnnouncement response:', result);
+      if (result.success) {
+        showToast(text ? 'Announcement posted.' : 'Announcement cleared.', 'info');
+        editingAnnouncement = false;
+        await loadAttendance();
+      } else {
+        showAnnouncementError(result.message || 'Could not save announcement.');
+      }
+    } catch (err) {
+      console.error('[Announcement] save failed:', err);
+      showAnnouncementError(err.message || 'Could not save announcement.');
+    }
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
+  }
+
+  async function clearAnnouncement() {
+    if (!currentIsAdmin) {
+      showToast('Admin access required.', 'error');
+      return;
+    }
+    if (!window.confirm('Remove the current announcement?')) return;
+
+    const clearBtn = document.getElementById('announcementClearBtn');
+    if (clearBtn) clearBtn.disabled = true;
+    try {
+      const result = await jsonp({ action: 'setAnnouncement', email: currentUserEmail, adminToken: currentAdminToken, text: '' });
+      console.debug('[Announcement] clear response:', result);
+      if (result.success) {
+        showToast('Announcement cleared.', 'info');
+        editingAnnouncement = false;
+        await loadAttendance();
+      } else {
+        showAnnouncementError(result.message || 'Could not clear announcement.');
+      }
+    } catch (err) {
+      console.error('[Announcement] clear failed:', err);
+      showAnnouncementError(err.message || 'Could not clear announcement.');
+    }
+    if (clearBtn) clearBtn.disabled = false;
   }
 </script>
 </body>
