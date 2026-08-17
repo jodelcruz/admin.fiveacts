@@ -500,6 +500,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
   }
   .my-status-avatar svg { width: 25px; height: 25px; }
   .my-status-card.status-out .my-status-avatar { background: #fdeaee; color: var(--certiverse-red); }
@@ -844,6 +845,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
   }
   .emp-avatar svg { width: 24px; height: 24px; }
   .emp-card.status-out .emp-avatar { background: var(--gray-light); color: var(--gray-mid); }
@@ -912,6 +914,7 @@
     gap: 14px;
     margin-bottom: 18px;
   }
+  .modal-avatar-wrap { position: relative; flex-shrink: 0; }
   .modal-avatar {
     width: 56px; height: 56px;
     border-radius: 50%;
@@ -920,8 +923,29 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
   }
   .modal-avatar svg { width: 30px; height: 30px; }
+  .photo-edit-btn {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--green);
+    color: #fff;
+    border: 2px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.15s;
+  }
+  .photo-edit-btn:hover { background: var(--green-dark); }
+  .photo-edit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .photo-edit-btn svg { width: 13px; height: 13px; }
   .modal-header h2 {
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 24px;
@@ -1440,7 +1464,13 @@
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal()">&times;</button>
     <div class="modal-header">
-      <div class="modal-avatar" id="modalAvatar"></div>
+      <div class="modal-avatar-wrap">
+        <div class="modal-avatar" id="modalAvatar"></div>
+        <button type="button" class="photo-edit-btn" id="photoEditBtn" style="display:none;" title="Change photo" onclick="document.getElementById('photoFileInput').click();">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z"/><circle cx="12" cy="13" r="4"/></svg>
+        </button>
+        <input type="file" id="photoFileInput" accept="image/*" style="display:none;">
+      </div>
       <div>
         <h2 id="modalName"></h2>
         <div class="modal-date" id="modalDate"></div>
@@ -1483,7 +1513,7 @@
      slide-in drawer toggled by the hamburger button.
      ========================================================= */
 
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxbDhiO8RZG611I8lpZrLQjzp-6Gm3N-uftChRcnYmBObku-fNr3c8W6IZUvZMEn1yx/exec";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyn9rT2MBQDWCx1s72O9MJ5LLqjB1YCYehiOy-vZKYoUrQ-ekpbE0iVs9QNVn3g2bZK/exec";
   const SESSION_KEY = "fa_staff_session";
 
   // Identity of the signed-in staff member, used to pin their own
@@ -1863,7 +1893,19 @@
     '<path d="M4.5 20c1-3.8 4.2-6 7.5-6s6.5 2.2 7.5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' +
     '</svg>';
 
-  let currentData = { date: '', names: [], records: {}, pinStatus: {} };
+  // Returns an <img> for a profile photo if this employee has uploaded
+  // one, otherwise the generic placeholder icon — used everywhere an
+  // avatar is rendered (grid cards, My Status, the profile modal) so
+  // they all stay in sync automatically once a photo is added.
+  function avatarHtmlFor(name) {
+    const photo = currentData.photos && currentData.photos[name];
+    if (photo) {
+      return '<img src="data:image/jpeg;base64,' + photo + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+    }
+    return PERSON_ICON_SVG;
+  }
+
+  let currentData = { date: '', names: [], records: {}, pinStatus: {}, photos: {}, lastKnownPunch: {} };
   let activeEmployee = null;
 
   // Attendance-grid search box + status filter pills state.
@@ -1895,6 +1937,38 @@
     return !!entry && String(entry.type || '').trim().toLowerCase() === 'in';
   }
 
+  // Mirrors getEntriesForName's resilient lookup, for the "most recent
+  // punch across all dates" map (see lastKnownPunch in Code.gs).
+  function getLastKnownPunchForName(name) {
+    const map = currentData.lastKnownPunch;
+    if (!map) return null;
+    if (Object.prototype.hasOwnProperty.call(map, name)) return map[name] || null;
+    const target = normalizeForMatch(name);
+    const key = Object.keys(map).find(k => normalizeForMatch(k) === target);
+    return key ? (map[key] || null) : null;
+  }
+
+  // THE ACTUAL FIX for "can't time out if the date changed": status
+  // used to be based only on today's punches, so forgetting to time out
+  // yesterday (or any earlier day) made today look like a fresh day with
+  // zero activity — the dashboard assumed "out" and disabled Time Out,
+  // leaving no way to close that forgotten session. This checks today's
+  // punches first (unchanged behavior for the normal case), and only
+  // falls back to the person's last known punch from any earlier day
+  // when today genuinely has nothing yet — so someone still clocked in
+  // from yesterday correctly shows as "in" and can time out today.
+  function getCurrentStatusForName(name) {
+    const todayLast = latestPunch(getEntriesForName(name));
+    if (todayLast) {
+      return { type: todayLast.type, time: todayLast.time, date: currentData.date, isToday: true };
+    }
+    const prior = getLastKnownPunchForName(name);
+    if (prior) {
+      return { type: prior.type, time: prior.time, date: prior.date, isToday: false };
+    }
+    return null;
+  }
+
   function handleGridFilterChange() {
     const input = document.getElementById('empSearchInput');
     gridSearchTerm = input ? input.value.trim().toLowerCase() : '';
@@ -1916,10 +1990,10 @@
     const visibleNames = currentData.names.filter(name => {
       if (gridSearchTerm && !name.toLowerCase().includes(gridSearchTerm)) return false;
       if (gridStatusFilter === 'all') return true;
-      const last = latestPunch(getEntriesForName(name));
-      if (gridStatusFilter === 'none') return !last;
-      if (!last) return false;
-      return gridStatusFilter === 'in' ? isPunchIn(last) : !isPunchIn(last);
+      const status = getCurrentStatusForName(name);
+      if (gridStatusFilter === 'none') return !status;
+      if (!status) return false;
+      return gridStatusFilter === 'in' ? isPunchIn(status) : !isPunchIn(status);
     });
 
     if (visibleNames.length === 0) {
@@ -1928,19 +2002,32 @@
     }
 
     visibleNames.forEach(name => {
-      const entries = getEntriesForName(name);
-      const last = latestPunch(entries);
-      const currentlyIn = isPunchIn(last);
-      const statusClass = last ? (currentlyIn ? 'status-in' : 'status-out') : '';
-      const statusText = last ? ((currentlyIn ? 'In ' : 'Out ') + last.time) : 'No activity today';
-      const chipHtml = last
+      const status = getCurrentStatusForName(name);
+      const currentlyIn = isPunchIn(status);
+      const statusClass = status ? (currentlyIn ? 'status-in' : 'status-out') : '';
+      let statusText;
+      if (!status) {
+        statusText = 'No activity today';
+      } else if (status.isToday) {
+        statusText = (currentlyIn ? 'In ' : 'Out ') + status.time;
+      } else if (currentlyIn) {
+        // Carried over from an earlier day — the actionable case: they
+        // forgot to time out, so make that obvious rather than showing
+        // "no activity today" (which would hide that they're still in).
+        statusText = 'Still in since ' + formatAdminDate(status.date);
+      } else {
+        // Last known state was already "out" from an earlier day —
+        // functionally the same as no activity today.
+        statusText = 'No activity today';
+      }
+      const chipHtml = status
         ? '<div class="emp-status-chip ' + (currentlyIn ? 'in' : 'out') + '">' + (currentlyIn ? 'IN' : 'OUT') + '</div>'
         : '';
 
       const card = document.createElement('div');
       card.className = 'emp-card ' + statusClass;
       card.innerHTML =
-        '<div class="emp-avatar">' + PERSON_ICON_SVG + '</div>' +
+        '<div class="emp-avatar">' + avatarHtmlFor(name) + '</div>' +
         '<div class="emp-info">' +
         '<div class="emp-name">' + name + '</div>' +
         '<div class="emp-status"><span class="dot"></span>' + statusText + '</div>' +
@@ -1977,12 +2064,15 @@
   // current status — already timed in? "Time In" is disabled (can't
   // double-punch in); already timed out (or no activity yet)? "Time
   // Out" is disabled. Keeps people from logging a duplicate/out-of-order
-  // punch by mistake.
+  // punch by mistake. Uses getCurrentStatusForName (not just today's
+  // punches) so someone still clocked in from an earlier day correctly
+  // gets Time Out enabled today, instead of looking like a fresh day
+  // with nothing to time out of.
   function updateModalPunchButtons(name) {
     const btnIn = document.getElementById('btnTimeIn');
     const btnOut = document.getElementById('btnTimeOut');
     if (!btnIn || !btnOut) return;
-    const currentlyIn = isPunchIn(latestPunch(getEntriesForName(name)));
+    const currentlyIn = isPunchIn(getCurrentStatusForName(name));
     btnIn.disabled = currentlyIn;
     btnOut.disabled = !currentlyIn;
   }
@@ -2129,18 +2219,21 @@
   }
 
   // Punching (and the note field that goes with it) is only meaningful
-  // on your own profile — everyone else's card is view-only.
+  // on your own profile — everyone else's card is view-only. Same rule
+  // for the photo-edit button: you can only change your own picture.
   function applyProfileAccessState(name) {
     const own = isOwnProfile(name);
     const punchActions = document.querySelector('.punch-actions');
     const noteField = document.querySelector('.note-field');
+    const photoEditBtn = document.getElementById('photoEditBtn');
     if (punchActions) punchActions.style.display = own ? 'flex' : 'none';
     if (noteField) noteField.style.display = own ? 'block' : 'none';
+    if (photoEditBtn) photoEditBtn.style.display = own ? 'flex' : 'none';
   }
 
   function openModal(name) {
     activeEmployee = name;
-    document.getElementById('modalAvatar').innerHTML = PERSON_ICON_SVG;
+    document.getElementById('modalAvatar').innerHTML = avatarHtmlFor(name);
     document.getElementById('modalName').textContent = name;
     document.getElementById('modalDate').textContent = formatFullDate(currentData.date);
     document.getElementById('noteInput').value = '';
@@ -2162,6 +2255,104 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') closeModal();
   });
+
+  /* ---------- Profile photo upload (own profile only) ---------- */
+
+  // Resizes/center-crops the chosen image down to a small square JPEG
+  // via canvas before it ever leaves the browser — keeps the resulting
+  // base64 payload small enough for chunked upload, and gives every
+  // avatar a consistent square source image regardless of what the
+  // original photo's aspect ratio was.
+  function resizeImageToBase64(file, maxSize, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Could not read the selected file.'));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Could not read that image.'));
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = maxSize;
+          canvas.height = maxSize;
+          const ctx = canvas.getContext('2d');
+          // Cover-crop: scale so the shorter side fills maxSize, then center-crop the rest.
+          const scale = Math.max(maxSize / img.width, maxSize / img.height);
+          const w = img.width * scale;
+          const h = img.height * scale;
+          const dx = (maxSize - w) / 2;
+          const dy = (maxSize - h) / 2;
+          ctx.drawImage(img, dx, dy, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(dataUrl.split(',')[1]); // strip the "data:image/jpeg;base64," prefix
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Sends the (already-small) base64 image to the backend in pieces —
+  // GET/JSONP URLs have practical length limits far below what even a
+  // heavily-compressed thumbnail needs. The backend reassembles these
+  // via CacheService (see uploadPhotoChunk in Code.gs) and only writes
+  // to the Photos sheet once the final chunk arrives.
+  async function uploadPhotoChunks(name, base64Data) {
+    const CHUNK_SIZE = 1200;
+    const chunks = [];
+    for (let i = 0; i < base64Data.length; i += CHUNK_SIZE) {
+      chunks.push(base64Data.slice(i, i + CHUNK_SIZE));
+    }
+    const uploadId = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    for (let i = 0; i < chunks.length; i++) {
+      const result = await jsonp({
+        action: 'uploadPhotoChunk',
+        name: name,
+        email: currentUserEmail,
+        uploadId: uploadId,
+        chunkIndex: i,
+        totalChunks: chunks.length,
+        chunkData: chunks[i]
+      });
+      console.debug('[Photo] chunk ' + (i + 1) + '/' + chunks.length + ' response:', result);
+      if (!result.success) {
+        throw new Error(result.message || 'Photo upload failed.');
+      }
+    }
+  }
+
+  async function handlePhotoFileSelected(event) {
+    const file = event.target.files && event.target.files[0];
+    event.target.value = ''; // reset so choosing the same file again still fires 'change'
+    if (!file) return;
+
+    const name = activeEmployee;
+    if (!name || !isOwnProfile(name)) {
+      showToast('You can only change your own photo.', 'error');
+      return;
+    }
+    if (!file.type || file.type.indexOf('image/') !== 0) {
+      showToast('Please choose an image file.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('photoEditBtn');
+    if (btn) btn.disabled = true;
+    try {
+      const base64 = await resizeImageToBase64(file, 160, 0.72);
+      await uploadPhotoChunks(name, base64);
+      showToast('Profile photo updated.', 'info');
+      await loadAttendance(); // refreshes currentData.photos so every avatar picks up the new image
+      if (activeEmployee === name) {
+        document.getElementById('modalAvatar').innerHTML = avatarHtmlFor(name);
+      }
+    } catch (err) {
+      console.error('[Photo] upload failed:', err);
+      showToast(err.message || 'Could not upload photo.', 'error');
+    }
+    if (btn) btn.disabled = false;
+  }
+
+  document.getElementById('photoFileInput').addEventListener('change', handlePhotoFileSelected);
 
   function showToast(message, kind) {
     const el = document.getElementById('toast');
@@ -2368,14 +2559,18 @@
       if (openIn) sessions.push({ date, name, timeIn: openIn.time, timeOut: null, note: openIn.note }); // still clocked in
     });
 
-    // Most recent day first, then alphabetical by name, then most
-    // recent session first within that day+name.
+    // Most recent first, full stop — sorted by actual date+time only,
+    // not grouped by name first. (Previously this sorted by name ahead
+    // of time within a day, which clustered each person's sessions
+    // together instead of showing the truly most recent one on top
+    // regardless of whose it was.) Name is only a tie-breaker for the
+    // rare case for two sessions sharing the exact same date+time.
     sessions.sort((a, b) => {
       if (a.date !== b.date) return a.date < b.date ? 1 : -1;
-      if (a.name !== b.name) return a.name.localeCompare(b.name);
       const aKey = timeToMinutes(a.timeIn || a.timeOut);
       const bKey = timeToMinutes(b.timeIn || b.timeOut);
-      return bKey - aKey;
+      if (aKey !== bKey) return bKey - aKey;
+      return a.name.localeCompare(b.name);
     });
     return sessions;
   }
@@ -2555,19 +2750,25 @@
         sessionStorage.setItem(SESSION_KEY, JSON.stringify(existing));
       } catch (e) { /* no-op */ }
 
-      const entries = getEntriesForName(name);
-      const last = latestPunch(entries);
-      const currentlyIn = isPunchIn(last);
-      const statusClass = last ? (currentlyIn ? 'status-in' : 'status-out') : '';
-      const statusText = last
-        ? ((currentlyIn ? 'Timed in at ' : 'Timed out at ') + last.time)
-        : 'No activity yet today';
+      const status = getCurrentStatusForName(name);
+      const currentlyIn = isPunchIn(status);
+      const statusClass = status ? (currentlyIn ? 'status-in' : 'status-out') : '';
+      let statusText;
+      if (!status) {
+        statusText = 'No activity yet today';
+      } else if (status.isToday) {
+        statusText = (currentlyIn ? 'Timed in at ' : 'Timed out at ') + status.time;
+      } else if (currentlyIn) {
+        statusText = 'Still timed in since ' + formatAdminDate(status.date);
+      } else {
+        statusText = 'No activity yet today';
+      }
 
       card.className = 'my-status-card ' + statusClass;
       card.onclick = function () { openModal(name); };
       card.innerHTML =
         '<div class="my-status-badge">You</div>' +
-        '<div class="my-status-avatar">' + PERSON_ICON_SVG + '</div>' +
+        '<div class="my-status-avatar">' + avatarHtmlFor(name) + '</div>' +
         '<div class="my-status-info">' +
         '<div class="my-status-name">' + escapeHtml(name) + '</div>' +
         '<div class="my-status-line"><span class="dot"></span>' + statusText + '</div>' +
