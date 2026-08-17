@@ -213,13 +213,11 @@
     z-index: 90;
   }
   .app-nav-inner {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 10px 20px;
-    position: relative;
+    max-width: 100%;
+    margin: 0;
+    padding: 10px 24px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 16px;
     min-height: 48px;
   }
@@ -274,13 +272,10 @@
   .app-nav-links {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    flex-wrap: nowrap;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    max-width: calc(100% - 340px);
+    flex: 1;
+    min-width: 0;
     overflow-x: auto;
     scrollbar-width: none;
   }
@@ -430,9 +425,9 @@
   .panel-header {
     background: #fff;
     border-radius: 16px;
-    padding: 24px 24px 8px;
+    padding: 16px 22px 6px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-    margin-bottom: 18px;
+    margin-bottom: 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -442,13 +437,13 @@
   .panel-header-left { flex: 1; min-width: 180px; }
   .panel-header h1 {
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 36px;
+    font-size: 28px;
     color: var(--black);
   }
   .panel-header .date-tag {
     font-size: 13px;
     color: var(--gray-mid);
-    margin-bottom: 16px;
+    margin-bottom: 10px;
   }
 
   /* ── MY STATUS CARD (signed-in employee's own attendance, pinned beside clock) ── */
@@ -695,6 +690,489 @@
     margin-bottom: 24px;
   }
   .coming-soon-card .back-to-dashboard-btn { margin-bottom: 0; }
+
+  /* ── ORGANIZATIONAL CHART ── */
+  .org-chart-wrap {
+    background: #fff;
+    border-radius: 14px;
+    padding: 44px 24px 52px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    overflow-x: auto;
+  }
+  .org-tree {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 980px;
+    width: max-content;
+    margin: 0 auto;
+  }
+  .org-tier-label {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    color: var(--gray-mid);
+    margin-bottom: 14px;
+  }
+
+  .org-node {
+    background: #fff;
+    border: 1px solid var(--gray-light);
+    border-radius: 14px;
+    padding: 14px 22px 14px 14px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.07);
+    min-width: 210px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .org-node:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(0,0,0,0.11); }
+  .org-node-president {
+    border: none;
+    background: linear-gradient(135deg, #2f9e3e 0%, #257a32 100%);
+    box-shadow: 0 10px 28px rgba(46,150,62,0.28);
+    min-width: 230px;
+    padding: 16px 26px 16px 16px;
+  }
+  .org-node-president .org-node-title { color: rgba(255,255,255,0.75); }
+  .org-node-president .org-node-name { color: #fff; font-size: 20px; }
+
+  .org-avatar {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .org-avatar-president {
+    width: 50px; height: 50px; min-width: 50px;
+    background: rgba(255,255,255,0.22);
+    color: #fff;
+    font-size: 18px;
+    border: 1.5px solid rgba(255,255,255,0.4);
+  }
+  .org-avatar-manager {
+    background: var(--green-light);
+    color: var(--green-dark);
+    border: 1.5px solid #cfe8d4;
+  }
+
+  .org-node-title {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-mid);
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+  .org-node-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--black);
+    white-space: nowrap;
+  }
+
+  .org-vline { width: 2px; height: 26px; background: var(--gray-light); }
+  .org-vline-team { height: 20px; }
+
+  /* The classic "family tree" connector trick: each branch draws a
+     horizontal segment spanning its own flex width, except the first
+     (only right half) and last (only left half) — stitched together
+     across however many branches there are, this forms one continuous
+     bar from the first node's center to the last node's center,
+     without needing to know the branch count up front. Each branch
+     then drops its own vertical tick down to its node. Small circular
+     "junction" dots mark where the line meets each node, matching the
+     look of professional org-chart tools. */
+  .org-managers-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 40px;
+  }
+  .org-branch {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 26px;
+  }
+  .org-branch::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--gray-light);
+  }
+  .org-branch:first-child::before { left: 50%; }
+  .org-branch:last-child::before { right: 50%; }
+  .org-branch::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 2px;
+    height: 26px;
+    background: var(--gray-light);
+    transform: translateX(-1px);
+  }
+  .org-branch-dot {
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    transform: translateX(-4px);
+    box-shadow: 0 0 0 3px #fff;
+  }
+
+  .org-team-box {
+    background: #fafbfc;
+    border: 1px solid #e6e9ec;
+    border-radius: 12px;
+    padding: 14px 16px 16px;
+    width: 100%;
+    max-width: 260px;
+    box-sizing: border-box;
+  }
+  .org-team-box-wide { max-width: 420px; }
+  .org-team-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--gray-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  .org-team-count {
+    background: var(--green-light);
+    color: var(--green-dark);
+    font-size: 10px;
+    font-weight: 800;
+    padding: 1px 7px;
+    border-radius: 10px;
+  }
+  .org-team-members {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .org-team-members-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .org-member-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid var(--gray-light);
+    border-radius: 8px;
+    padding: 6px 10px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .org-member-chip:hover { border-color: var(--green); box-shadow: 0 3px 10px rgba(0,0,0,0.06); }
+  .org-member-avatar {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border-radius: 50%;
+    background: #eef1f3;
+    color: var(--gray-dark);
+    font-size: 10px;
+    font-weight: 800;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .org-member-name {
+    font-size: 12.5px;
+    color: var(--gray-dark);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── BIRTHDAY CALENDAR ── */
+  .bday-header-actions { display: flex; align-items: center; gap: 10px; }
+  .bday-add-btn {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .bday-add-btn:hover { background: var(--green-dark); }
+
+  .bday-form-panel {
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px 22px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    border-left: 4px solid var(--green);
+    margin-bottom: 16px;
+    max-width: 420px;
+  }
+  .bday-form-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--black);
+    margin-bottom: 14px;
+  }
+  .bday-form-row { margin-bottom: 14px; }
+  .bday-form-row label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--gray-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 6px;
+  }
+  .bday-form-row input[type="text"],
+  .bday-form-row input[type="number"],
+  .bday-form-row select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--gray-light);
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+  .bday-form-row input:focus, .bday-form-row select:focus { outline: none; border-color: var(--green); }
+  .bday-form-row-inline { display: flex; gap: 12px; }
+  .bday-form-row-inline > div { flex: 1; }
+  .bday-form-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--gray-dark);
+    margin-bottom: 16px;
+    cursor: pointer;
+  }
+  .bday-form-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .bday-save-btn, .bday-delete-btn-form, .bday-cancel-btn {
+    border: none;
+    padding: 9px 18px;
+    border-radius: 18px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .bday-save-btn { background: var(--green); color: #fff; }
+  .bday-save-btn:hover { background: var(--green-dark); }
+  .bday-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .bday-delete-btn-form { background: #fff; border: 1.5px solid var(--certiverse-red); color: var(--certiverse-red); }
+  .bday-delete-btn-form:hover { background: var(--certiverse-red); color: #fff; }
+  .bday-cancel-btn { background: #fff; border: 1.5px solid var(--gray-light); color: var(--gray-dark); }
+  .bday-cancel-btn:hover { border-color: var(--gray-mid); }
+  .bday-form-error {
+    font-size: 12px;
+    color: var(--certiverse-red);
+    margin-top: 10px;
+    display: none;
+  }
+  .bday-form-error.show { display: block; }
+
+  .bday-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .bday-month-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 16px 18px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    border: 1.5px solid transparent;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .bday-month-card.bday-current-month {
+    border-color: var(--green);
+    box-shadow: 0 8px 24px rgba(46,150,62,0.16);
+  }
+  .bday-month-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 2px solid var(--gray-light);
+  }
+  .bday-month-header span:first-child {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--black);
+    letter-spacing: 0.3px;
+  }
+  .bday-count {
+    background: var(--green-light);
+    color: var(--green-dark);
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 9px;
+    border-radius: 12px;
+  }
+  .bday-current-month .bday-count { background: var(--green); color: #fff; }
+  .bday-list { display: flex; flex-direction: column; gap: 7px; }
+  .bday-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+  .bday-date {
+    font-weight: 700;
+    color: var(--green-dark);
+    min-width: 48px;
+    flex-shrink: 0;
+    text-align: center;
+  }
+  .bday-name {
+    color: var(--gray-dark);
+    font-size: 15px;
+    font-weight: 600;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .bday-row-anniversary .bday-date { color: #b6912a; }
+  .bday-row-anniversary .bday-name { font-weight: 700; color: #8a6d1a; }
+  .bday-empty {
+    font-size: 12.5px;
+    color: var(--gray-mid);
+    font-style: italic;
+  }
+  .bday-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+  .bday-edit-btn, .bday-delete-btn {
+    background: none;
+    border: none;
+    color: var(--gray-mid);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px 5px;
+    border-radius: 5px;
+    line-height: 1;
+    transition: background 0.15s, color 0.15s;
+  }
+  .bday-edit-btn:hover { color: var(--green-dark); background: var(--green-light); }
+  .bday-delete-btn:hover { color: var(--certiverse-red); background: #fdeaee; }
+  .bday-delete-btn { font-size: 16px; font-weight: 700; }
+
+  /* ── APAC SHIFT SCHEDULE ── */
+  .apac-legend {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .apac-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--gray-mid);
+  }
+  .apac-table-wrap {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    overflow-x: auto;
+  }
+  .apac-table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+  .apac-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--green);
+    color: #fff;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 12px 14px;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .apac-table th.apac-shift-col { background: var(--green-dark); }
+  .apac-table td {
+    padding: 14px;
+    border-bottom: 1px solid var(--gray-light);
+    vertical-align: top;
+  }
+  .apac-table tbody tr:last-child td { border-bottom: none; }
+  .apac-table td.apac-shift-col {
+    background: #fafcfa;
+    min-width: 150px;
+  }
+  .apac-shift-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--black);
+  }
+  .apac-shift-time {
+    font-size: 12px;
+    color: var(--gray-mid);
+    margin-top: 2px;
+  }
+  .apac-day-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 130px;
+  }
+  .apac-crew-chip {
+    background: #f2f4f2;
+    color: var(--gray-dark);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .apac-crew-chip.cs { background: var(--green-light); color: var(--green-dark); }
+  .apac-crew-chip.tbc { background: #cdeef0; color: #0d6b73; font-style: italic; }
 
   /* ── ADMIN DASHBOARD (manager/HR only) ── */
   .admin-panel-header {
@@ -1247,8 +1725,8 @@
   /* ---------- Tablet tweaks (also apply down through mobile) ---------- */
   @media (max-width: 1024px) {
     .app-main { padding: 20px 16px 48px; }
-    .panel-header { padding: 20px 20px 6px; }
-    .panel-header h1 { font-size: 30px; }
+    .panel-header { padding: 14px 18px 5px; }
+    .panel-header h1 { font-size: 24px; }
     .emp-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
     .digital-clock-wrap { padding: 12px 22px; }
     .digital-time { font-size: 40px; }
@@ -1257,6 +1735,7 @@
     .my-status-card { min-width: 220px; padding: 12px 16px; gap: 12px; }
     .my-status-avatar { width: 40px; height: 40px; min-width: 40px; }
     .my-status-avatar svg { width: 22px; height: 22px; }
+    .bday-grid { grid-template-columns: repeat(2, 1fr); }
   }
 
   /* ---------- Hamburger takes over the top nav ---------- */
@@ -1329,10 +1808,11 @@
     .app-nav-inner { flex-wrap: nowrap; }
     .app-brand span { font-size: 15px; }
     .app-user-tag { max-width: 90px; }
+    .bday-grid { grid-template-columns: 1fr; }
 
     .login-card { padding: 30px 22px; }
     .panel-header { flex-direction: row; align-items: center; }
-    .panel-header h1 { font-size: 26px; }
+    .panel-header h1 { font-size: 21px; }
 
     /* 3-column grid of compact cards instead of one wide card per row —
        the original horizontal layout (avatar | name+status | chip) is
@@ -1474,8 +1954,17 @@
         <a href="https://icare.com.ph/our-icare-mobile-app/" target="_blank" rel="noopener">
           <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.2s-7.2-4.4-9.6-9A5 5 0 0 1 12 6.3 5 5 0 0 1 21.6 11c-2.4 4.6-9.6 9-9.6 9Z"/></svg></span>Benefits Guide
         </a>
-        <a href="#" id="proctoringNavLink" onclick="event.preventDefault(); showComingSoonPage();">
+        <a href="#" id="proctoringNavLink" onclick="event.preventDefault(); showComingSoonPage('Proctoring Guide');">
           <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 9 12 4.3 21.5 9 12 13.7 2.5 9Z"/><path d="M6.5 11.2v4c0 1.2 2.5 2.1 5.5 2.1s5.5-.9 5.5-2.1v-4"/><path d="M21.5 9v5.5"/></svg></span>Proctoring Guide
+        </a>
+        <a href="#" id="orgChartNavLink" onclick="event.preventDefault(); showOrgChartPage();">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/></svg></span>Organizational Chart
+        </a>
+        <a href="#" id="birthdayNavLink" onclick="event.preventDefault(); showBirthdayCalendarPage();">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-.8 1-1.4 1.8-1.4 2.6a1.4 1.4 0 0 0 2.8 0C13.4 4.8 12.8 4 12 3Z"/><path d="M4 21v-6.5a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3V21"/><path d="M3 21h18"/><path d="M9 11.5v9.5M15 11.5v9.5"/><path d="M4 17c1 .7 2 .7 3 0s2-.7 3 0 2 .7 3 0 2-.7 3 0 2 .7 3 0"/></svg></span>Birthday Calendar
+        </a>
+        <a href="#" id="apacNavLink" onclick="event.preventDefault(); showApacSchedulePage();">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a13.5 13.5 0 0 1 0 18M12 3a13.5 13.5 0 0 0 0 18"/></svg></span>APAC Schedule
         </a>
         <a href="#" id="adminNavLink" class="admin-nav-link" style="display:none;" onclick="event.preventDefault(); showAdminPage();">
           <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.3 5 6v5.5c0 4.6 3 7.9 7 9.2 4-1.3 7-4.6 7-9.2V6l-7-2.7Z"/></svg></span>Admin
@@ -1593,10 +2082,211 @@
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
             </svg>
           </div>
-          <h1>This feature is under construction</h1>
-          <p>The Proctoring Guide isn't ready yet — we're still building it out. Check back soon.</p>
+          <h1 id="comingSoonTitle">This feature is under construction</h1>
+          <p id="comingSoonMessage">The Proctoring Guide isn't ready yet — we're still building it out. Check back soon.</p>
           <button type="button" class="back-to-dashboard-btn" onclick="showDashboardPage()">&larr; Back to Dashboard</button>
         </div>
+      </div>
+    </div>
+
+    <div id="orgChartView" style="display:none;">
+      <div class="panel-header admin-panel-header">
+        <div class="panel-header-left">
+          <h1>Organizational Chart</h1>
+          <div class="date-tag">Five Acts Services Corp. &middot; 23 team members across 4 departments</div>
+        </div>
+        <button type="button" class="back-to-dashboard-btn" onclick="showDashboardPage()">&larr; Back to Dashboard</button>
+      </div>
+
+      <div class="org-chart-wrap">
+        <div class="org-tree">
+          <div class="org-tier-label">Leadership</div>
+          <div class="org-node org-node-president">
+            <div class="org-avatar org-avatar-president">EC</div>
+            <div class="org-node-body">
+              <div class="org-node-title">President</div>
+              <div class="org-node-name">Erick Cruz</div>
+            </div>
+          </div>
+
+          <div class="org-vline"></div>
+          <div class="org-tier-label">Departments</div>
+
+          <div class="org-managers-row">
+            <div class="org-branch">
+              <div class="org-branch-dot"></div>
+              <div class="org-node org-node-manager">
+                <div class="org-avatar org-avatar-manager">JC</div>
+                <div class="org-node-body">
+                  <div class="org-node-title">Operations Manager</div>
+                  <div class="org-node-name">Jodel Cruz</div>
+                </div>
+              </div>
+              <div class="org-vline org-vline-team"></div>
+              <div class="org-team-box">
+                <div class="org-team-label">Candidate Support Team <span class="org-team-count">5</span></div>
+                <div class="org-team-members">
+                  <div class="org-member-chip"><span class="org-member-avatar">MA</span><span class="org-member-name">Mary Jane Austria</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">GG</span><span class="org-member-name">Gian Garcia</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">DC</span><span class="org-member-name">Dianne Candano</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">RS</span><span class="org-member-name">Ralph Soriano</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">RM</span><span class="org-member-name">Ralph Maullion</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="org-branch">
+              <div class="org-branch-dot"></div>
+              <div class="org-node org-node-manager">
+                <div class="org-avatar org-avatar-manager">DC</div>
+                <div class="org-node-body">
+                  <div class="org-node-title">HR Manager</div>
+                  <div class="org-node-name">Dyanne Cruz</div>
+                </div>
+              </div>
+              <div class="org-vline org-vline-team"></div>
+              <div class="org-team-box">
+                <div class="org-team-label">Accountant <span class="org-team-count">1</span></div>
+                <div class="org-team-members">
+                  <div class="org-member-chip"><span class="org-member-avatar">BA</span><span class="org-member-name">Bryan Mark Adan</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="org-branch">
+              <div class="org-branch-dot"></div>
+              <div class="org-node org-node-manager">
+                <div class="org-avatar org-avatar-manager">JM</div>
+                <div class="org-node-body">
+                  <div class="org-node-title">Proctor Manager</div>
+                  <div class="org-node-name">Jeffrey Macapagal</div>
+                </div>
+              </div>
+              <div class="org-vline org-vline-team"></div>
+              <div class="org-team-box org-team-box-wide">
+                <div class="org-team-label">Proctors <span class="org-team-count">13</span></div>
+                <div class="org-team-members org-team-members-grid">
+                  <div class="org-member-chip"><span class="org-member-avatar">ST</span><span class="org-member-name">Sebastian Tamayo</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">KH</span><span class="org-member-name">Keenan Handugan</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">GR</span><span class="org-member-name">Grace Remolacio</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">RR</span><span class="org-member-name">Rachelle Raymundo</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">KA</span><span class="org-member-name">Khate Cyrelle Amil</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">KL</span><span class="org-member-name">Kathy Lyn Leonar</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">RP</span><span class="org-member-name">Rose Ann Parafina</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">BS</span><span class="org-member-name">Bobzer San Juan</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">SB</span><span class="org-member-name">Sunshine Faith Broñosa</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">MP</span><span class="org-member-name">Mark Pesico</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">JR</span><span class="org-member-name">John Paul Racines</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">RD</span><span class="org-member-name">Romina Marie Dumlao</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">MC</span><span class="org-member-name">Moses Cawil</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="birthdayCalendarView" style="display:none;">
+      <div class="panel-header admin-panel-header">
+        <div class="panel-header-left">
+          <h1>Birthday Calendar</h1>
+          <div class="date-tag" id="bdaySummary">Five Acts Services Corp.</div>
+        </div>
+        <div class="bday-header-actions">
+          <button type="button" class="bday-add-btn" id="bdayAddBtn" style="display:none;">+ Add Birthday</button>
+          <button type="button" class="back-to-dashboard-btn" onclick="showDashboardPage()">&larr; Back to Dashboard</button>
+        </div>
+      </div>
+
+      <div class="bday-form-panel" id="bdayFormPanel" style="display:none;">
+        <div class="bday-form-title" id="bdayFormTitle">Add Birthday</div>
+        <div class="bday-form-row">
+          <label for="bdayFormName">Name</label>
+          <input type="text" id="bdayFormName" maxlength="60" placeholder="e.g. Juan Dela Cruz">
+        </div>
+        <div class="bday-form-row bday-form-row-inline">
+          <div>
+            <label for="bdayFormMonth">Month</label>
+            <select id="bdayFormMonth">
+              <option value="1">January</option>
+              <option value="2">February</option>
+              <option value="3">March</option>
+              <option value="4">April</option>
+              <option value="5">May</option>
+              <option value="6">June</option>
+              <option value="7">July</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
+          </div>
+          <div>
+            <label for="bdayFormDay">Day</label>
+            <input type="number" id="bdayFormDay" min="1" max="31" placeholder="1-31">
+          </div>
+        </div>
+        <label class="bday-form-checkbox">
+          <input type="checkbox" id="bdayFormAnniversary">
+          This is a company event/anniversary, not a birthday
+        </label>
+        <div class="bday-form-actions">
+          <button type="button" class="bday-save-btn" id="bdaySaveBtn">Save</button>
+          <button type="button" class="bday-delete-btn-form" id="bdayDeleteFromFormBtn" style="display:none;">Delete</button>
+          <button type="button" class="bday-cancel-btn" id="bdayCancelBtn">Cancel</button>
+        </div>
+        <div class="bday-form-error" id="bdayFormError"></div>
+      </div>
+
+      <div class="bday-grid" id="bdayGrid">
+        <div class="loading">Loading birthdays…</div>
+      </div>
+    </div>
+
+    <div id="apacScheduleView" style="display:none;">
+      <div class="panel-header admin-panel-header">
+        <div class="panel-header-left">
+          <h1>APAC Shift Schedule</h1>
+          <div class="date-tag">Revised schedule &middot; Effective August 3, 2026</div>
+        </div>
+        <button type="button" class="back-to-dashboard-btn" onclick="showDashboardPage()">&larr; Back to Dashboard</button>
+      </div>
+
+      <div class="apac-legend">
+        <span class="apac-legend-item"><span class="apac-crew-chip cs">Name (CS)</span> Candidate Support</span>
+        <span class="apac-legend-item"><span class="apac-crew-chip tbc">Name</span> To Be Confirmed</span>
+      </div>
+
+      <div class="apac-table-wrap">
+        <table class="apac-table">
+          <thead>
+            <tr><th class="apac-shift-col">Shift</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th><th>Sunday</th></tr>
+          </thead>
+          <tbody>
+        <tr>
+          <td class="apac-shift-col"><div class="apac-shift-name">APAC 1</div><div class="apac-shift-time">6:00 AM – 2:00 PM</div></td>
+          <td><div class="apac-day-cell"><span class="apac-crew-chip">Jeff</span><span class="apac-crew-chip">Kaye</span><span class="apac-crew-chip tbc">RA</span><span class="apac-crew-chip tbc">Paul</span><span class="apac-crew-chip">Moses</span><span class="apac-crew-chip cs">Dianne (CS)</span><span class="apac-crew-chip cs">Rap (CS)</span></div></td>
+          <td><div class="apac-day-cell"><span class="apac-crew-chip">Jeff</span><span class="apac-crew-chip">Kaye</span><span class="apac-crew-chip tbc">RA</span><span class="apac-crew-chip tbc">Paul</span><span class="apac-crew-chip">Moses</span><span class="apac-crew-chip cs">Dianne (CS)</span><span class="apac-crew-chip cs">Rap (CS)</span></div></td>
+          <td><div class="apac-day-cell"><span class="apac-crew-chip">Jeff</span><span class="apac-crew-chip">Keenan</span><span class="apac-crew-chip">Rachelle</span><span class="apac-crew-chip">KC</span><span class="apac-crew-chip">Chris</span><span class="apac-crew-chip cs">Jane (CS)</span><span class="apac-crew-chip cs">Ralph (CS)</span></div></td>
+          <td><div class="apac-day-cell"><span class="apac-crew-chip">Jeff</span><span class="apac-crew-chip">Keenan</span><span class="apac-crew-chip">Rachelle</span><span class="apac-crew-chip">KC</span><span class="apac-crew-chip">Chris</span><span class="apac-crew-chip cs">Jane (CS)</span><span class="apac-crew-chip cs">Ralph (CS)</span></div></td>
+          <td><div class="apac-day-cell"><span class="apac-crew-chip">Dyanne</span><span class="apac-crew-chip">Faith</span><span class="apac-crew-chip">Kaye</span><span class="apac-crew-chip tbc">RA</span><span class="apac-crew-chip tbc">Paul</span><span class="apac-crew-chip">Moses</span><span class="apac-crew-chip cs">Gian (CS)</span><span class="apac-crew-chip cs">Ralph (CS)</span></div></td>
+          <td><div class="apac-day-cell"><span class="apac-crew-chip">Dyanne</span><span class="apac-crew-chip">Faith</span><span class="apac-crew-chip">Kaye</span><span class="apac-crew-chip tbc">RA</span><span class="apac-crew-chip tbc">Paul</span><span class="apac-crew-chip">Moses</span><span class="apac-crew-chip cs">Gian (CS)</span><span class="apac-crew-chip cs">Ralph (CS)</span></div></td>
+          <td><div class="apac-day-cell"><span class="apac-crew-chip">Dyanne</span><span class="apac-crew-chip">Grace</span><span class="apac-crew-chip">Kaye</span><span class="apac-crew-chip tbc">RA</span><span class="apac-crew-chip tbc">Paul</span><span class="apac-crew-chip">Moses</span><span class="apac-crew-chip cs">Dianne (CS)</span><span class="apac-crew-chip cs">Ralph (CS)</span></div></td>
+        </tr>
+        <tr>
+          <td class="apac-shift-col"><div class="apac-shift-name">APAC 2</div><div class="apac-shift-time">2:00 PM – 10:00 PM</div></td>
+          <td><div class="apac-day-cell"><span class="apac-crew-chip">Jodel</span><span class="apac-crew-chip">Grace</span><span class="apac-crew-chip">Faith</span><span class="apac-crew-chip">Mina</span><span class="apac-crew-chip cs">Gian (CS)</span></div></td>
+          <td><div class="apac-day-cell"><span class="apac-crew-chip">Jodel</span><span class="apac-crew-chip">Grace</span><span class="apac-crew-chip">Faith</span><span class="apac-crew-chip">Mina</span><span class="apac-crew-chip cs">Gian (CS)</span></div></td>
+          <td><div class="apac-day-cell"><span class="apac-crew-chip">Dyanne</span><span class="apac-crew-chip">Seb</span><span class="apac-crew-chip">Grace</span><span class="apac-crew-chip">Mark</span><span class="apac-crew-chip">Bob</span><span class="apac-crew-chip cs">Dianne (CS)</span></div></td>
+          <td><div class="apac-day-cell"><span class="apac-crew-chip">Dyanne</span><span class="apac-crew-chip">Seb</span><span class="apac-crew-chip">Grace</span><span class="apac-crew-chip">Mark</span><span class="apac-crew-chip">Bob</span><span class="apac-crew-chip cs">Dianne (CS)</span></div></td>
+          <td><div class="apac-day-cell"><span class="apac-crew-chip">Jodel</span><span class="apac-crew-chip">Seb</span><span class="apac-crew-chip">Keenan</span><span class="apac-crew-chip">KC</span><span class="apac-crew-chip">Rachelle</span><span class="apac-crew-chip">Mina</span><span class="apac-crew-chip">Mark</span><span class="apac-crew-chip">Bob</span><span class="apac-crew-chip">Chris</span><span class="apac-crew-chip cs">Jane (CS)</span><span class="apac-crew-chip cs">Rap (CS)</span></div></td>
+          <td><div class="apac-day-cell"><span class="apac-crew-chip">Jodel</span><span class="apac-crew-chip">Seb</span><span class="apac-crew-chip">Keenan</span><span class="apac-crew-chip">KC</span><span class="apac-crew-chip">Rachelle</span><span class="apac-crew-chip">Mina</span><span class="apac-crew-chip">Mark</span><span class="apac-crew-chip">Bob</span><span class="apac-crew-chip">Chris</span><span class="apac-crew-chip cs">Jane (CS)</span><span class="apac-crew-chip cs">Rap (CS)</span></div></td>
+          <td><div class="apac-day-cell"><span class="apac-crew-chip">Jodel</span><span class="apac-crew-chip">Jeff</span><span class="apac-crew-chip">Seb</span><span class="apac-crew-chip">Keenan</span><span class="apac-crew-chip">KC</span><span class="apac-crew-chip">Rachelle</span><span class="apac-crew-chip">Faith</span><span class="apac-crew-chip">Mina</span><span class="apac-crew-chip">Mark</span><span class="apac-crew-chip">Bob</span><span class="apac-crew-chip">Chris</span><span class="apac-crew-chip cs">Jane (CS)</span><span class="apac-crew-chip cs">Gian (CS)</span><span class="apac-crew-chip cs">Rap (CS)</span></div></td>
+        </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -1661,7 +2351,7 @@
      slide-in drawer toggled by the hamburger button.
      ========================================================= */
 
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwaq-u9dGB5YQvT1oYAWl_K72CutJz5UuSqnwMlqKrIzPYYVfasKz9HpOI_BEp0IgjE/exec";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz14B1uNgVewJF45jDyoM3AxDalMrlduHc0VtX-6nSIfMhkrYsYl76T_nbC0vJ1krOw/exec";
   const SESSION_KEY = "fa_staff_session";
 
   // Identity of the signed-in staff member, used to pin their own
@@ -2570,9 +3260,9 @@
     }
   }
 
-  /* ---------- Main content view switching (dashboard / admin / coming-soon) ---------- */
+  /* ---------- Main content view switching (dashboard / admin / coming-soon / org chart / birthdays) ---------- */
 
-  const MAIN_VIEW_IDS = ['dashboardView', 'adminView', 'comingSoonView'];
+  const MAIN_VIEW_IDS = ['dashboardView', 'adminView', 'comingSoonView', 'orgChartView', 'birthdayCalendarView', 'apacScheduleView'];
 
   function showMainView(viewId) {
     MAIN_VIEW_IDS.forEach(id => {
@@ -2581,10 +3271,268 @@
     });
   }
 
-  function showComingSoonPage() {
+  // Reused for nav items that don't have real content yet (Proctoring
+  // Guide, APAC Schedule) — one shared view, just with the feature name
+  // swapped into the message.
+  function showComingSoonPage(featureName) {
+    const name = featureName || 'This feature';
+    const titleEl = document.getElementById('comingSoonTitle');
+    const msgEl = document.getElementById('comingSoonMessage');
+    if (titleEl) titleEl.textContent = 'This feature is under construction';
+    if (msgEl) msgEl.textContent = name + " isn't ready yet — we're still building it out. Check back soon.";
     showMainView('comingSoonView');
     closeMobileNav();
   }
+
+  function showOrgChartPage() {
+    showMainView('orgChartView');
+    closeMobileNav();
+  }
+
+  /* ---------- Birthday calendar (admin-editable, everyone can view) ---------- */
+
+  const BDAY_MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  let birthdaysData = [];
+  let editingBirthdayId = null; // null = adding a new entry, otherwise editing this id
+
+  function showBirthdayCalendarPage() {
+    showMainView('birthdayCalendarView');
+    closeMobileNav();
+    const addBtn = document.getElementById('bdayAddBtn');
+    if (addBtn) addBtn.style.display = currentIsAdmin ? 'inline-block' : 'none';
+    closeBirthdayForm();
+    loadBirthdays();
+  }
+
+  function showApacSchedulePage() {
+    showMainView('apacScheduleView');
+    closeMobileNav();
+  }
+
+  async function loadBirthdays() {
+    const grid = document.getElementById('bdayGrid');
+    grid.innerHTML = '<div class="loading">Loading birthdays…</div>';
+    try {
+      const result = await jsonp({ action: 'getBirthdays' });
+      console.debug('[Birthdays] getBirthdays response:', result);
+      if (!result.success) {
+        grid.innerHTML = '<div class="loading">' + escapeHtml(result.message || 'Could not load birthdays.') + '</div>';
+        return;
+      }
+      birthdaysData = result.birthdays || [];
+      renderBirthdayCalendar();
+    } catch (err) {
+      console.error('[Birthdays] load failed:', err);
+      grid.innerHTML = '<div class="loading">' + escapeHtml(err.message) + '</div>';
+    }
+  }
+
+  function renderBirthdayCalendar() {
+    const grid = document.getElementById('bdayGrid');
+    const summaryEl = document.getElementById('bdaySummary');
+
+    const byMonth = {};
+    for (let m = 1; m <= 12; m++) byMonth[m] = [];
+    birthdaysData.forEach(b => { if (byMonth[b.month]) byMonth[b.month].push(b); });
+    Object.values(byMonth).forEach(list => list.sort((a, b) => a.day - b.day));
+
+    const birthdayCount = birthdaysData.filter(b => !b.isAnniversary).length;
+    const anniversaryCount = birthdaysData.filter(b => b.isAnniversary).length;
+    if (summaryEl) {
+      summaryEl.textContent = 'Five Acts Services Corp. \u00b7 ' + birthdayCount + ' birthday' + (birthdayCount === 1 ? '' : 's') +
+        (anniversaryCount ? ' & ' + anniversaryCount + ' company anniversar' + (anniversaryCount === 1 ? 'y' : 'ies') : '');
+    }
+
+    let html = '';
+    for (let m = 1; m <= 12; m++) {
+      const entries = byMonth[m];
+      const monthBdayCount = entries.filter(e => !e.isAnniversary).length;
+      html += '<div class="bday-month-card" data-month="' + m + '">';
+      html += '<div class="bday-month-header"><span>' + BDAY_MONTH_NAMES[m - 1] + '</span><span class="bday-count">' + monthBdayCount + '</span></div>';
+      html += '<div class="bday-list">';
+      if (entries.length === 0) {
+        html += '<div class="bday-empty">No birthdays this month</div>';
+      } else {
+        entries.forEach(e => {
+          const dateStr = BDAY_MONTH_NAMES[m - 1].slice(0, 3) + ' ' + String(e.day).padStart(2, '0');
+          html += '<div class="bday-row' + (e.isAnniversary ? ' bday-row-anniversary' : '') + '">' +
+            '<span class="bday-date">' + dateStr + '</span>' +
+            '<span class="bday-name">' + escapeHtml(e.name) + '</span>';
+          if (currentIsAdmin) {
+            html += '<span class="bday-actions">' +
+              '<button type="button" class="bday-edit-btn" data-id="' + e.id + '" title="Edit">\u270e</button>' +
+              '<button type="button" class="bday-delete-btn" data-id="' + e.id + '" title="Delete">&times;</button>' +
+              '</span>';
+          }
+          html += '</div>';
+        });
+      }
+      html += '</div></div>';
+    }
+    grid.innerHTML = html;
+
+    if (currentIsAdmin) {
+      document.querySelectorAll('.bday-edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => openBirthdayForm(btn.getAttribute('data-id')));
+      });
+      document.querySelectorAll('.bday-delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => confirmDeleteBirthday(btn.getAttribute('data-id')));
+      });
+    }
+
+    highlightCurrentBirthdayMonth();
+  }
+
+  // Highlights whichever month card matches "now" — using the same
+  // Asia/Manila reference timezone the rest of the app is pinned to
+  // (see the digital clock), not the viewer's own device timezone.
+  function highlightCurrentBirthdayMonth() {
+    const monthNum = parseInt(
+      new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', month: 'numeric' }).format(new Date()),
+      10
+    );
+    document.querySelectorAll('.bday-month-card').forEach(card => {
+      const cardMonth = parseInt(card.getAttribute('data-month'), 10);
+      card.classList.toggle('bday-current-month', cardMonth === monthNum);
+    });
+  }
+
+  function openBirthdayForm(id) {
+    if (!currentIsAdmin) {
+      showToast('Admin access required.', 'error');
+      return;
+    }
+    editingBirthdayId = id || null;
+
+    const panel = document.getElementById('bdayFormPanel');
+    const title = document.getElementById('bdayFormTitle');
+    const nameInput = document.getElementById('bdayFormName');
+    const monthSelect = document.getElementById('bdayFormMonth');
+    const dayInput = document.getElementById('bdayFormDay');
+    const annivCheckbox = document.getElementById('bdayFormAnniversary');
+    const deleteBtn = document.getElementById('bdayDeleteFromFormBtn');
+    const errorEl = document.getElementById('bdayFormError');
+    if (errorEl) errorEl.classList.remove('show');
+
+    if (id) {
+      const entry = birthdaysData.find(b => b.id === id);
+      if (!entry) return;
+      title.textContent = 'Edit Entry';
+      nameInput.value = entry.name;
+      monthSelect.value = String(entry.month);
+      dayInput.value = entry.day;
+      annivCheckbox.checked = !!entry.isAnniversary;
+      deleteBtn.style.display = 'inline-block';
+    } else {
+      title.textContent = 'Add Birthday';
+      nameInput.value = '';
+      monthSelect.value = '1';
+      dayInput.value = '';
+      annivCheckbox.checked = false;
+      deleteBtn.style.display = 'none';
+    }
+
+    panel.style.display = 'block';
+    nameInput.focus();
+  }
+
+  function closeBirthdayForm() {
+    editingBirthdayId = null;
+    const panel = document.getElementById('bdayFormPanel');
+    if (panel) panel.style.display = 'none';
+  }
+
+  function showBdayFormError(message) {
+    const el = document.getElementById('bdayFormError');
+    if (!el) return;
+    el.textContent = message;
+    el.classList.add('show');
+  }
+
+  async function saveBirthdayForm() {
+    if (!currentIsAdmin) {
+      showToast('Admin access required.', 'error');
+      return;
+    }
+    const nameInput = document.getElementById('bdayFormName');
+    const monthSelect = document.getElementById('bdayFormMonth');
+    const dayInput = document.getElementById('bdayFormDay');
+    const annivCheckbox = document.getElementById('bdayFormAnniversary');
+    const saveBtn = document.getElementById('bdaySaveBtn');
+    const errorEl = document.getElementById('bdayFormError');
+    if (errorEl) errorEl.classList.remove('show');
+
+    const name = nameInput.value.trim();
+    const month = parseInt(monthSelect.value, 10);
+    const day = parseInt(dayInput.value, 10);
+    const isAnniversary = !!annivCheckbox.checked;
+
+    if (!name) { showBdayFormError('Name is required.'); return; }
+    if (!day || day < 1 || day > 31) { showBdayFormError('Enter a valid day (1-31).'); return; }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving\u2026';
+    try {
+      const params = {
+        email: currentUserEmail,
+        adminToken: currentAdminToken,
+        name: name,
+        month: month,
+        day: day,
+        isAnniversary: String(isAnniversary)
+      };
+      const result = editingBirthdayId
+        ? await jsonp(Object.assign({ action: 'updateBirthday', id: editingBirthdayId }, params))
+        : await jsonp(Object.assign({ action: 'addBirthday' }, params));
+      console.debug('[Birthdays] save response:', result);
+      if (result.success) {
+        showToast(editingBirthdayId ? 'Entry updated.' : 'Birthday added.', 'info');
+        closeBirthdayForm();
+        await loadBirthdays();
+      } else {
+        showBdayFormError(result.message || 'Could not save this entry.');
+      }
+    } catch (err) {
+      console.error('[Birthdays] save failed:', err);
+      showBdayFormError(err.message || 'Could not save this entry.');
+    }
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Save';
+  }
+
+  async function confirmDeleteBirthday(id) {
+    if (!currentIsAdmin) {
+      showToast('Admin access required.', 'error');
+      return;
+    }
+    const entry = birthdaysData.find(b => b.id === id);
+    if (!entry) return;
+    if (!window.confirm('Remove "' + entry.name + '" from the birthday calendar?')) return;
+
+    try {
+      const result = await jsonp({ action: 'deleteBirthday', email: currentUserEmail, adminToken: currentAdminToken, id: id });
+      console.debug('[Birthdays] delete response:', result);
+      if (result.success) {
+        showToast('Entry removed.', 'info');
+        if (editingBirthdayId === id) closeBirthdayForm();
+        await loadBirthdays();
+      } else {
+        showToast(result.message || 'Could not remove this entry.', 'error');
+      }
+    } catch (err) {
+      console.error('[Birthdays] delete failed:', err);
+      showToast(err.message || 'Could not remove this entry.', 'error');
+    }
+  }
+
+  async function deleteBirthdayFromForm() {
+    if (editingBirthdayId) await confirmDeleteBirthday(editingBirthdayId);
+  }
+
+  document.getElementById('bdayAddBtn').addEventListener('click', () => openBirthdayForm(null));
+  document.getElementById('bdaySaveBtn').addEventListener('click', saveBirthdayForm);
+  document.getElementById('bdayCancelBtn').addEventListener('click', closeBirthdayForm);
+  document.getElementById('bdayDeleteFromFormBtn').addEventListener('click', deleteBirthdayFromForm);
 
   /* ---------- Admin dashboard (manager/HR only) ---------- */
 
