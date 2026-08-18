@@ -2451,7 +2451,7 @@
     </div>
 
     <div class="punch-log">
-      <h3>Today's Log</h3>
+      <h3>Time Log (last 15 days)</h3>
       <div id="punchLogList"></div>
     </div>
 
@@ -2547,7 +2547,7 @@
     );
   }
 
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz14B1uNgVewJF45jDyoM3AxDalMrlduHc0VtX-6nSIfMhkrYsYl76T_nbC0vJ1krOw/exec";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxRFB5LLvRoKqhNE-fAEUwDPsgzSnfIBxSCpsOaqoGR2kNbA-IkKHLyxOTgmKeESMlf/exec";
   const SESSION_KEY = "fa_staff_session";
 
   // Identity of the signed-in staff member, used to pin their own
@@ -3072,13 +3072,23 @@
     });
   }
 
-  function renderPunchLog(entries) {
-    const list = document.getElementById('punchLogList');
-    if (!entries || entries.length === 0) {
-      list.innerHTML = '<div class="no-punches">No punches yet today.</div>';
-      return;
-    }
-    list.innerHTML = entries.slice().reverse().map(e => {
+  function dateGroupLabel(isoDate) {
+    if (isoDate === todayIsoForClient()) return 'Today';
+    const [year, month, day] = isoDate.split('-').map(Number);
+    const d = new Date(year, month - 1, day);
+    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  }
+
+  // Mirrors the backend's todayStr() so "Today" labels correctly without
+  // an extra round trip — currentData.date is already today's ISO date
+  // from the last getAttendanceToday() poll, so reuse that instead of
+  // trusting the browser's own clock/timezone.
+  function todayIsoForClient() {
+    return (currentData && currentData.date) ? currentData.date : '';
+  }
+
+  function renderPunchEntries(entries) {
+    return entries.slice().reverse().map(e => {
       const label = isPunchIn(e) ? 'Time In' : 'Time Out';
       const cls = isPunchIn(e) ? 'in' : 'out';
       const note = e.note ? '<div class="pe-note">' + escapeHtml(e.note) + '</div>' : '';
@@ -3088,6 +3098,60 @@
         '</div>';
     }).join('');
   }
+
+  // Renders a list of {date, entries} groups (most recent day first).
+  // Falls back to rendering a single today-only list if groups aren't
+  // available yet (e.g. history hasn't loaded, or the request failed) —
+  // keeps the modal from showing nothing while the 15-day fetch is in flight.
+  function renderPunchLog(groupsOrTodayEntries) {
+    const list = document.getElementById('punchLogList');
+    const isGroups = Array.isArray(groupsOrTodayEntries) && groupsOrTodayEntries.length > 0
+      && Object.prototype.hasOwnProperty.call(groupsOrTodayEntries[0], 'date');
+
+    if (isGroups) {
+      list.innerHTML = groupsOrTodayEntries.map(g =>
+        '<div class="log-day-group">' +
+        '<div class="log-day-label">' + dateGroupLabel(g.date) + '</div>' +
+        renderPunchEntries(g.entries) +
+        '</div>'
+      ).join('');
+      return;
+    }
+
+    const todayEntries = groupsOrTodayEntries || [];
+    if (todayEntries.length === 0) {
+      list.innerHTML = '<div class="no-punches">Loading time log…</div>';
+      return;
+    }
+    list.innerHTML = renderPunchEntries(todayEntries);
+  }
+
+  // Fetches the last 15 days of punches for the given name and renders
+  // them into the open modal. Only applies its result if the modal is
+  // still showing that same person by the time the request finishes —
+  // avoids a slow response clobbering a different profile the user has
+  // since clicked into.
+  async function loadPunchHistory(name) {
+    try {
+      const result = await jsonp({ action: 'getEmployeeHistory', name: name, days: 15 });
+      if (activeEmployee !== name) return; // modal moved on already
+      if (!result.success) {
+        showToast(result.message || 'Could not load time log.', 'error');
+        return;
+      }
+      if (!result.groups || result.groups.length === 0) {
+        document.getElementById('punchLogList').innerHTML = '<div class="no-punches">No punches in the last 15 days.</div>';
+        return;
+      }
+      renderPunchLog(result.groups);
+    } catch (err) {
+      if (activeEmployee !== name) return;
+      console.error('[Attendance] getEmployeeHistory failed:', err);
+      // Fall back to at least showing today's entries rather than nothing.
+      renderPunchLog(getEntriesForName(name));
+    }
+  }
+
 
   function escapeHtml(str) {
     const div = document.createElement('div');
@@ -3273,7 +3337,8 @@
     document.getElementById('modalDate').textContent = formatFullDate(currentData.date);
     document.getElementById('noteInput').value = '';
     hidePhotoSuccessMsg();
-    renderPunchLog(getEntriesForName(name));
+    renderPunchLog(getEntriesForName(name)); // today's entries immediately, no wait
+    loadPunchHistory(name); // then swap in the full 15-day view once it arrives
     updateModalPunchButtons(name);
     renderPinSection(name);
     applyProfileAccessState(name);
