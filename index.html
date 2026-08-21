@@ -190,6 +190,32 @@
   .app-page { display: none; }
   .app-page.open { display: block; }
 
+  /* Dashboard entrance animation — plays once when the app becomes
+     visible right after login. Staggered slightly (header, then the
+     attendance grid, then the sidebar) so it reads as one smooth
+     motion rather than everything popping in at once. Respects
+     prefers-reduced-motion for anyone who's set that preference. */
+  @keyframes dashboardEnter {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .app-page.open #dashboardView .panel-header {
+    animation: dashboardEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .app-page.open #dashboardView .dashboard-main {
+    animation: dashboardEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.09s both;
+  }
+  .app-page.open #dashboardView .dashboard-sidebar {
+    animation: dashboardEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.17s both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .app-page.open #dashboardView .panel-header,
+    .app-page.open #dashboardView .dashboard-main,
+    .app-page.open #dashboardView .dashboard-sidebar {
+      animation: none;
+    }
+  }
+
   .app-nav {
     background: #fff;
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
@@ -1026,15 +1052,19 @@
   }
   .bday-month-card {
     background: #fff;
-    border-radius: 14px;
+    border-radius: 16px;
     padding: 16px 18px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.06);
     border: 1.5px solid transparent;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color 0.2s, box-shadow 0.25s, transform 0.25s;
+  }
+  .bday-month-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.1);
   }
   .bday-month-card.bday-current-month {
     border-color: var(--green);
-    box-shadow: 0 8px 24px rgba(46,150,62,0.16);
+    box-shadow: 0 8px 24px rgba(46,150,62,0.18);
   }
   .bday-month-header {
     display: flex;
@@ -1050,6 +1080,29 @@
     font-weight: 700;
     color: var(--black);
     letter-spacing: 0.3px;
+    position: relative;
+  }
+  /* Small pulsing dot next to the name of whichever month is "now" —
+     a quieter way to draw the eye than a banner/ribbon, and it lives
+     inside the existing flex item so it can't disturb the
+     space-between layout of the header. */
+  @keyframes bdayPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(46,150,62,0.5); }
+    50%      { box-shadow: 0 0 0 6px rgba(46,150,62,0); }
+  }
+  .bday-current-month .bday-month-header span:first-child {
+    padding-right: 14px;
+  }
+  .bday-current-month .bday-month-header span:first-child::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    right: 0;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: bdayPulse 1.8s ease-in-out infinite;
   }
   .bday-count {
     background: var(--green-light);
@@ -1060,19 +1113,29 @@
     border-radius: 12px;
   }
   .bday-current-month .bday-count { background: var(--green); color: #fff; }
-  .bday-list { display: flex; flex-direction: column; gap: 7px; }
+  .bday-list { display: flex; flex-direction: column; gap: 4px; }
   .bday-row {
     display: flex;
     align-items: center;
     gap: 10px;
     font-size: 13px;
+    padding: 5px 7px;
+    border-radius: 9px;
+    transition: background 0.15s;
   }
+  .bday-row:hover { background: #f4f8f4; }
+  .bday-row-anniversary:hover { background: #fbf5e8; }
   .bday-date {
     font-weight: 700;
-    color: var(--green-dark);
-    min-width: 48px;
+    color: #fff;
+    background: var(--green);
+    min-width: 46px;
     flex-shrink: 0;
     text-align: center;
+    padding: 3px 6px;
+    border-radius: 8px;
+    font-size: 11px;
+    letter-spacing: 0.2px;
   }
   .bday-name {
     color: var(--gray-dark);
@@ -1084,7 +1147,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .bday-row-anniversary .bday-date { color: #b6912a; }
+  .bday-row-anniversary .bday-date { background: #d8ae3a; }
   .bday-row-anniversary .bday-name { font-weight: 700; color: #8a6d1a; }
   .bday-empty {
     font-size: 12.5px;
@@ -1115,7 +1178,7 @@
   /* ── APAC SHIFT SCHEDULE ── */
   .apac-legend {
     display: flex;
-    gap: 20px;
+    gap: 10px;
     margin-bottom: 16px;
     flex-wrap: wrap;
   }
@@ -1125,6 +1188,10 @@
     gap: 8px;
     font-size: 12.5px;
     color: var(--gray-mid);
+    background: #f7faf7;
+    border: 1px solid var(--gray-light);
+    padding: 6px 12px;
+    border-radius: 20px;
   }
   .apac-table-wrap {
     background: #fff;
@@ -1146,18 +1213,27 @@
     padding: 12px 14px;
     text-align: left;
     white-space: nowrap;
+    transition: background 0.2s;
   }
+  .apac-table thead th:first-child { border-top-left-radius: 14px; }
+  .apac-table thead th:last-child { border-top-right-radius: 14px; }
   .apac-table th.apac-shift-col { background: var(--green-dark); }
+  .apac-table th.apac-today { background: #1f7a2e; }
   .apac-table td {
     padding: 14px;
     border-bottom: 1px solid var(--gray-light);
     vertical-align: top;
+    transition: background 0.15s;
   }
   .apac-table tbody tr:last-child td { border-bottom: none; }
   .apac-table td.apac-shift-col {
     background: #fafcfa;
     min-width: 150px;
+    border-left: 3px solid var(--green);
   }
+  .apac-table tbody tr:hover td:not(.apac-shift-col) { background: #f2f8f2; }
+  .apac-table td.apac-today { background: #eafbea; }
+  .apac-table tbody tr:hover td.apac-today { background: #ddf5dd; }
   .apac-shift-name {
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 19px;
@@ -1184,7 +1260,9 @@
     border-radius: 12px;
     text-align: center;
     white-space: nowrap;
+    transition: transform 0.15s, box-shadow 0.15s;
   }
+  .apac-crew-chip:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
   .apac-crew-chip.cs { background: var(--green-light); color: var(--green-dark); }
   .apac-crew-chip.tbc { background: #cdeef0; color: #0d6b73; font-style: italic; }
 
@@ -1820,8 +1898,10 @@
      Desktop: > 1024px  (default styles above)
      Tablet:  641px – 1024px
      Mobile:  <= 640px
-     Hamburger nav kicks in at <= 860px so the pill links never
-     get cramped on mid-size tablets/small laptops either.
+     Hamburger nav kicks in at <= 1400px — with 8 nav items now
+     (Handbook, Proctoring, Org Chart, Birthdays, APAC Schedule,
+     Admin, etc.) plus the logo and profile chip, they no longer fit
+     comfortably even on a modest, non-maximized laptop window.
      ========================================================= */
 
   /* ---------- Tablet tweaks (also apply down through mobile) ---------- */
@@ -1843,7 +1923,7 @@
   }
 
   /* ---------- Hamburger takes over the top nav ---------- */
-  @media (max-width: 860px) {
+  @media (max-width: 1400px) {
     .hamburger-btn { display: flex; }
 
     .app-nav-links {
@@ -2470,7 +2550,7 @@
      Guide, which opens an in-app "under construction" view
      instead of an external link until that content is ready.
 
-     On narrow screens (<= 860px) the nav links collapse into a
+     On narrower windows (<= 1400px) the nav links collapse into a
      slide-in drawer toggled by the hamburger button.
      ========================================================= */
 
@@ -2911,7 +2991,7 @@
   // Collapse the drawer automatically if the viewport is resized back
   // up past the hamburger breakpoint (e.g. rotating a tablet).
   window.addEventListener('resize', function () {
-    if (window.innerWidth > 860) closeMobileNav();
+    if (window.innerWidth > 1400) closeMobileNav();
   });
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') closeMobileNav();
@@ -3557,6 +3637,23 @@
   function showApacSchedulePage() {
     showMainView('apacScheduleView');
     closeMobileNav();
+    highlightApacToday();
+  }
+
+  // Highlights whichever day-of-week column matches "now" in Asia/Manila
+  // (same reference timezone as the digital clock and the birthday
+  // calendar) — a quick visual anchor for "which column am I looking
+  // for" on a schedule with 7 columns of similar-looking chips.
+  function highlightApacToday() {
+    const table = document.querySelector('.apac-table');
+    if (!table) return;
+    const today = getManilaTodayYMD();
+    const utcDay = new Date(Date.UTC(today.year, today.month - 1, today.day)).getUTCDay(); // 0=Sun..6=Sat
+    const colIndex = utcDay === 0 ? 7 : utcDay; // columns run Mon(1)..Sun(7)
+    const nth = colIndex + 1; // +1 since the first column is the shift-name column
+    table.querySelectorAll('.apac-today').forEach(cell => cell.classList.remove('apac-today'));
+    table.querySelectorAll('thead th:nth-child(' + nth + '), tbody td:nth-child(' + nth + ')')
+      .forEach(cell => cell.classList.add('apac-today'));
   }
 
   async function loadBirthdays() {
