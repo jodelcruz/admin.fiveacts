@@ -416,7 +416,9 @@
     position: absolute;
     top: calc(100% + 10px);
     right: 0;
-    min-width: 220px;
+    min-width: 300px;
+    width: max-content;
+    max-width: min(90vw, 340px);
     background: #fff;
     border-radius: 14px;
     box-shadow: 0 16px 40px rgba(0,0,0,0.18);
@@ -436,7 +438,9 @@
     font-size: 13px;
     font-weight: 600;
     color: var(--black);
-    word-break: break-all;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     padding-bottom: 12px;
     margin-bottom: 12px;
     border-bottom: 1px solid var(--gray-light);
@@ -743,7 +747,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: 980px;
+    min-width: 1180px;
     width: max-content;
     margin: 0 auto;
   }
@@ -903,6 +907,26 @@
     margin-bottom: 10px;
     text-align: center;
   }
+  .org-team-icon {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    border-radius: 50%;
+    background: var(--green);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .org-team-icon svg { width: 13px; height: 13px; }
+
+  /* The merge branch (HR Manager & Proctor Manager -> shared Proctors
+     team) needs roughly double the width of a plain single-box branch,
+     since it holds two manager nodes side by side plus a wide team box
+     underneath. Giving it flex:2 against its plain siblings' flex:1
+     approximates the same proportions as the source org chart. */
+  .org-branch-group { flex: 2; }
+  .org-managers-row-nested { gap: 24px; margin-bottom: 4px; }
   .org-team-count {
     background: var(--green-light);
     color: var(--green-dark);
@@ -1566,6 +1590,109 @@
     display: none;
   }
   .announcement-error.show { display: block; }
+
+  /* ── Announcement image attachment (view mode: clickable thumbnail) ── */
+  .announcement-image-wrap { margin-top: 10px; }
+  .announcement-image-thumb {
+    max-width: 100%;
+    max-height: 160px;
+    border-radius: 10px;
+    border: 1px solid var(--gray-light);
+    cursor: zoom-in;
+    display: block;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .announcement-image-thumb:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.12); }
+  .announcement-image-loading {
+    font-size: 12px;
+    color: var(--gray-mid);
+    font-style: italic;
+    margin-top: 8px;
+  }
+
+  /* ── Announcement image attachment (edit mode: attach/preview/remove) ── */
+  .announcement-image-edit-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 4px 0 12px;
+  }
+  .announcement-image-preview { position: relative; display: inline-block; }
+  .announcement-image-preview img {
+    max-width: 150px;
+    max-height: 95px;
+    border-radius: 8px;
+    border: 1px solid var(--gray-light);
+    display: block;
+  }
+  .announcement-image-remove-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--certiverse-red);
+    color: #fff;
+    border: 2px solid #fff;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .announcement-image-remove-btn:hover { background: #c21f42; }
+  .announcement-attach-btn {
+    background: #fff;
+    border: 1.5px solid var(--gray-light);
+    color: var(--gray-dark);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .announcement-attach-btn:hover { border-color: var(--green); color: var(--green-dark); }
+  .announcement-attach-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* ── Full-size image lightbox (announcement attachment preview) ── */
+  .img-lightbox-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    cursor: zoom-out;
+  }
+  .img-lightbox-overlay.open { display: flex; }
+  .img-lightbox-overlay img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 10px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    cursor: default;
+  }
+  .img-lightbox-close {
+    position: absolute;
+    top: 18px;
+    right: 22px;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .img-lightbox-close:hover { background: rgba(255,255,255,0.28); }
 
   /* ── UPCOMING BIRTHDAYS/EVENTS (dashboard sidebar) ── */
   .upcoming-card {
@@ -2234,6 +2361,7 @@
           <div class="announcement-section" id="announcementSection" style="display:none;">
             <div class="announcement-card" id="announcementCard"></div>
           </div>
+          <input type="file" id="announcementImageFileInput" accept="image/*" style="display:none;">
 
           <div class="upcoming-card">
             <div class="upcoming-header">
@@ -2328,23 +2456,28 @@
           </div>
 
           <div class="org-vline"></div>
-          <div class="org-tier-label">Departments</div>
+          <div class="org-node org-node-manager">
+            <div class="org-avatar org-avatar-manager">JC</div>
+            <div class="org-node-body">
+              <div class="org-node-title">Operations Manager</div>
+              <div class="org-node-name">Jodel Cruz</div>
+            </div>
+          </div>
+
+          <div class="org-vline"></div>
+          <div class="org-tier-label">Teams</div>
 
           <div class="org-managers-row">
             <div class="org-branch">
               <div class="org-branch-dot"></div>
-              <div class="org-node org-node-manager">
-                <div class="org-avatar org-avatar-manager">JC</div>
-                <div class="org-node-body">
-                  <div class="org-node-title">Operations Manager</div>
-                  <div class="org-node-name">Jodel Cruz</div>
-                </div>
-              </div>
               <div class="org-vline org-vline-team"></div>
               <div class="org-team-box">
-                <div class="org-team-label">Candidate Support Team <span class="org-team-count">5</span></div>
+                <div class="org-team-label">
+                  <span class="org-team-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+                  Candidate Support Team <span class="org-team-count">5</span>
+                </div>
                 <div class="org-team-members">
-                  <div class="org-member-chip"><span class="org-member-avatar">MA</span><span class="org-member-name">Mary Jane Austria</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">JA</span><span class="org-member-name">Jane Austria</span></div>
                   <div class="org-member-chip"><span class="org-member-avatar">GG</span><span class="org-member-name">Gian Garcia</span></div>
                   <div class="org-member-chip"><span class="org-member-avatar">DC</span><span class="org-member-name">Dianne Candano</span></div>
                   <div class="org-member-chip"><span class="org-member-avatar">RS</span><span class="org-member-name">Ralph Soriano</span></div>
@@ -2355,48 +2488,68 @@
 
             <div class="org-branch">
               <div class="org-branch-dot"></div>
-              <div class="org-node org-node-manager">
-                <div class="org-avatar org-avatar-manager">DC</div>
-                <div class="org-node-body">
-                  <div class="org-node-title">HR Manager</div>
-                  <div class="org-node-name">Dyanne Cruz</div>
-                </div>
-              </div>
               <div class="org-vline org-vline-team"></div>
               <div class="org-team-box">
-                <div class="org-team-label">Accountant <span class="org-team-count">1</span></div>
+                <div class="org-team-label">
+                  <span class="org-team-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10.5" x2="8" y2="10.5"/><line x1="12" y1="10.5" x2="12" y2="10.5"/><line x1="16" y1="10.5" x2="16" y2="10.5"/><line x1="8" y1="14.5" x2="8" y2="14.5"/><line x1="12" y1="14.5" x2="12" y2="14.5"/><line x1="16" y1="14.5" x2="16" y2="14.5"/><line x1="8" y1="18.5" x2="12" y2="18.5"/><line x1="16" y1="18.5" x2="16" y2="18.5"/></svg></span>
+                  Accountant <span class="org-team-count">1</span>
+                </div>
                 <div class="org-team-members">
                   <div class="org-member-chip"><span class="org-member-avatar">BA</span><span class="org-member-name">Bryan Mark Adan</span></div>
                 </div>
               </div>
             </div>
 
-            <div class="org-branch">
+            <!-- HR Manager & Proctor Manager both feed into one shared
+                 Proctors team below — reuses the same "split bar" trick
+                 recursively for the inner pair, so the merge point ends
+                 up centered under both nodes automatically via flexbox,
+                 no manual position math needed. -->
+            <div class="org-branch org-branch-group">
               <div class="org-branch-dot"></div>
-              <div class="org-node org-node-manager">
-                <div class="org-avatar org-avatar-manager">JM</div>
-                <div class="org-node-body">
-                  <div class="org-node-title">Proctor Manager</div>
-                  <div class="org-node-name">Jeffrey Macapagal</div>
+              <div class="org-vline"></div>
+              <div class="org-managers-row org-managers-row-nested">
+                <div class="org-branch">
+                  <div class="org-branch-dot"></div>
+                  <div class="org-node org-node-manager">
+                    <div class="org-avatar org-avatar-manager">DC</div>
+                    <div class="org-node-body">
+                      <div class="org-node-title">HR Manager &amp; Proctor Manager</div>
+                      <div class="org-node-name">Dyanne Cruz</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="org-branch">
+                  <div class="org-branch-dot"></div>
+                  <div class="org-node org-node-manager">
+                    <div class="org-avatar org-avatar-manager">JM</div>
+                    <div class="org-node-body">
+                      <div class="org-node-title">Proctor Manager</div>
+                      <div class="org-node-name">Jeffrey Macapagal</div>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="org-vline org-vline-team"></div>
               <div class="org-team-box org-team-box-wide">
-                <div class="org-team-label">Proctors <span class="org-team-count">13</span></div>
+                <div class="org-team-label">
+                  <span class="org-team-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+                  Proctors <span class="org-team-count">13</span>
+                </div>
                 <div class="org-team-members org-team-members-grid">
                   <div class="org-member-chip"><span class="org-member-avatar">ST</span><span class="org-member-name">Sebastian Tamayo</span></div>
-                  <div class="org-member-chip"><span class="org-member-avatar">KH</span><span class="org-member-name">Keenan Handugan</span></div>
-                  <div class="org-member-chip"><span class="org-member-avatar">GR</span><span class="org-member-name">Grace Remolacio</span></div>
-                  <div class="org-member-chip"><span class="org-member-avatar">RR</span><span class="org-member-name">Rachelle Raymundo</span></div>
-                  <div class="org-member-chip"><span class="org-member-avatar">KA</span><span class="org-member-name">Khate Cyrelle Amil</span></div>
-                  <div class="org-member-chip"><span class="org-member-avatar">KL</span><span class="org-member-name">Kathy Lyn Leonar</span></div>
-                  <div class="org-member-chip"><span class="org-member-avatar">RP</span><span class="org-member-name">Rose Ann Parafina</span></div>
                   <div class="org-member-chip"><span class="org-member-avatar">BS</span><span class="org-member-name">Bobzer San Juan</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">KH</span><span class="org-member-name">Keenan Handugan</span></div>
                   <div class="org-member-chip"><span class="org-member-avatar">SB</span><span class="org-member-name">Sunshine Faith Broñosa</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">GR</span><span class="org-member-name">Grace Remolacio</span></div>
                   <div class="org-member-chip"><span class="org-member-avatar">MP</span><span class="org-member-name">Mark Pesico</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">RR</span><span class="org-member-name">Rachelle Raymundo</span></div>
                   <div class="org-member-chip"><span class="org-member-avatar">JR</span><span class="org-member-name">John Paul Racines</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">KA</span><span class="org-member-name">Khate Cyrelle Amil</span></div>
                   <div class="org-member-chip"><span class="org-member-avatar">RD</span><span class="org-member-name">Romina Marie Dumlao</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">KL</span><span class="org-member-name">Kathy Lyn Leonar</span></div>
                   <div class="org-member-chip"><span class="org-member-avatar">MC</span><span class="org-member-name">Moses Cawil</span></div>
+                  <div class="org-member-chip"><span class="org-member-avatar">RP</span><span class="org-member-name">Rose Ann Parafina</span></div>
                 </div>
               </div>
             </div>
@@ -2554,6 +2707,15 @@
   </div>
 </div>
 
+<!-- Full-size preview for the announcement's attached image. Kept as
+     its own small overlay rather than reusing the profile modal-overlay,
+     since that one already carries a lot of profile-specific state and
+     open/close logic this has no business touching. -->
+<div class="img-lightbox-overlay" id="announcementImgLightbox" onclick="closeAnnouncementImageLightbox()">
+  <button type="button" class="img-lightbox-close" onclick="closeAnnouncementImageLightbox()">&times;</button>
+  <img id="announcementImgLightboxImg" src="" alt="Announcement attachment" onclick="event.stopPropagation()">
+</div>
+
 <script>
   /* =========================================================
      STAFF PORTAL — SINGLE-FILE APP
@@ -2639,7 +2801,7 @@
     window.open('https://team-ops-share.preview.emergentagent.com/', '_blank', 'noopener');
   }
 
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwIM_O3tQYbgBeT5Kuv0Oc_vYXu381cwW1wELe8LvipLtLcWCDCR2iZa7sa2ViY56Pl/exec";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzSA8VqyL4-pnzIUnoP-vX1HKWWYZ-NFS4yjlsNr-0BGlzNpXmMvY_zcxApIhIH0UPC/exec";
   const SESSION_KEY = "fa_staff_session";
 
   // Identity of the signed-in staff member, used to pin their own
@@ -3032,7 +3194,7 @@
     return PERSON_ICON_SVG;
   }
 
-  let currentData = { date: '', names: [], records: {}, pinStatus: {}, photos: {}, lastKnownPunch: {}, announcement: { text: '', updatedBy: '', updatedAt: '' } };
+  let currentData = { date: '', names: [], records: {}, pinStatus: {}, photos: {}, lastKnownPunch: {}, announcement: { text: '', updatedBy: '', updatedAt: '', hasImage: false, imageUpdatedAt: '' } };
   let activeEmployee = null;
 
   // Attendance-grid search box + status filter pills state.
@@ -3468,6 +3630,50 @@
           ctx.drawImage(img, dx, dy, w, h);
           const dataUrl = canvas.toDataURL('image/jpeg', quality);
           resolve(dataUrl.split(',')[1]); // strip the "data:image/jpeg;base64," prefix
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Unlike avatars, an announcement attachment (a flyer, a screenshot, a
+  // banner) shouldn't be force-cropped to a square — this "contain"
+  // resize preserves the original aspect ratio, only shrinking if the
+  // image is larger than maxWidth/maxHeight. Also retries at
+  // progressively lower quality if the result is still too large for
+  // MAX_ANNOUNCEMENT_IMAGE_BASE64_LENGTH on the backend, rather than
+  // just failing outright on one busy/detailed photo.
+  function resizeAnnouncementImageToBase64(file, maxWidth, maxHeight) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Could not read the selected file.'));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Could not read that image.'));
+        img.onload = () => {
+          const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1); // never upscale
+          const w = Math.round(img.width * scale);
+          const h = Math.round(img.height * scale);
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+          const qualitySteps = [0.82, 0.65, 0.5, 0.35];
+          let base64 = null;
+          for (const q of qualitySteps) {
+            const candidate = canvas.toDataURL('image/jpeg', q).split(',')[1];
+            if (candidate.length <= ANNOUNCEMENT_MAX_IMAGE_BASE64_JS) {
+              base64 = candidate;
+              break;
+            }
+          }
+          if (!base64) {
+            reject(new Error('That image is too large even after compressing — please choose a smaller one.'));
+            return;
+          }
+          resolve(base64);
         };
         img.src = reader.result;
       };
@@ -4338,6 +4544,9 @@
   // backend will actually accept.
   const ANNOUNCEMENT_MAX_LENGTH_JS = 500;
 
+  // Matches Code.gs's MAX_ANNOUNCEMENT_IMAGE_BASE64_LENGTH.
+  const ANNOUNCEMENT_MAX_IMAGE_BASE64_JS = 45000;
+
   const ANNOUNCEMENT_ICON_SVG =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
     '<path d="M3 11v2a2 2 0 0 0 2 2h1l3 5V6L6 11H5a2 2 0 0 0-2 2Z"/>' +
@@ -4346,6 +4555,19 @@
     '</svg>';
 
   let editingAnnouncement = false;
+
+  // Caches the fetched announcement image (as a ready-to-use data URI)
+  // so the 15-second poll doesn't re-fetch tens of KB of image data
+  // every time — only refetches when imageUpdatedAt actually changes,
+  // or when hasImage flips from false to true.
+  let cachedAnnouncementImageDataUri = null;
+  let cachedAnnouncementImageUpdatedAt = '';
+  let announcementImageFetchInFlight = false;
+  // Holds a freshly-picked (not yet uploaded) image while editing, so
+  // Cancel can discard it without having already committed anything.
+  // Both actually commit only when Save is clicked.
+  let pendingAnnouncementImageBase64 = null;
+  let pendingAnnouncementImageRemoved = false;
 
   function formatAnnouncementDate(isoString) {
     if (!isoString) return '';
@@ -4368,7 +4590,7 @@
     const card = document.getElementById('announcementCard');
     if (!section || !card) return;
 
-    const ann = currentData.announcement || { text: '', updatedBy: '', updatedAt: '' };
+    const ann = currentData.announcement || { text: '', updatedBy: '', updatedAt: '', hasImage: false, imageUpdatedAt: '' };
     const hasText = !!(ann.text && ann.text.trim());
 
     // Regular staff never see an empty announcement card — only admins
@@ -4388,8 +4610,10 @@
       ? '<div class="announcement-meta">Posted ' + formatAnnouncementDate(ann.updatedAt) + (ann.updatedBy ? ' by ' + escapeHtml(ann.updatedBy) : '') + '</div>'
       : '';
 
+    const imageHtml = (hasText && ann.hasImage) ? renderAnnouncementImageBlock(ann) : '';
+
     const bodyHtml = hasText
-      ? '<div class="announcement-text">' + escapeHtml(ann.text) + '</div>' + metaHtml
+      ? '<div class="announcement-text">' + escapeHtml(ann.text) + '</div>' + imageHtml + metaHtml
       : '<div class="announcement-empty">No announcements right now.</div>';
 
     card.innerHTML =
@@ -4402,12 +4626,54 @@
     if (editBtn) editBtn.addEventListener('click', startEditAnnouncement);
   }
 
+  // Returns the markup for the image portion of a posted announcement —
+  // either the already-cached thumbnail, or a "loading" placeholder
+  // while fetchAnnouncementImageIfNeeded() retrieves it in the
+  // background and re-renders once it arrives.
+  function renderAnnouncementImageBlock(ann) {
+    if (cachedAnnouncementImageDataUri && cachedAnnouncementImageUpdatedAt === ann.imageUpdatedAt) {
+      return '<div class="announcement-image-wrap">' +
+        '<img class="announcement-image-thumb" src="' + cachedAnnouncementImageDataUri + '" alt="Announcement attachment" onclick="openAnnouncementImageLightbox(\'' + cachedAnnouncementImageDataUri.replace(/'/g, "\\'") + '\')">' +
+        '</div>';
+    }
+    fetchAnnouncementImageIfNeeded(ann);
+    return '<div class="announcement-image-wrap"><div class="announcement-image-loading">Loading attachment…</div></div>';
+  }
+
+  async function fetchAnnouncementImageIfNeeded(ann) {
+    if (cachedAnnouncementImageUpdatedAt === ann.imageUpdatedAt && cachedAnnouncementImageDataUri) return;
+    if (announcementImageFetchInFlight) return;
+    announcementImageFetchInFlight = true;
+    try {
+      const result = await jsonp({ action: 'getAnnouncementImage' });
+      if (!result.success) return; // image may have been removed between poll and fetch — fine, just skip
+      cachedAnnouncementImageDataUri = 'data:image/jpeg;base64,' + result.imageBase64;
+      cachedAnnouncementImageUpdatedAt = ann.imageUpdatedAt;
+      renderAnnouncement(); // re-render now that the image is ready
+    } catch (err) {
+      console.error('[Announcement] image fetch failed:', err);
+    }
+    announcementImageFetchInFlight = false;
+  }
+
+  function openAnnouncementImageLightbox(dataUri) {
+    document.getElementById('announcementImgLightboxImg').src = dataUri;
+    document.getElementById('announcementImgLightbox').classList.add('open');
+  }
+
+  function closeAnnouncementImageLightbox() {
+    document.getElementById('announcementImgLightbox').classList.remove('open');
+    document.getElementById('announcementImgLightboxImg').src = '';
+  }
+
   function startEditAnnouncement() {
     if (!currentIsAdmin) {
       showToast('Admin access required.', 'error');
       return;
     }
     editingAnnouncement = true;
+    pendingAnnouncementImageBase64 = null;
+    pendingAnnouncementImageRemoved = false;
 
     const card = document.getElementById('announcementCard');
     const currentText = (currentData.announcement && currentData.announcement.text) || '';
@@ -4420,12 +4686,15 @@
       '</div>' +
       '<textarea class="announcement-textarea" id="announcementInput" maxlength="' + ANNOUNCEMENT_MAX_LENGTH_JS + '" placeholder="Write an office announcement…">' + escapeHtml(currentText) + '</textarea>' +
       '<div class="announcement-char-count" id="announcementCharCount"></div>' +
+      '<div class="announcement-image-edit-wrap" id="announcementImageEditWrap"></div>' +
       '<div class="announcement-edit-actions">' +
       '<button type="button" class="announcement-save-btn" id="announcementSaveBtn">Save</button>' +
       (hasExisting ? '<button type="button" class="announcement-clear-btn" id="announcementClearBtn">Clear</button>' : '') +
       '<button type="button" class="announcement-cancel-btn" id="announcementCancelBtn">Cancel</button>' +
       '</div>' +
       '<div class="announcement-error" id="announcementError"></div>';
+
+    renderAnnouncementImageEditor();
 
     const textarea = document.getElementById('announcementInput');
     const saveBtn = document.getElementById('announcementSaveBtn');
@@ -4438,8 +4707,80 @@
     updateAnnouncementCharCount();
   }
 
+  // Renders whichever image state currently applies while editing: a
+  // newly-picked (not yet saved) image, the existing saved one, or
+  // neither — plus the Attach/Change and Remove controls. Re-called
+  // after every change so the preview stays in sync with the pending
+  // state without needing a full startEditAnnouncement() rebuild
+  // (which would lose textarea focus/cursor position).
+  function renderAnnouncementImageEditor() {
+    const wrap = document.getElementById('announcementImageEditWrap');
+    if (!wrap) return;
+
+    const ann = currentData.announcement || {};
+    let previewSrc = null;
+    if (pendingAnnouncementImageBase64) {
+      previewSrc = 'data:image/jpeg;base64,' + pendingAnnouncementImageBase64;
+    } else if (!pendingAnnouncementImageRemoved && ann.hasImage && cachedAnnouncementImageDataUri && cachedAnnouncementImageUpdatedAt === ann.imageUpdatedAt) {
+      previewSrc = cachedAnnouncementImageDataUri;
+    } else if (!pendingAnnouncementImageRemoved && ann.hasImage) {
+      // Existing image not cached yet (e.g. admin never viewed it this
+      // session) — fetch it just so the editor can show a real preview
+      // instead of a blank "Change Image" state.
+      fetchAnnouncementImageIfNeeded(ann).then(() => {
+        if (editingAnnouncement) renderAnnouncementImageEditor();
+      });
+    }
+
+    const previewHtml = previewSrc
+      ? '<div class="announcement-image-preview">' +
+        '<img src="' + previewSrc + '" alt="Announcement attachment preview">' +
+        '<button type="button" class="announcement-image-remove-btn" id="announcementImageRemoveBtn" title="Remove image">&times;</button>' +
+        '</div>'
+      : '';
+
+    const attachLabel = previewSrc ? 'Change Image' : 'Attach Image';
+    wrap.innerHTML = previewHtml +
+      '<button type="button" class="announcement-attach-btn" id="announcementAttachBtn">' + attachLabel + '</button>';
+
+    const attachBtn = document.getElementById('announcementAttachBtn');
+    if (attachBtn) attachBtn.addEventListener('click', () => document.getElementById('announcementImageFileInput').click());
+    const removeBtn = document.getElementById('announcementImageRemoveBtn');
+    if (removeBtn) removeBtn.addEventListener('click', () => {
+      pendingAnnouncementImageBase64 = null;
+      pendingAnnouncementImageRemoved = true;
+      renderAnnouncementImageEditor();
+    });
+  }
+
+  async function handleAnnouncementImageFileSelected(event) {
+    const file = event.target.files && event.target.files[0];
+    event.target.value = ''; // reset so choosing the same file again still fires 'change'
+    if (!file || !editingAnnouncement) return;
+
+    if (!file.type || file.type.indexOf('image/') !== 0) {
+      showToast('Please choose an image file.', 'error');
+      return;
+    }
+
+    const attachBtn = document.getElementById('announcementAttachBtn');
+    if (attachBtn) { attachBtn.disabled = true; attachBtn.textContent = 'Processing…'; }
+    try {
+      pendingAnnouncementImageBase64 = await resizeAnnouncementImageToBase64(file, 900, 900);
+      pendingAnnouncementImageRemoved = false;
+      renderAnnouncementImageEditor();
+    } catch (err) {
+      console.error('[Announcement] image processing failed:', err);
+      showToast(err.message || 'Could not process that image.', 'error');
+      if (attachBtn) { attachBtn.disabled = false; attachBtn.textContent = 'Attach Image'; }
+    }
+  }
+  document.getElementById('announcementImageFileInput').addEventListener('change', handleAnnouncementImageFileSelected);
+
   function cancelEditAnnouncement() {
     editingAnnouncement = false;
+    pendingAnnouncementImageBase64 = null;
+    pendingAnnouncementImageRemoved = false;
     renderAnnouncement();
   }
 
@@ -4448,6 +4789,36 @@
     const counter = document.getElementById('announcementCharCount');
     if (!textarea || !counter) return;
     counter.textContent = textarea.value.length + ' / ' + ANNOUNCEMENT_MAX_LENGTH_JS;
+  }
+
+  // Sends the (already-compressed) base64 image to the backend in
+  // pieces — GET/JSONP URLs have practical length limits far below
+  // what even a modest image needs. The backend reassembles these via
+  // CacheService (same pattern as uploadPhotoChunk) and only writes to
+  // the AnnouncementImage sheet once the final chunk arrives. Unlike
+  // profile photos, this is admin-gated — it carries adminToken.
+  async function uploadAnnouncementImageChunks(base64Data) {
+    const CHUNK_SIZE = 1200;
+    const chunks = [];
+    for (let i = 0; i < base64Data.length; i += CHUNK_SIZE) {
+      chunks.push(base64Data.slice(i, i + CHUNK_SIZE));
+    }
+    const uploadId = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    for (let i = 0; i < chunks.length; i++) {
+      const result = await jsonp({
+        action: 'uploadAnnouncementImageChunk',
+        email: currentUserEmail,
+        adminToken: currentAdminToken,
+        uploadId: uploadId,
+        chunkIndex: i,
+        totalChunks: chunks.length,
+        chunkData: chunks[i]
+      });
+      console.debug('[Announcement] image chunk ' + (i + 1) + '/' + chunks.length + ' response:', result);
+      if (!result.success) {
+        throw new Error(result.message || 'Image upload failed.');
+      }
+    }
   }
 
   function showAnnouncementError(message) {
@@ -4477,13 +4848,40 @@
     try {
       const result = await jsonp({ action: 'setAnnouncement', email: currentUserEmail, adminToken: currentAdminToken, text: text });
       console.debug('[Announcement] setAnnouncement response:', result);
-      if (result.success) {
-        showToast(text ? 'Announcement posted.' : 'Announcement cleared.', 'info');
-        editingAnnouncement = false;
-        await loadAttendance();
-      } else {
+      if (!result.success) {
         showAnnouncementError(result.message || 'Could not save announcement.');
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
+        return;
       }
+
+      // Text saved fine — now commit whatever image change is pending,
+      // if any. A failure here still leaves the text saved (that part
+      // already succeeded), so it's reported as its own toast rather
+      // than blocking on the text's success message.
+      if (pendingAnnouncementImageBase64) {
+        saveBtn.textContent = 'Uploading image…';
+        try {
+          await uploadAnnouncementImageChunks(pendingAnnouncementImageBase64);
+        } catch (imgErr) {
+          console.error('[Announcement] image upload failed:', imgErr);
+          showToast(imgErr.message || 'Announcement saved, but the image failed to upload.', 'error');
+        }
+      } else if (pendingAnnouncementImageRemoved) {
+        try {
+          await jsonp({ action: 'clearAnnouncementImage', email: currentUserEmail, adminToken: currentAdminToken });
+        } catch (imgErr) {
+          console.error('[Announcement] image removal failed:', imgErr);
+        }
+      }
+
+      cachedAnnouncementImageDataUri = null; // force a fresh fetch under the new imageUpdatedAt
+      cachedAnnouncementImageUpdatedAt = '';
+      pendingAnnouncementImageBase64 = null;
+      pendingAnnouncementImageRemoved = false;
+
+      showToast(text ? 'Announcement posted.' : 'Announcement cleared.', 'info');
+      editingAnnouncement = false;
+      await loadAttendance();
     } catch (err) {
       console.error('[Announcement] save failed:', err);
       showAnnouncementError(err.message || 'Could not save announcement.');
@@ -4504,6 +4902,10 @@
       const result = await jsonp({ action: 'setAnnouncement', email: currentUserEmail, adminToken: currentAdminToken, text: '' });
       console.debug('[Announcement] clear response:', result);
       if (result.success) {
+        cachedAnnouncementImageDataUri = null;
+        cachedAnnouncementImageUpdatedAt = '';
+        pendingAnnouncementImageBase64 = null;
+        pendingAnnouncementImageRemoved = false;
         showToast('Announcement cleared.', 'info');
         editingAnnouncement = false;
         await loadAttendance();
