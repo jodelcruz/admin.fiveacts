@@ -2447,7 +2447,7 @@
           <div class="grid-toolbar">
             <div class="grid-search">
               <span class="search-icon">🔍</span>
-              <input type="text" id="empSearchInput" name="staff-directory-search" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="Search employee…" oninput="handleGridFilterChange()">
+              <input type="text" id="empSearchInput" name="staff-directory-search" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" readonly onfocus="this.removeAttribute('readonly');" placeholder="Search employee…" oninput="handleGridFilterChange()">
             </div>
             <div class="grid-filter-pills" id="gridFilterPills">
               <button type="button" class="filter-pill active" data-filter="all" onclick="setGridFilter('all')">All</button>
