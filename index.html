@@ -37,7 +37,14 @@
     background: linear-gradient(135deg, #f5fcf6 0%, #e8f7eb 60%, #cff0d7 100%);
     min-height: 100vh;
     overflow-x: hidden;
+    line-height: 1.5;
   }
+  /* Body text gets a comfortable, readable line-height above (there was
+     none set at all before, so most paragraphs/labels were relying on
+     the browser's cramped ~1.15 default). Headings use Barlow Condensed,
+     a display face that wants to sit tighter — this keeps them punchy
+     rather than inheriting the same loose spacing meant for paragraphs. */
+  h1, h2, h3 { line-height: 1.15; }
   img { max-width: 100%; }
 
   /* ══════════════ LOGIN / REGISTER SCREEN ══════════════ */
@@ -420,7 +427,7 @@
     width: max-content;
     max-width: min(90vw, 340px);
     background: #fff;
-    border-radius: 14px;
+    border-radius: 16px;
     box-shadow: 0 16px 40px rgba(0,0,0,0.18);
     padding: 14px;
     z-index: 80;
@@ -738,7 +745,7 @@
   /* ── ORGANIZATIONAL CHART ── */
   .org-chart-wrap {
     background: #fff;
-    border-radius: 14px;
+    border-radius: 16px;
     padding: 44px 24px 52px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.06);
     overflow-x: auto;
@@ -997,7 +1004,7 @@
 
   .bday-form-panel {
     background: #fff;
-    border-radius: 14px;
+    border-radius: 16px;
     padding: 20px 22px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.06);
     border-left: 4px solid var(--green);
@@ -1219,7 +1226,7 @@
   }
   .apac-table-wrap {
     background: #fff;
-    border-radius: 14px;
+    border-radius: 16px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.06);
     overflow-x: auto;
   }
@@ -1289,6 +1296,104 @@
   .apac-crew-chip:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
   .apac-crew-chip.cs { background: var(--green-light); color: var(--green-dark); }
   .apac-crew-chip.tbc { background: #cdeef0; color: #0d6b73; font-style: italic; }
+  .apac-empty-cell { font-size: 12.5px; color: var(--gray-mid); font-style: italic; }
+
+  /* ── APAC Schedule editor (admin) ── */
+  .apac-edit-hint {
+    font-size: 12.5px;
+    color: var(--gray-mid);
+    background: #fff;
+    border: 1px solid var(--gray-light);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+  }
+  .apac-edit-shift-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .apac-edit-shift-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--gray-light);
+  }
+  .apac-edit-shift-fields {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+  .apac-edit-shift-name, .apac-edit-shift-time {
+    border: 1.5px solid var(--gray-light);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+  }
+  .apac-edit-shift-name { min-width: 140px; }
+  .apac-edit-shift-time { min-width: 200px; }
+  .apac-edit-shift-name:focus, .apac-edit-shift-time:focus { outline: none; border-color: var(--green); }
+  .apac-edit-remove-shift-btn {
+    background: #fff;
+    border: 1.5px solid var(--certiverse-red);
+    color: var(--certiverse-red);
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .apac-edit-remove-shift-btn:hover { background: var(--certiverse-red); color: #fff; }
+  .apac-edit-days-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+  .apac-edit-day label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--gray-mid);
+    margin-bottom: 5px;
+  }
+  .apac-edit-textarea {
+    width: 100%;
+    min-height: 110px;
+    border: 1.5px solid var(--gray-light);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12.5px;
+    font-family: 'Inter', sans-serif;
+    resize: vertical;
+    box-sizing: border-box;
+  }
+  .apac-edit-textarea:focus { outline: none; border-color: var(--green); }
+  .apac-add-shift-btn {
+    background: #fff;
+    border: 1.5px dashed var(--gray-mid);
+    color: var(--gray-dark);
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 16px;
+  }
+  .apac-add-shift-btn:hover { border-color: var(--green); color: var(--green-dark); }
+  .apac-edit-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
   /* ── ADMIN DASHBOARD (manager/HR only) ── */
   .admin-panel-header {
@@ -1318,7 +1423,7 @@
     gap: 14px;
     flex-wrap: wrap;
     background: #fff;
-    border-radius: 14px;
+    border-radius: 16px;
     padding: 16px 18px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.06);
     margin-bottom: 16px;
@@ -1370,7 +1475,7 @@
 
   .admin-table-wrap {
     background: #fff;
-    border-radius: 14px;
+    border-radius: 16px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.06);
     overflow-x: auto;
     overflow-y: auto;
@@ -1488,7 +1593,7 @@
   .announcement-section { margin-top: 0; }
   .announcement-card {
     background: #fff;
-    border-radius: 14px;
+    border-radius: 16px;
     padding: 20px 22px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.06);
     border-left: 4px solid var(--green);
@@ -1697,7 +1802,7 @@
   /* ── UPCOMING BIRTHDAYS/EVENTS (dashboard sidebar) ── */
   .upcoming-card {
     background: #fff;
-    border-radius: 14px;
+    border-radius: 16px;
     padding: 18px 20px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.06);
     border-left: 4px solid #d9a441;
@@ -2342,7 +2447,7 @@
           <div class="grid-toolbar">
             <div class="grid-search">
               <span class="search-icon">🔍</span>
-              <input type="text" id="empSearchInput" placeholder="Search employee…" oninput="handleGridFilterChange()">
+              <input type="text" id="empSearchInput" name="staff-directory-search" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="Search employee…" oninput="handleGridFilterChange()">
             </div>
             <div class="grid-filter-pills" id="gridFilterPills">
               <button type="button" class="filter-pill active" data-filter="all" onclick="setGridFilter('all')">All</button>
@@ -2622,42 +2727,14 @@
           <h1>APAC Shift Schedule</h1>
           <div class="date-tag">Revised schedule &middot; Effective August 3, 2026</div>
         </div>
-        <button type="button" class="back-to-dashboard-btn" onclick="showDashboardPage()">&larr; Back to Dashboard</button>
+        <div class="bday-header-actions">
+          <button type="button" class="bday-add-btn" id="apacEditBtn" style="display:none;">Edit Schedule</button>
+          <button type="button" class="back-to-dashboard-btn" onclick="showDashboardPage()">&larr; Back to Dashboard</button>
+        </div>
       </div>
 
-      <div class="apac-legend">
-        <span class="apac-legend-item"><span class="apac-crew-chip cs">Name (CS)</span> Candidate Support</span>
-        <span class="apac-legend-item"><span class="apac-crew-chip tbc">Name</span> To Be Confirmed</span>
-      </div>
-
-      <div class="apac-table-wrap">
-        <table class="apac-table">
-          <thead>
-            <tr><th class="apac-shift-col">Shift</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th><th>Sunday</th></tr>
-          </thead>
-          <tbody>
-        <tr>
-          <td class="apac-shift-col"><div class="apac-shift-name">APAC 1</div><div class="apac-shift-time">6:00 AM – 2:00 PM</div></td>
-          <td><div class="apac-day-cell"><span class="apac-crew-chip">Jeff</span><span class="apac-crew-chip">Kaye</span><span class="apac-crew-chip tbc">RA</span><span class="apac-crew-chip tbc">Paul</span><span class="apac-crew-chip">Moses</span><span class="apac-crew-chip cs">Dianne (CS)</span><span class="apac-crew-chip cs">Rap (CS)</span></div></td>
-          <td><div class="apac-day-cell"><span class="apac-crew-chip">Jeff</span><span class="apac-crew-chip">Kaye</span><span class="apac-crew-chip tbc">RA</span><span class="apac-crew-chip tbc">Paul</span><span class="apac-crew-chip">Moses</span><span class="apac-crew-chip cs">Dianne (CS)</span><span class="apac-crew-chip cs">Rap (CS)</span></div></td>
-          <td><div class="apac-day-cell"><span class="apac-crew-chip">Jeff</span><span class="apac-crew-chip">Keenan</span><span class="apac-crew-chip">Rachelle</span><span class="apac-crew-chip">KC</span><span class="apac-crew-chip">Chris</span><span class="apac-crew-chip cs">Jane (CS)</span><span class="apac-crew-chip cs">Ralph (CS)</span></div></td>
-          <td><div class="apac-day-cell"><span class="apac-crew-chip">Jeff</span><span class="apac-crew-chip">Keenan</span><span class="apac-crew-chip">Rachelle</span><span class="apac-crew-chip">KC</span><span class="apac-crew-chip">Chris</span><span class="apac-crew-chip cs">Jane (CS)</span><span class="apac-crew-chip cs">Ralph (CS)</span></div></td>
-          <td><div class="apac-day-cell"><span class="apac-crew-chip">Dyanne</span><span class="apac-crew-chip">Faith</span><span class="apac-crew-chip">Kaye</span><span class="apac-crew-chip tbc">RA</span><span class="apac-crew-chip tbc">Paul</span><span class="apac-crew-chip">Moses</span><span class="apac-crew-chip cs">Gian (CS)</span><span class="apac-crew-chip cs">Ralph (CS)</span></div></td>
-          <td><div class="apac-day-cell"><span class="apac-crew-chip">Dyanne</span><span class="apac-crew-chip">Faith</span><span class="apac-crew-chip">Kaye</span><span class="apac-crew-chip tbc">RA</span><span class="apac-crew-chip tbc">Paul</span><span class="apac-crew-chip">Moses</span><span class="apac-crew-chip cs">Gian (CS)</span><span class="apac-crew-chip cs">Ralph (CS)</span></div></td>
-          <td><div class="apac-day-cell"><span class="apac-crew-chip">Dyanne</span><span class="apac-crew-chip">Grace</span><span class="apac-crew-chip">Kaye</span><span class="apac-crew-chip tbc">RA</span><span class="apac-crew-chip tbc">Paul</span><span class="apac-crew-chip">Moses</span><span class="apac-crew-chip cs">Dianne (CS)</span><span class="apac-crew-chip cs">Ralph (CS)</span></div></td>
-        </tr>
-        <tr>
-          <td class="apac-shift-col"><div class="apac-shift-name">APAC 2</div><div class="apac-shift-time">2:00 PM – 10:00 PM</div></td>
-          <td><div class="apac-day-cell"><span class="apac-crew-chip">Jodel</span><span class="apac-crew-chip">Grace</span><span class="apac-crew-chip">Faith</span><span class="apac-crew-chip">Mina</span><span class="apac-crew-chip cs">Gian (CS)</span></div></td>
-          <td><div class="apac-day-cell"><span class="apac-crew-chip">Jodel</span><span class="apac-crew-chip">Grace</span><span class="apac-crew-chip">Faith</span><span class="apac-crew-chip">Mina</span><span class="apac-crew-chip cs">Gian (CS)</span></div></td>
-          <td><div class="apac-day-cell"><span class="apac-crew-chip">Dyanne</span><span class="apac-crew-chip">Seb</span><span class="apac-crew-chip">Grace</span><span class="apac-crew-chip">Mark</span><span class="apac-crew-chip">Bob</span><span class="apac-crew-chip cs">Dianne (CS)</span></div></td>
-          <td><div class="apac-day-cell"><span class="apac-crew-chip">Dyanne</span><span class="apac-crew-chip">Seb</span><span class="apac-crew-chip">Grace</span><span class="apac-crew-chip">Mark</span><span class="apac-crew-chip">Bob</span><span class="apac-crew-chip cs">Dianne (CS)</span></div></td>
-          <td><div class="apac-day-cell"><span class="apac-crew-chip">Jodel</span><span class="apac-crew-chip">Seb</span><span class="apac-crew-chip">Keenan</span><span class="apac-crew-chip">KC</span><span class="apac-crew-chip">Rachelle</span><span class="apac-crew-chip">Mina</span><span class="apac-crew-chip">Mark</span><span class="apac-crew-chip">Bob</span><span class="apac-crew-chip">Chris</span><span class="apac-crew-chip cs">Jane (CS)</span><span class="apac-crew-chip cs">Rap (CS)</span></div></td>
-          <td><div class="apac-day-cell"><span class="apac-crew-chip">Jodel</span><span class="apac-crew-chip">Seb</span><span class="apac-crew-chip">Keenan</span><span class="apac-crew-chip">KC</span><span class="apac-crew-chip">Rachelle</span><span class="apac-crew-chip">Mina</span><span class="apac-crew-chip">Mark</span><span class="apac-crew-chip">Bob</span><span class="apac-crew-chip">Chris</span><span class="apac-crew-chip cs">Jane (CS)</span><span class="apac-crew-chip cs">Rap (CS)</span></div></td>
-          <td><div class="apac-day-cell"><span class="apac-crew-chip">Jodel</span><span class="apac-crew-chip">Jeff</span><span class="apac-crew-chip">Seb</span><span class="apac-crew-chip">Keenan</span><span class="apac-crew-chip">KC</span><span class="apac-crew-chip">Rachelle</span><span class="apac-crew-chip">Faith</span><span class="apac-crew-chip">Mina</span><span class="apac-crew-chip">Mark</span><span class="apac-crew-chip">Bob</span><span class="apac-crew-chip">Chris</span><span class="apac-crew-chip cs">Jane (CS)</span><span class="apac-crew-chip cs">Gian (CS)</span><span class="apac-crew-chip cs">Rap (CS)</span></div></td>
-        </tr>
-          </tbody>
-        </table>
+      <div id="apacScheduleContent">
+        <div class="loading">Loading schedule…</div>
       </div>
     </div>
   </div>
@@ -2801,7 +2878,7 @@
     window.open('https://team-ops-share.preview.emergentagent.com/', '_blank', 'noopener');
   }
 
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzSA8VqyL4-pnzIUnoP-vX1HKWWYZ-NFS4yjlsNr-0BGlzNpXmMvY_zcxApIhIH0UPC/exec";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyTcGYcDkWSD7qWfgStvx7O3wbE7ch6hls_kXnzDEMdDopkjLMMrVd3I6RR6cus8VX-/exec";
   const SESSION_KEY = "fa_staff_session";
 
   // Identity of the signed-in staff member, used to pin their own
@@ -3855,9 +3932,76 @@
     loadBirthdays();
   }
 
+  let apacScheduleData = null;
+  let editingApacSchedule = false;
+  const APAC_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
   function showApacSchedulePage() {
     showMainView('apacScheduleView');
     closeMobileNav();
+    loadApacSchedule();
+  }
+
+  async function loadApacSchedule() {
+    const content = document.getElementById('apacScheduleContent');
+    try {
+      const result = await jsonp({ action: 'getApacSchedule' });
+      if (!result.success) {
+        content.innerHTML = '<div class="loading">Could not load the schedule.</div>';
+        return;
+      }
+      apacScheduleData = result.schedule;
+      editingApacSchedule = false;
+      renderApacSchedule();
+      const editBtn = document.getElementById('apacEditBtn');
+      if (editBtn) {
+        editBtn.style.display = currentIsAdmin ? 'inline-block' : 'none';
+        editBtn.onclick = startEditApacSchedule;
+        editBtn.textContent = 'Edit Schedule';
+      }
+    } catch (err) {
+      console.error('[APAC] load failed:', err);
+      content.innerHTML = '<div class="loading">Could not load the schedule.</div>';
+    }
+  }
+
+  // Renders one crew entry's chip classes/label from its stored
+  // {name, type} shape — "type" is the single source of truth for
+  // whether "(CS)"/"" gets appended, so the editor never needs the
+  // admin to manually type a suffix into the name itself.
+  function apacChipHtml(entry) {
+    const cls = entry.type === 'cs' ? 'cs' : (entry.type === 'tbc' ? 'tbc' : '');
+    const label = entry.type === 'cs' ? entry.name + ' (CS)' : entry.name;
+    return '<span class="apac-crew-chip' + (cls ? ' ' + cls : '') + '">' + escapeHtml(label) + '</span>';
+  }
+
+  function renderApacSchedule() {
+    const content = document.getElementById('apacScheduleContent');
+    if (!apacScheduleData || !content) return;
+
+    const theadCells = '<th class="apac-shift-col">Shift</th>' + APAC_DAYS.map(d => '<th>' + d + '</th>').join('');
+
+    const rows = apacScheduleData.shifts.map(shift => {
+      const dayCells = APAC_DAYS.map(day => {
+        const entries = shift.days[day] || [];
+        const chips = entries.map(apacChipHtml).join('');
+        return '<td><div class="apac-day-cell">' + (chips || '<span class="apac-empty-cell">&mdash;</span>') + '</div></td>';
+      }).join('');
+      return '<tr>' +
+        '<td class="apac-shift-col"><div class="apac-shift-name">' + escapeHtml(shift.name) + '</div><div class="apac-shift-time">' + escapeHtml(shift.time) + '</div></td>' +
+        dayCells +
+        '</tr>';
+    }).join('');
+
+    content.innerHTML =
+      '<div class="apac-legend">' +
+      '<span class="apac-legend-item"><span class="apac-crew-chip cs">Name (CS)</span> Candidate Support</span>' +
+      '<span class="apac-legend-item"><span class="apac-crew-chip tbc">Name</span> To Be Confirmed</span>' +
+      '</div>' +
+      '<div class="apac-table-wrap">' +
+      '<table class="apac-table"><thead><tr>' + theadCells + '</tr></thead><tbody>' + rows + '</tbody></table>' +
+      '</div>';
+
     highlightApacToday();
   }
 
@@ -3875,6 +4019,161 @@
     table.querySelectorAll('.apac-today').forEach(cell => cell.classList.remove('apac-today'));
     table.querySelectorAll('thead th:nth-child(' + nth + '), tbody td:nth-child(' + nth + ')')
       .forEach(cell => cell.classList.add('apac-today'));
+  }
+
+  // Converts a crew list into the editor's one-name-per-line text
+  // format, tagging CS/TBC people with a trailing "(CS)"/"(TBC)" —
+  // typing that tag back in on save is what sets their type, so the
+  // admin only has one thing to learn instead of a separate control
+  // per person.
+  function apacEntriesToText(entries) {
+    return (entries || []).map(e => {
+      if (e.type === 'cs') return e.name + ' (CS)';
+      if (e.type === 'tbc') return e.name + ' (TBC)';
+      return e.name;
+    }).join('\n');
+  }
+
+  // The inverse of apacEntriesToText — parses the admin's edited text
+  // back into {name, type} entries. Blank lines are skipped so trailing
+  // newlines don't create empty phantom crew members.
+  function apacTextToEntries(text) {
+    return (text || '').split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .map(line => {
+        const csMatch = line.match(/^(.*?)\s*\(CS\)$/i);
+        if (csMatch) return { name: csMatch[1].trim(), type: 'cs' };
+        const tbcMatch = line.match(/^(.*?)\s*\(TBC\)$/i);
+        if (tbcMatch) return { name: tbcMatch[1].trim(), type: 'tbc' };
+        return { name: line, type: 'normal' };
+      })
+      .filter(e => e.name.length > 0);
+  }
+
+  function startEditApacSchedule() {
+    if (!currentIsAdmin) {
+      showToast('Admin access required.', 'error');
+      return;
+    }
+    editingApacSchedule = true;
+    renderApacScheduleEditor();
+    const editBtn = document.getElementById('apacEditBtn');
+    if (editBtn) editBtn.style.display = 'none';
+  }
+
+  function cancelEditApacSchedule() {
+    editingApacSchedule = false;
+    renderApacSchedule();
+    const editBtn = document.getElementById('apacEditBtn');
+    if (editBtn) editBtn.style.display = currentIsAdmin ? 'inline-block' : 'none';
+  }
+
+  function renderApacScheduleEditor() {
+    const content = document.getElementById('apacScheduleContent');
+    if (!content || !apacScheduleData) return;
+
+    const shiftCardsHtml = apacScheduleData.shifts.map((shift, shiftIdx) => {
+      const dayFieldsHtml = APAC_DAYS.map(day => {
+        const text = apacEntriesToText(shift.days[day] || []);
+        return '<div class="apac-edit-day">' +
+          '<label>' + day + '</label>' +
+          '<textarea class="apac-edit-textarea" data-shift="' + shiftIdx + '" data-day="' + day + '" placeholder="One name per line&#10;Add (CS) or (TBC) after a name to tag it">' + escapeHtml(text) + '</textarea>' +
+          '</div>';
+      }).join('');
+
+      return '<div class="apac-edit-shift-card" data-shift-idx="' + shiftIdx + '">' +
+        '<div class="apac-edit-shift-header">' +
+        '<div class="apac-edit-shift-fields">' +
+        '<input type="text" class="apac-edit-shift-name" data-shift="' + shiftIdx + '" value="' + escapeHtml(shift.name) + '" placeholder="Shift name">' +
+        '<input type="text" class="apac-edit-shift-time" data-shift="' + shiftIdx + '" value="' + escapeHtml(shift.time) + '" placeholder="e.g. 6:00 AM \u2013 2:00 PM">' +
+        '</div>' +
+        '<button type="button" class="apac-edit-remove-shift-btn" data-shift="' + shiftIdx + '" title="Remove this shift">&times; Remove Shift</button>' +
+        '</div>' +
+        '<div class="apac-edit-days-grid">' + dayFieldsHtml + '</div>' +
+        '</div>';
+    }).join('');
+
+    content.innerHTML =
+      '<div class="apac-edit-hint">One name per line in each day box. Add <strong>(CS)</strong> or <strong>(TBC)</strong> after a name to tag their role — e.g. "Dianne (CS)".</div>' +
+      shiftCardsHtml +
+      '<button type="button" class="apac-add-shift-btn" id="apacAddShiftBtn">+ Add Shift</button>' +
+      '<div class="apac-edit-actions">' +
+      '<button type="button" class="announcement-save-btn" id="apacSaveBtn">Save Schedule</button>' +
+      '<button type="button" class="announcement-cancel-btn" id="apacCancelBtn">Cancel</button>' +
+      '</div>' +
+      '<div class="announcement-error" id="apacEditError"></div>';
+
+    document.getElementById('apacAddShiftBtn').addEventListener('click', addApacShift);
+    document.getElementById('apacSaveBtn').addEventListener('click', saveApacSchedule);
+    document.getElementById('apacCancelBtn').addEventListener('click', cancelEditApacSchedule);
+    content.querySelectorAll('.apac-edit-remove-shift-btn').forEach(btn => {
+      btn.addEventListener('click', () => removeApacShift(parseInt(btn.dataset.shift, 10)));
+    });
+  }
+
+  // Reads every field currently in the editor DOM back into
+  // apacScheduleData before doing anything that re-renders (adding a
+  // shift, removing one, or saving) — otherwise whatever the admin had
+  // just typed would be silently discarded by the next render.
+  function syncApacEditorFieldsIntoData() {
+    document.querySelectorAll('.apac-edit-shift-name').forEach(input => {
+      const idx = parseInt(input.dataset.shift, 10);
+      if (apacScheduleData.shifts[idx]) apacScheduleData.shifts[idx].name = input.value.trim();
+    });
+    document.querySelectorAll('.apac-edit-shift-time').forEach(input => {
+      const idx = parseInt(input.dataset.shift, 10);
+      if (apacScheduleData.shifts[idx]) apacScheduleData.shifts[idx].time = input.value.trim();
+    });
+    document.querySelectorAll('.apac-edit-textarea').forEach(textarea => {
+      const idx = parseInt(textarea.dataset.shift, 10);
+      const day = textarea.dataset.day;
+      if (apacScheduleData.shifts[idx]) apacScheduleData.shifts[idx].days[day] = apacTextToEntries(textarea.value);
+    });
+  }
+
+  function addApacShift() {
+    syncApacEditorFieldsIntoData();
+    const emptyDays = {};
+    APAC_DAYS.forEach(d => { emptyDays[d] = []; });
+    apacScheduleData.shifts.push({ name: 'New Shift', time: '', days: emptyDays });
+    renderApacScheduleEditor();
+  }
+
+  function removeApacShift(idx) {
+    if (!window.confirm('Remove this shift entirely?')) return;
+    syncApacEditorFieldsIntoData();
+    apacScheduleData.shifts.splice(idx, 1);
+    renderApacScheduleEditor();
+  }
+
+  async function saveApacSchedule() {
+    syncApacEditorFieldsIntoData();
+    const errorEl = document.getElementById('apacEditError');
+    if (errorEl) errorEl.classList.remove('show');
+
+    const saveBtn = document.getElementById('apacSaveBtn');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+    try {
+      const result = await jsonp({
+        action: 'setApacSchedule',
+        email: currentUserEmail,
+        adminToken: currentAdminToken,
+        scheduleJson: JSON.stringify(apacScheduleData)
+      });
+      console.debug('[APAC] setApacSchedule response:', result);
+      if (result.success) {
+        showToast('Schedule saved.', 'info');
+        editingApacSchedule = false;
+        await loadApacSchedule();
+      } else {
+        if (errorEl) { errorEl.textContent = result.message || 'Could not save the schedule.'; errorEl.classList.add('show'); }
+      }
+    } catch (err) {
+      console.error('[APAC] save failed:', err);
+      if (errorEl) { errorEl.textContent = err.message || 'Could not save the schedule.'; errorEl.classList.add('show'); }
+    }
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Schedule'; }
   }
 
   async function loadBirthdays() {
