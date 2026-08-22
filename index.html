@@ -482,6 +482,11 @@
   .hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
   .hamburger-btn.open span:nth-child(2) { opacity: 0; }
   .hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+  /* Once the drawer is open, its own close button (below) handles
+     closing — leaving the hamburger visible too just meant two X icons
+     stacked on top of each other on narrower phones, where the drawer's
+     width leaves barely any margin next to the hamburger's position. */
+  .hamburger-btn.open { display: none; }
 
   .nav-backdrop {
     display: none;
