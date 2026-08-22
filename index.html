@@ -9,6 +9,15 @@
     const cleanPath = window.location.pathname.replace(/index\.html$/i, '');
     window.history.replaceState(null, '', cleanPath + window.location.search + window.location.hash);
   }
+  // Applying the saved theme here, before the rest of the page parses,
+  // avoids a "flash of light mode" for anyone who's chosen dark — if
+  // this waited until the main script block at the bottom, the browser
+  // would paint the light theme first, then flip a moment later.
+  try {
+    if (localStorage.getItem('fa_theme') === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  } catch (err) {}
 </script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -30,6 +39,174 @@
     --white: #ffffff;
     --certiverse-red: #E0284F;
   }
+
+  /* =========================================================
+     DARK MODE — Phase 1
+     Scoped deliberately to the login screen, nav, main dashboard,
+     profile modal, and toast — the highest-traffic surfaces. Org
+     Chart, Birthday Calendar, APAC Schedule, and the Admin Dashboard
+     are intentionally left on their existing light styling for now;
+     those pages use a lot of hardcoded colors outside the shared
+     variables, so folding them in safely is a separate follow-up
+     pass rather than something to rush into this same block.
+
+     This does NOT override the shared --black/--gray-dark/--gray-mid/
+     etc. variables above — doing so would leak dark-mode text colors
+     onto the still-light out-of-scope pages, since they read those
+     same variables against unchanged white/light backgrounds. Instead
+     every rule below is scoped to a specific in-scope selector.
+     ========================================================= */
+  [data-theme="dark"] body {
+    color: #f0f0f0;
+    background: linear-gradient(135deg, #10312f 0%, #0d2422 50%, #0a1a19 100%);
+  }
+
+  /* ── Login screen ── */
+  [data-theme="dark"] .login-card { background: #16211f; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+  [data-theme="dark"] .login-card h1 { color: #f0f0f0; }
+  [data-theme="dark"] .login-card p.sub { color: #9fb0ac; }
+  [data-theme="dark"] .auth-tabs { border-color: #274943; }
+  [data-theme="dark"] .auth-tabs button { background: #1c2b28; color: #9fb0ac; }
+  [data-theme="dark"] .auth-tabs button.active { background: var(--green); color: #fff; }
+  [data-theme="dark"] .auth-form label { color: #d5dfdb; }
+  [data-theme="dark"] .auth-form input {
+    background: #1c2b28;
+    border-color: #2f4c46;
+    color: #f0f0f0;
+  }
+  [data-theme="dark"] .auth-form input::placeholder { color: #6f8580; }
+  [data-theme="dark"] .login-status.checking { color: #9fb0ac; }
+  [data-theme="dark"] .verify-box { background: #14261f; border-color: #275c3f; }
+  [data-theme="dark"] .verify-box p { color: #d5dfdb; }
+  [data-theme="dark"] .login-footnote { color: rgba(240,240,240,0.35); }
+  [data-theme="dark"] .config-warning { background: #382c10; border-color: #7a5b00; color: #f0c36d; }
+
+  /* ── Nav ── */
+  [data-theme="dark"] .app-nav { background: #16211f; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+  [data-theme="dark"] .app-brand span { color: #f0f0f0; }
+  [data-theme="dark"] .hamburger-btn { border-color: #2f4c46; }
+  [data-theme="dark"] .hamburger-btn span { background: #d5dfdb; }
+  [data-theme="dark"] .app-nav-links a {
+    color: #d5dfdb;
+    border-color: #2f4c46;
+  }
+  [data-theme="dark"] .app-nav-links a:hover {
+    background: #1c3a2f;
+    color: #8fe0a3;
+    border-color: var(--green);
+  }
+  [data-theme="dark"] .app-nav-links a.admin-nav-link {
+    border-color: #a37f22;
+    color: #e8c96a;
+    background: #2e2510;
+  }
+  [data-theme="dark"] .app-nav-links a.admin-nav-link:hover {
+    background: #3a2f14;
+    color: #f0d585;
+    border-color: #c9a53a;
+  }
+  [data-theme="dark"] .app-user-trigger { background: #1c2b28; border-color: #2f4c46; }
+  [data-theme="dark"] .app-user-tag { color: #d5dfdb; }
+  [data-theme="dark"] .user-caret { color: #9fb0ac; }
+  [data-theme="dark"] .user-dropdown { background: #16211f; box-shadow: 0 16px 40px rgba(0,0,0,0.45); }
+  [data-theme="dark"] .user-dropdown-label { color: #9fb0ac; }
+  [data-theme="dark"] .user-dropdown-email { color: #f0f0f0; border-bottom-color: #2f4c46; }
+  [data-theme="dark"] .app-logout { background: #1c2b28; }
+  [data-theme="dark"] .nav-drawer-header { border-bottom-color: #2f4c46; }
+  [data-theme="dark"] .nav-drawer-header span { color: #9fb0ac; }
+  @media (max-width: 1400px) {
+    [data-theme="dark"] .app-nav-links { background: #16211f; box-shadow: 6px 0 30px rgba(0,0,0,0.5); }
+  }
+
+  /* ── Dashboard ── */
+  [data-theme="dark"] .panel-header { background: #16211f; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+  [data-theme="dark"] .panel-header h1 { color: #f0f0f0; }
+  [data-theme="dark"] .panel-header .date-tag { color: #9fb0ac; }
+  [data-theme="dark"] .my-status-card { background: #1c2b28; border-color: #2f4c46; }
+  [data-theme="dark"] .my-status-name { color: #f0f0f0; }
+  [data-theme="dark"] .my-status-line { color: #9fb0ac; }
+  [data-theme="dark"] .my-status-line .dot { background: #2f4c46; }
+  [data-theme="dark"] .my-status-loading { color: #9fb0ac; }
+  [data-theme="dark"] .grid-search input { background: #1c2b28; border-color: #2f4c46; color: #f0f0f0; }
+  [data-theme="dark"] .filter-pill { background: #1c2b28; border-color: #2f4c46; color: #d5dfdb; }
+  [data-theme="dark"] .emp-card { background: #1c2b28; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+  [data-theme="dark"] .emp-card.status-out { border-color: #2f4c46; }
+  [data-theme="dark"] .emp-name { color: #f0f0f0; }
+  [data-theme="dark"] .emp-status { color: #9fb0ac; }
+  [data-theme="dark"] .emp-status .dot { background: #2f4c46; }
+  [data-theme="dark"] .emp-status-chip { background: #2f4c46; color: #d5dfdb; }
+  [data-theme="dark"] .announcement-card { background: #1c2b28; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+  [data-theme="dark"] .announcement-header h3 { color: #f0f0f0; }
+  [data-theme="dark"] .announcement-edit-btn { background: #1c2b28; border-color: #2f4c46; color: #d5dfdb; }
+  [data-theme="dark"] .announcement-text { color: #d5dfdb; }
+  [data-theme="dark"] .announcement-meta, [data-theme="dark"] .announcement-empty { color: #9fb0ac; }
+  [data-theme="dark"] .announcement-textarea { background: #1c2b28; border-color: #2f4c46; color: #f0f0f0; }
+  [data-theme="dark"] .announcement-char-count { color: #9fb0ac; }
+  [data-theme="dark"] .announcement-clear-btn, [data-theme="dark"] .announcement-cancel-btn { background: #1c2b28; color: #d5dfdb; }
+  [data-theme="dark"] .announcement-cancel-btn { border-color: #2f4c46; }
+  [data-theme="dark"] .announcement-image-loading { color: #9fb0ac; }
+  [data-theme="dark"] .upcoming-card { background: #1c2b28; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+  [data-theme="dark"] .upcoming-header h3 { color: #f0f0f0; }
+  [data-theme="dark"] .upcoming-event-name { color: #d5dfdb; }
+  [data-theme="dark"] .upcoming-event-when, [data-theme="dark"] .upcoming-empty { color: #9fb0ac; }
+  [data-theme="dark"] .upcoming-event-row { background: #2e2510; }
+  [data-theme="dark"] .upcoming-event-row.upcoming-today { background: #3a2f14; }
+  [data-theme="dark"] .upcoming-event-row.upcoming-anniversary { background: #1c3a2f; }
+  [data-theme="dark"] .upcoming-event-date { color: #e8c96a; }
+  [data-theme="dark"] .upcoming-event-row.upcoming-anniversary .upcoming-event-date { color: #8fe0a3; }
+
+  /* ── Profile modal ── */
+  [data-theme="dark"] .modal-box { background: #16211f; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+  [data-theme="dark"] .modal-close { color: #9fb0ac; }
+  [data-theme="dark"] .modal-header h2 { color: #f0f0f0; }
+  [data-theme="dark"] .modal-header .modal-date { color: #9fb0ac; }
+  [data-theme="dark"] .pin-section { background: #1c3a2f; border-color: #275c3f; }
+  [data-theme="dark"] .pin-section.pin-enter { background: #1c2b28; border-color: #2f4c46; }
+  [data-theme="dark"] .pin-section.pin-locked { background: #1c2b28; border-color: #2f4c46; }
+  [data-theme="dark"] .pin-section-title { color: #d5dfdb; }
+  [data-theme="dark"] .pin-section-sub { color: #9fb0ac; }
+  [data-theme="dark"] .pin-inputs input, [data-theme="dark"] .pin-single-input input {
+    background: #1c2b28; border-color: #2f4c46; color: #f0f0f0;
+  }
+  [data-theme="dark"] .pin-forgot-link { color: #9fb0ac; }
+  [data-theme="dark"] .note-field label { color: #d5dfdb; }
+  [data-theme="dark"] .note-field textarea { background: #1c2b28; border-color: #2f4c46; color: #f0f0f0; }
+  [data-theme="dark"] .punch-log h3 { color: #9fb0ac; }
+  [data-theme="dark"] .punch-entry { border-bottom-color: #2f4c46; }
+  [data-theme="dark"] .punch-entry .pe-note, [data-theme="dark"] .punch-entry .pe-time { color: #9fb0ac; }
+  [data-theme="dark"] .no-punches { color: #9fb0ac; }
+  [data-theme="dark"] .log-day-label { color: #9fb0ac; }
+  [data-theme="dark"] .announcement-image-preview img,
+  [data-theme="dark"] .modal-avatar { background: #1c3a2f; }
+
+  /* ── Toast ── */
+  [data-theme="dark"] .toast.error { background: #3a1c22; color: #ff8fa0; }
+  [data-theme="dark"] .toast.info { background: #1c3a2f; color: #8fe0a3; }
+  [data-theme="dark"] .loading { color: #9fb0ac; }
+
+  /* ── Theme toggle button (nav) ── */
+  .theme-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: none;
+    border: 1.5px solid var(--gray-light);
+    cursor: pointer;
+    flex-shrink: 0;
+    color: var(--gray-dark);
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .theme-toggle-btn:hover { border-color: var(--green); color: var(--green-dark); }
+  .theme-toggle-btn svg { width: 17px; height: 17px; }
+  .theme-toggle-btn .icon-moon { display: none; }
+  [data-theme="dark"] .theme-toggle-btn { border-color: #2f4c46; color: #d5dfdb; }
+  [data-theme="dark"] .theme-toggle-btn:hover { border-color: var(--green); color: #8fe0a3; }
+  [data-theme="dark"] .theme-toggle-btn .icon-sun { display: none; }
+  [data-theme="dark"] .theme-toggle-btn .icon-moon { display: flex; }
+
   html { -webkit-text-size-adjust: 100%; }
   body {
     font-family: 'Inter', sans-serif;
@@ -370,7 +547,7 @@
     color: #6b5514;
     border-color: #b6912a;
   }
-  .app-nav-right { position: relative; flex-shrink: 0; }
+  .app-nav-right { position: relative; flex-shrink: 0; display: flex; align-items: center; gap: 10px; }
   .app-user-trigger {
     display: flex;
     align-items: center;
@@ -2403,6 +2580,10 @@
       </div>
 
       <div class="app-nav-right">
+        <button type="button" class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+        </button>
         <button type="button" class="app-user-trigger" id="userMenuTrigger" onclick="toggleUserMenu()" aria-haspopup="true" aria-expanded="false">
           <span class="app-user-avatar" id="userAvatar"></span>
           <span class="app-user-tag" id="userLabel"></span>
@@ -3115,6 +3296,22 @@
     if (card) {
       card.className = 'my-status-card';
       card.innerHTML = '<div class="my-status-loading">Loading your status…</div>';
+    }
+  }
+
+  /* ---------- Theme toggle (dark mode) ---------- */
+  // Phase 1: covers login, nav, main dashboard, profile modal, toast.
+  // Org Chart / Birthday Calendar / APAC Schedule / Admin Dashboard are
+  // intentionally left on light styling for now — see the CSS comment
+  // at the top of the dark-mode block for why.
+  function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+      document.documentElement.removeAttribute('data-theme');
+      try { localStorage.setItem('fa_theme', 'light'); } catch (err) {}
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      try { localStorage.setItem('fa_theme', 'dark'); } catch (err) {}
     }
   }
 
