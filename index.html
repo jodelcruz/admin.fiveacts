@@ -1820,6 +1820,39 @@
     line-height: 1.6;
     white-space: pre-line;
   }
+  .announcement-reactions-bar {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .announcement-reaction-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #f7faf7;
+    border: 1.5px solid var(--gray-light);
+    border-radius: 16px;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: transform 0.12s, border-color 0.15s, background 0.15s;
+  }
+  .announcement-reaction-btn:hover { transform: translateY(-1px); border-color: var(--green); }
+  .announcement-reaction-btn .reaction-emoji { font-size: 15px; line-height: 1; }
+  .announcement-reaction-btn .reaction-count {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--gray-dark);
+  }
+  .announcement-reaction-btn.mine {
+    background: var(--green-light);
+    border-color: var(--green);
+  }
+  .announcement-reaction-btn.mine .reaction-count { color: var(--green-dark); }
+  [data-theme="dark"] .announcement-reaction-btn { background: #1c2b28; border-color: #2f4c46; }
+  [data-theme="dark"] .announcement-reaction-btn .reaction-count { color: #d5dfdb; }
+  [data-theme="dark"] .announcement-reaction-btn.mine { background: #1c3a2f; border-color: var(--green); }
+  [data-theme="dark"] .announcement-reaction-btn.mine .reaction-count { color: #8fe0a3; }
   .announcement-meta {
     font-size: 11.5px;
     color: var(--gray-mid);
@@ -3065,7 +3098,7 @@
     window.open('https://team-ops-share.preview.emergentagent.com/', '_blank', 'noopener');
   }
 
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyTcGYcDkWSD7qWfgStvx7O3wbE7ch6hls_kXnzDEMdDopkjLMMrVd3I6RR6cus8VX-/exec";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzyhv6K53_ZYRRC3ZYXHDpcAthTtHJKcpAe_Te2NCHecOfryN_A7ai_0q35rx2-_Y_-/exec";
   const SESSION_KEY = "fa_staff_session";
 
   // Identity of the signed-in staff member, used to pin their own
@@ -3474,7 +3507,7 @@
     return PERSON_ICON_SVG;
   }
 
-  let currentData = { date: '', names: [], records: {}, pinStatus: {}, photos: {}, lastKnownPunch: {}, announcement: { text: '', updatedBy: '', updatedAt: '', hasImage: false, imageUpdatedAt: '' } };
+  let currentData = { date: '', names: [], records: {}, pinStatus: {}, photos: {}, lastKnownPunch: {}, announcement: { text: '', updatedBy: '', updatedAt: '', hasImage: false, imageUpdatedAt: '', reactions: { counts: {}, reactorsByEmoji: {}, myReaction: null } } };
   let activeEmployee = null;
 
   // Attendance-grid search box + status filter pills state.
@@ -4062,7 +4095,7 @@
   async function loadAttendance() {
     if (!isConfigured()) return;
     try {
-      const result = await jsonp({ action: 'getAttendanceToday' });
+      const result = await jsonp({ action: 'getAttendanceToday', email: currentUserEmail });
       console.debug('[Attendance] getAttendanceToday response:', result);
       if (!result.success) { showToast(result.message || 'Could not load attendance.', 'error'); return; }
       currentData = result;
@@ -5085,6 +5118,48 @@
   // Only re-renders when NOT actively being edited — same lesson as the
   // PIN section: a background poll (every 15s) blindly rebuilding this
   // would wipe out an admin's in-progress typing in the textarea.
+  // Matches Code.gs's ANNOUNCEMENT_REACTION_EMOJIS — a fixed small set
+  // rather than a free-for-all picker, same reasoning as the backend.
+  const ANNOUNCEMENT_REACTION_EMOJIS_JS = ['👍', '❤️', '😂', '🎉', '👏'];
+
+  function renderAnnouncementReactionsBar(reactions) {
+    const r = reactions || { counts: {}, reactorsByEmoji: {}, myReaction: null };
+    const buttons = ANNOUNCEMENT_REACTION_EMOJIS_JS.map(emoji => {
+      const count = (r.counts && r.counts[emoji]) || 0;
+      const isMine = r.myReaction === emoji;
+      const reactors = (r.reactorsByEmoji && r.reactorsByEmoji[emoji]) || [];
+      const title = reactors.length ? reactors.join(', ') : 'React';
+      return '<button type="button" class="announcement-reaction-btn' + (isMine ? ' mine' : '') + '" ' +
+        'onclick="toggleAnnouncementReaction(\'' + emoji + '\')" title="' + escapeHtml(title) + '">' +
+        '<span class="reaction-emoji">' + emoji + '</span>' +
+        (count > 0 ? '<span class="reaction-count">' + count + '</span>' : '') +
+        '</button>';
+    }).join('');
+    return '<div class="announcement-reactions-bar">' + buttons + '</div>';
+  }
+
+  // Clicking a reaction you already made removes it (toggle off);
+  // clicking a different one switches to it — the backend only ever
+  // stores one reaction per person, matching that mental model.
+  async function toggleAnnouncementReaction(emoji) {
+    if (!currentUserEmail) return;
+    const bar = document.querySelector('.announcement-reactions-bar');
+    if (bar) bar.style.pointerEvents = 'none';
+    try {
+      const current = (currentData.announcement && currentData.announcement.reactions) ? currentData.announcement.reactions.myReaction : null;
+      if (current === emoji) {
+        await jsonp({ action: 'removeAnnouncementReaction', email: currentUserEmail });
+      } else {
+        await jsonp({ action: 'setAnnouncementReaction', email: currentUserEmail, emoji: emoji });
+      }
+      await loadAttendance();
+    } catch (err) {
+      console.error('[Announcement] reaction failed:', err);
+      showToast('Could not update reaction.', 'error');
+    }
+    if (bar) bar.style.pointerEvents = '';
+  }
+
   function renderAnnouncement() {
     if (editingAnnouncement) return;
 
@@ -5092,7 +5167,7 @@
     const card = document.getElementById('announcementCard');
     if (!section || !card) return;
 
-    const ann = currentData.announcement || { text: '', updatedBy: '', updatedAt: '', hasImage: false, imageUpdatedAt: '' };
+    const ann = currentData.announcement || { text: '', updatedBy: '', updatedAt: '', hasImage: false, imageUpdatedAt: '', reactions: { counts: {}, reactorsByEmoji: {}, myReaction: null } };
     const hasText = !!(ann.text && ann.text.trim());
 
     // Regular staff never see an empty announcement card — only admins
@@ -5113,9 +5188,10 @@
       : '';
 
     const imageHtml = (hasText && ann.hasImage) ? renderAnnouncementImageBlock(ann) : '';
+    const reactionsHtml = hasText ? renderAnnouncementReactionsBar(ann.reactions) : '';
 
     const bodyHtml = hasText
-      ? '<div class="announcement-text">' + escapeHtml(ann.text) + '</div>' + imageHtml + metaHtml
+      ? '<div class="announcement-text">' + escapeHtml(ann.text) + '</div>' + imageHtml + reactionsHtml + metaHtml
       : '<div class="announcement-empty">No announcements right now.</div>';
 
     card.innerHTML =
