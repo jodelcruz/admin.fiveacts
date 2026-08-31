@@ -2015,6 +2015,138 @@
   }
   .img-lightbox-close:hover { background: rgba(255,255,255,0.28); }
 
+  /* ── Post-login birthday popup + confetti ── */
+  .birthday-popup-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 210;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .birthday-popup-overlay.open { display: flex; }
+  .birthday-confetti-layer {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .confetti-piece {
+    position: absolute;
+    top: -20px;
+    width: 9px;
+    height: 14px;
+    opacity: 0.9;
+    animation-name: confettiFall;
+    animation-timing-function: linear;
+    animation-iteration-count: 1;
+  }
+  @keyframes confettiFall {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(105vh) rotate(540deg); opacity: 0.85; }
+  }
+  @keyframes birthdayPopIn {
+    0%   { opacity: 0; transform: scale(0.85) translateY(10px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .birthday-popup-card {
+    position: relative;
+    background: #fff;
+    border-radius: 20px;
+    padding: 40px 34px;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.35);
+    animation: birthdayPopIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .birthday-popup-close {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    line-height: 1;
+    color: var(--gray-mid);
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+  }
+  .birthday-popup-close:hover { background: var(--gray-light); }
+  .birthday-popup-emoji { font-size: 52px; margin-bottom: 10px; line-height: 1; }
+  .birthday-popup-message {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--black);
+    line-height: 1.3;
+  }
+  [data-theme="dark"] .birthday-popup-card { background: #16211f; }
+  [data-theme="dark"] .birthday-popup-message { color: #f0f0f0; }
+  [data-theme="dark"] .birthday-popup-close { color: #9fb0ac; }
+  [data-theme="dark"] .birthday-popup-close:hover { background: #1c2b28; }
+  @media (prefers-reduced-motion: reduce) {
+    .confetti-piece { display: none; }
+    .birthday-popup-card { animation: none; }
+  }
+
+  /* ── Holiday season decorations (ber months) ── */
+  .holiday-lights {
+    position: absolute;
+    top: -6px;
+    left: 0;
+    right: 0;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    padding: 0 16px;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .holiday-bulb {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    box-shadow: 0 0 5px 1.5px currentColor;
+    animation-name: bulbTwinkle;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+  }
+  @keyframes bulbTwinkle {
+    0%, 100% { opacity: 0.35; transform: scale(0.85); }
+    50% { opacity: 1; transform: scale(1.1); }
+  }
+  .snowfall-layer {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 150;
+  }
+  .snowflake-piece {
+    position: absolute;
+    top: -12px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.9);
+    box-shadow: 0 0 4px rgba(255,255,255,0.7);
+    animation-name: snowfallDrift;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+  @keyframes snowfallDrift {
+    0%   { transform: translateY(-12px) translateX(0); }
+    100% { transform: translateY(105vh) translateX(var(--drift, 20px)); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .holiday-bulb { animation: none; opacity: 0.8; }
+    .snowfall-layer { display: none; }
+  }
+
   /* ── UPCOMING BIRTHDAYS/EVENTS (dashboard sidebar) ── */
   .upcoming-card {
     background: #fff;
@@ -2576,6 +2708,7 @@
 <!-- ══════════════ MAIN APP (post-login) ══════════════ -->
 <div class="app-page" id="appPage">
   <nav class="app-nav">
+    <div class="holiday-lights" id="holidayLights"></div>
     <div class="nav-backdrop" id="navBackdrop" onclick="closeMobileNav()"></div>
     <div class="app-nav-inner">
       <button type="button" class="app-brand" onclick="showDashboardPage(); closeMobileNav();" aria-label="Go to dashboard">
@@ -3013,6 +3146,25 @@
   <img id="announcementImgLightboxImg" src="" alt="Announcement attachment" onclick="event.stopPropagation()">
 </div>
 
+<!-- Gentle falling snow for the holiday season — fixed, pointer-events:
+     none, so it drifts over everything (including cards) without ever
+     blocking a click. Generated once in the script below; the CSS
+     animation loops on its own from there, no ongoing JS needed. -->
+<div class="snowfall-layer" id="snowfallLayer"></div>
+
+<!-- Post-login birthday popup. Shown at most once per page session
+     (see checkBirthdayPopup in the script below) — not re-triggered by
+     the 15-second attendance poll, only by the first successful load
+     after signing in. -->
+<div class="birthday-popup-overlay" id="birthdayPopupOverlay" onclick="closeBirthdayPopup()">
+  <div class="birthday-confetti-layer" id="birthdayConfettiLayer"></div>
+  <div class="birthday-popup-card" onclick="event.stopPropagation()">
+    <button type="button" class="birthday-popup-close" onclick="closeBirthdayPopup()" aria-label="Close">&times;</button>
+    <div class="birthday-popup-emoji" id="birthdayPopupEmoji">🎉</div>
+    <div class="birthday-popup-message" id="birthdayPopupMessage"></div>
+  </div>
+</div>
+
 <script>
   /* =========================================================
      STAFF PORTAL — SINGLE-FILE APP
@@ -3098,7 +3250,7 @@
     window.open('https://team-ops-share.preview.emergentagent.com/', '_blank', 'noopener');
   }
 
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzyhv6K53_ZYRRC3ZYXHDpcAthTtHJKcpAe_Te2NCHecOfryN_A7ai_0q35rx2-_Y_-/exec";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzljqdbVvSby07oWQgNmx4oR8gbvenjgB2FARbJqn_jeYLkcnR9RYxtwrD0kjPRKpIW/exec";
   const SESSION_KEY = "fa_staff_session";
 
   // Identity of the signed-in staff member, used to pin their own
@@ -4103,6 +4255,7 @@
       renderGrid();
       renderMyStatus();
       renderAnnouncement();
+      checkBirthdayPopup();
       if (activeEmployee) {
         loadPunchHistory(activeEmployee);
         updateModalPunchButtons(activeEmployee);
@@ -4999,6 +5152,69 @@
     return names.find(n => normalizeForMatch(n) === guessNorm) || null;
   }
 
+  /* ---------- Post-login birthday popup ---------- */
+
+  let birthdayPopupChecked = false;
+
+  // "Bob" / "Bob and Jane" / "Bob, Jane, and Alex"
+  function joinNamesForBirthdayMessage(names) {
+    if (names.length === 1) return names[0];
+    if (names.length === 2) return names[0] + ' and ' + names[1];
+    return names.slice(0, -1).join(', ') + ', and ' + names[names.length - 1];
+  }
+
+  // Runs once per page session (guarded by birthdayPopupChecked) on the
+  // first successful attendance load — deliberately NOT re-checked on
+  // every 15-second poll after that, or the popup would keep reappearing
+  // all day for anyone who leaves the tab open.
+  function checkBirthdayPopup() {
+    if (birthdayPopupChecked) return;
+    birthdayPopupChecked = true;
+
+    const todaysBirthdays = currentData.todaysBirthdays || [];
+    if (todaysBirthdays.length === 0) return;
+
+    const myName = resolveMyName(currentData.names);
+    const iAmCelebrating = myName && todaysBirthdays.indexOf(myName) !== -1;
+
+    if (iAmCelebrating) {
+      showBirthdayPopup('Happy Birthday, ' + escapeHtml(myName) + '!', '🎂');
+    } else {
+      const namesText = joinNamesForBirthdayMessage(todaysBirthdays.map(escapeHtml));
+      const verb = todaysBirthdays.length === 1 ? 'is' : 'are';
+      showBirthdayPopup('It ' + verb + ' ' + namesText + "'s Birthday Today!", '🎉');
+    }
+  }
+
+  function showBirthdayPopup(message, emoji) {
+    document.getElementById('birthdayPopupMessage').innerHTML = message;
+    document.getElementById('birthdayPopupEmoji').textContent = emoji;
+    document.getElementById('birthdayPopupOverlay').classList.add('open');
+    spawnConfetti();
+  }
+
+  function closeBirthdayPopup() {
+    document.getElementById('birthdayPopupOverlay').classList.remove('open');
+    document.getElementById('birthdayConfettiLayer').innerHTML = '';
+  }
+
+  function spawnConfetti() {
+    const layer = document.getElementById('birthdayConfettiLayer');
+    layer.innerHTML = '';
+    const colors = ['#3AB54A', '#2a9138', '#E0284F', '#f0c36d', '#4A90E2', '#e874c4'];
+    const pieceCount = 70;
+    for (let i = 0; i < pieceCount; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random() * 100 + 'vw';
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.animationDuration = (2.5 + Math.random() * 2) + 's';
+      piece.style.animationDelay = (Math.random() * 0.6) + 's';
+      piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      layer.appendChild(piece);
+    }
+  }
+
   function renderMyStatus() {
     const card = document.getElementById('myStatusCard');
     if (!card) return;
@@ -5496,6 +5712,52 @@
     }
     if (clearBtn) clearBtn.disabled = false;
   }
+
+  /* ---------- Holiday season decorations (ber months) ---------- */
+  // Purely decorative and not tied to login — these render immediately
+  // so they're visible on the sign-in screen too, not just after
+  // signing in. Both use CSS animations with animation-iteration-count:
+  // infinite, so they only need to be generated once; no ongoing JS
+  // upkeep or re-render loop required.
+
+  function renderHolidayLights() {
+    const container = document.getElementById('holidayLights');
+    if (!container) return;
+    const colors = ['#E0284F', '#3AB54A', '#f0c36d', '#4A90E2'];
+    const bulbCount = 24;
+    for (let i = 0; i < bulbCount; i++) {
+      const bulb = document.createElement('div');
+      bulb.className = 'holiday-bulb';
+      const color = colors[i % colors.length];
+      bulb.style.background = color;
+      bulb.style.color = color; // box-shadow glow uses currentColor
+      bulb.style.animationDuration = (1.3 + Math.random() * 0.8) + 's';
+      bulb.style.animationDelay = (Math.random() * 1.5) + 's';
+      container.appendChild(bulb);
+    }
+  }
+
+  function renderSnowfall() {
+    const layer = document.getElementById('snowfallLayer');
+    if (!layer) return;
+    const flakeCount = 28;
+    for (let i = 0; i < flakeCount; i++) {
+      const flake = document.createElement('div');
+      flake.className = 'snowflake-piece';
+      const size = 3 + Math.random() * 5;
+      flake.style.width = size + 'px';
+      flake.style.height = size + 'px';
+      flake.style.left = Math.random() * 100 + 'vw';
+      flake.style.opacity = (0.4 + Math.random() * 0.5).toFixed(2);
+      flake.style.setProperty('--drift', (Math.random() * 80 - 40) + 'px');
+      flake.style.animationDuration = (8 + Math.random() * 10) + 's';
+      flake.style.animationDelay = (Math.random() * -15) + 's'; // negative delay so they start mid-fall, not all clustered at the top
+      layer.appendChild(flake);
+    }
+  }
+
+  renderHolidayLights();
+  renderSnowfall();
 </script>
 </body>
 </html>
