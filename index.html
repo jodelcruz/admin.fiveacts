@@ -720,6 +720,7 @@
   }
 
   .my-status-avatar {
+    position: relative;
     width: 46px;
     height: 46px;
     min-width: 46px;
@@ -771,6 +772,7 @@
 
   /* ── DIGITAL CLOCK (panel header, right side) ── */
   .digital-clock-wrap {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1718,6 +1720,7 @@
   .emp-card.status-in { border-color: var(--green); }
   .emp-card.status-out { border-color: var(--gray-light); }
   .emp-avatar {
+    position: relative;
     width: 44px;
     height: 44px;
     min-width: 44px;
@@ -2146,6 +2149,69 @@
     .holiday-bulb { animation: none; opacity: 0.8; }
     .snowfall-layer { display: none; }
   }
+  /* Needs an unclipped positioning context to sit on — the avatar
+     circle itself has overflow:hidden (to keep photos cropped round),
+     which would clip the hat down to a barely-visible sliver if placed
+     directly inside it. */
+  .santa-hat-overlay {
+    position: absolute;
+    top: -40%;
+    left: -10%;
+    width: 70%;
+    transform: rotate(-16deg);
+    pointer-events: none;
+    z-index: 3;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+  }
+  /* Wraps just the My Status card's avatar — shrinks to fit its child
+     via inline-block, so it works at every breakpoint without needing
+     matching size rules duplicated here. */
+  .avatar-hat-wrap {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  /* Small holly accents next to headings — same shared SVG shape at
+     two sizes, one for the main "Clock System" title and a smaller
+     one for the "Team Attendance" section heading. */
+  .holly-sprig {
+    display: inline-block;
+    width: 30px;
+    height: 20px;
+    vertical-align: middle;
+    margin-left: 6px;
+    transform: rotate(-8deg);
+  }
+  .holly-sprig-small { width: 22px; height: 15px; }
+  .holly-sprig svg { width: 100%; height: 100%; }
+
+  /* A miniature version of the nav's string lights, draped along the
+     top edge of the digital clock so the two festive touches read as
+     one consistent decoration rather than two unrelated ones. */
+  .mini-garland {
+    position: absolute;
+    top: -5px;
+    left: 12%;
+    right: 12%;
+    height: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+  .mini-garland span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    box-shadow: 0 0 4px 1px currentColor;
+    animation-name: bulbTwinkle;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mini-garland span { animation: none; opacity: 0.8; }
+  }
 
   /* ── UPCOMING BIRTHDAYS/EVENTS (dashboard sidebar) ── */
   .upcoming-card {
@@ -2261,6 +2327,7 @@
   }
   .modal-avatar-wrap { position: relative; flex-shrink: 0; }
   .modal-avatar {
+    position: relative;
     width: 56px; height: 56px;
     border-radius: 50%;
     background: var(--green-light);
@@ -2774,7 +2841,14 @@
     <div id="dashboardView">
       <div class="panel-header">
         <div class="panel-header-left">
-          <h1>Clock System</h1>
+          <h1>Clock System <span class="holly-sprig" aria-hidden="true">
+            <svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14 34 Q2 22 12 8 Q18 18 20 26 Q22 14 32 4 Q30 18 26 28 Q34 16 46 16 Q36 24 28 30 Q40 26 50 32 Q36 32 26 32 Q20 36 14 34 Z" fill="#2a9138"/>
+              <circle cx="18" cy="30" r="4" fill="#d21f3c"/>
+              <circle cx="26" cy="33" r="4" fill="#d21f3c"/>
+              <circle cx="22" cy="27" r="3.5" fill="#e0284f"/>
+            </svg>
+          </span></h1>
           <div class="date-tag" id="dateTag">Loading date…</div>
         </div>
 
@@ -2783,6 +2857,7 @@
         </div>
 
         <div class="digital-clock-wrap">
+          <div class="mini-garland" aria-hidden="true"></div>
           <div class="digital-date" id="digitalDate">Loading date…</div>
           <div class="digital-time" id="digitalTime">
             <span id="digitalTimeText">--:--:--</span><span class="ampm" id="digitalAmPm"></span>
@@ -2794,7 +2869,14 @@
       <div class="dashboard-columns">
         <div class="dashboard-main">
           <div class="section-heading">
-            <h2>Team Attendance</h2>
+            <h2>Team Attendance <span class="holly-sprig holly-sprig-small" aria-hidden="true">
+              <svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 34 Q2 22 12 8 Q18 18 20 26 Q22 14 32 4 Q30 18 26 28 Q34 16 46 16 Q36 24 28 30 Q40 26 50 32 Q36 32 26 32 Q20 36 14 34 Z" fill="#2a9138"/>
+                <circle cx="18" cy="30" r="4" fill="#d21f3c"/>
+                <circle cx="26" cy="33" r="4" fill="#d21f3c"/>
+                <circle cx="22" cy="27" r="3.5" fill="#e0284f"/>
+              </svg>
+            </span></h2>
           </div>
 
           <div class="grid-toolbar">
@@ -3651,6 +3733,22 @@
   // one, otherwise the generic placeholder icon — used everywhere an
   // avatar is rendered (grid cards, My Status, the profile modal) so
   // they all stay in sync automatically once a photo is added.
+  // The Santa hat (holiday season) lives as static markup inside the
+  // profile modal only, right next to #modalAvatar — not generated
+  // here, since it's deliberately scoped to just that one view rather
+  // than every avatar across the dashboard.
+
+  // A simple cone + pom-pom + fur-trim shape rather than an emoji —
+  // there's no single "Santa hat" emoji reliably supported across every
+  // platform/font, so a small inline SVG guarantees it always renders.
+  // Used only on the My Status card's avatar (top of the dashboard) —
+  // deliberately not on the grid cards or the profile modal.
+  const SANTA_HAT_SVG = '<svg class="santa-hat-overlay" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+    '<path d="M20 72 Q8 38 52 12 Q92 40 82 72 Z" fill="#d21f3c"/>' +
+    '<circle cx="52" cy="12" r="11" fill="#fff"/>' +
+    '<rect x="8" y="64" width="84" height="20" rx="10" fill="#fff"/>' +
+    '</svg>';
+
   function avatarHtmlFor(name) {
     const photo = currentData.photos && currentData.photos[name];
     if (photo) {
@@ -5257,7 +5355,7 @@
       card.onclick = function () { openModal(name); };
       card.innerHTML =
         '<div class="my-status-badge">You</div>' +
-        '<div class="my-status-avatar">' + avatarHtmlFor(name) + '</div>' +
+        '<span class="avatar-hat-wrap"><div class="my-status-avatar">' + avatarHtmlFor(name) + '</div>' + SANTA_HAT_SVG + '</span>' +
         '<div class="my-status-info">' +
         '<div class="my-status-name">' + escapeHtml(name) + '</div>' +
         '<div class="my-status-line"><span class="dot"></span>' + statusText + '</div>' +
@@ -5756,8 +5854,24 @@
     }
   }
 
+  function renderMiniGarland() {
+    const container = document.querySelector('.mini-garland');
+    if (!container) return;
+    const colors = ['#E0284F', '#3AB54A', '#f0c36d', '#4A90E2'];
+    for (let i = 0; i < 6; i++) {
+      const bulb = document.createElement('span');
+      const color = colors[i % colors.length];
+      bulb.style.background = color;
+      bulb.style.color = color;
+      bulb.style.animationDuration = (1.3 + Math.random() * 0.8) + 's';
+      bulb.style.animationDelay = (Math.random() * 1.5) + 's';
+      container.appendChild(bulb);
+    }
+  }
+
   renderHolidayLights();
   renderSnowfall();
+  renderMiniGarland();
 </script>
 </body>
 </html>
