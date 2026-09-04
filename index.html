@@ -223,6 +223,12 @@
      a display face that wants to sit tighter — this keeps them punchy
      rather than inheriting the same loose spacing meant for paragraphs. */
   h1, h2, h3 { line-height: 1.15; }
+  /* Native <select> dropdowns inherit body's line-height too, and some
+     browsers stretch each option row by that same amount — with 1.5
+     that meant huge, mostly-blank-looking option rows instead of
+     normal compact ones. Options need their own sane line-height,
+     independent of the surrounding page's paragraph spacing. */
+  select, select option { line-height: normal; }
   img { max-width: 100%; }
 
   /* ══════════════ LOGIN / REGISTER SCREEN ══════════════ */
@@ -1223,6 +1229,8 @@
     font-family: 'Inter', sans-serif;
     font-size: 14px;
     box-sizing: border-box;
+    background: #fff;
+    color: var(--black);
   }
   .bday-form-row input:focus, .bday-form-row select:focus { outline: none; border-color: var(--green); }
   .bday-form-row-inline { display: flex; gap: 12px; }
@@ -1523,6 +1531,8 @@
     font-size: 14px;
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
+    background: #fff;
+    color: var(--black);
   }
   .apac-edit-shift-name { min-width: 140px; }
   .apac-edit-shift-time { min-width: 200px; }
@@ -1563,6 +1573,8 @@
     font-family: 'Inter', sans-serif;
     resize: vertical;
     box-sizing: border-box;
+    background: #fff;
+    color: var(--black);
   }
   .apac-edit-textarea:focus { outline: none; border-color: var(--green); }
   .apac-add-shift-btn {
@@ -1650,6 +1662,8 @@
     padding: 9px 12px;
     font-size: 14px;
     box-sizing: border-box;
+    background: #fff;
+    color: var(--black);
   }
   .admin-employees-field input:focus { outline: none; border-color: var(--green); }
   .admin-employees-admin-check {
@@ -1735,6 +1749,7 @@
     font-family: 'Inter', sans-serif;
     font-size: 13px;
     background: #fff;
+    color: var(--black);
     min-width: 150px;
   }
   .admin-filter-group select:focus, .admin-filter-group input[type="date"]:focus { outline: none; border-color: var(--green); }
