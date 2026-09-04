@@ -1602,6 +1602,113 @@
   }
   .back-to-dashboard-btn:hover { border-color: var(--green); color: var(--green-dark); }
 
+  /* ── Manage Employees (admin) ── */
+  .admin-employees-panel {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .admin-employees-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .admin-employees-header h3 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px;
+    color: var(--black);
+  }
+  .admin-employees-form {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--gray-light);
+  }
+  .admin-employees-form-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .admin-employees-field { flex: 1; min-width: 180px; }
+  .admin-employees-field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--gray-mid);
+    margin-bottom: 5px;
+  }
+  .admin-employees-field input {
+    width: 100%;
+    border: 1.5px solid var(--gray-light);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+  .admin-employees-field input:focus { outline: none; border-color: var(--green); }
+  .admin-employees-admin-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--gray-dark);
+    margin-bottom: 12px;
+    cursor: pointer;
+  }
+  .admin-employees-empty {
+    font-size: 13px;
+    color: var(--gray-mid);
+    padding: 10px 2px;
+  }
+  .admin-employee-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gray-light);
+  }
+  .admin-employee-row:last-child { border-bottom: none; }
+  .admin-employee-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  .admin-employee-name { font-weight: 700; color: var(--black); font-size: 14px; }
+  .admin-employee-badge {
+    background: #fdf7e6;
+    color: #8a6d1a;
+    border: 1px solid #d8b23a;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .admin-employee-email { font-size: 12.5px; color: var(--gray-mid); }
+  .admin-employee-remove-btn {
+    background: #fff;
+    border: 1.5px solid var(--certiverse-red);
+    color: var(--certiverse-red);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .admin-employee-remove-btn:hover { background: var(--certiverse-red); color: #fff; }
+
   .admin-toolbar {
     display: flex;
     align-items: flex-end;
@@ -2928,6 +3035,36 @@
         <button type="button" class="back-to-dashboard-btn" onclick="showDashboardPage()">&larr; Back to Dashboard</button>
       </div>
 
+      <div class="admin-employees-panel">
+        <div class="admin-employees-header">
+          <h3>Manage Employees</h3>
+          <button type="button" class="bday-add-btn" id="addEmployeeToggleBtn" onclick="toggleAddEmployeeForm()">+ Add Employee</button>
+        </div>
+
+        <div class="admin-employees-form" id="addEmployeeForm" style="display:none;">
+          <div class="admin-employees-form-row">
+            <div class="admin-employees-field">
+              <label for="newEmployeeName">Name (shown on attendance board)</label>
+              <input type="text" id="newEmployeeName" placeholder="e.g. Arianne" maxlength="40">
+            </div>
+            <div class="admin-employees-field">
+              <label for="newEmployeeEmail">Email</label>
+              <input type="email" id="newEmployeeEmail" placeholder="name@fiveactsservices.com">
+            </div>
+          </div>
+          <label class="admin-employees-admin-check">
+            <input type="checkbox" id="newEmployeeIsAdmin"> Grant admin access
+          </label>
+          <div class="announcement-edit-actions">
+            <button type="button" class="announcement-save-btn" id="saveNewEmployeeBtn" onclick="submitAddEmployee()">Add Employee</button>
+            <button type="button" class="announcement-cancel-btn" onclick="toggleAddEmployeeForm()">Cancel</button>
+          </div>
+          <div class="announcement-error" id="addEmployeeError"></div>
+        </div>
+
+        <div id="managedEmployeesList"></div>
+      </div>
+
       <div class="admin-toolbar">
         <div class="admin-filter-group">
           <label for="adminNameFilter">Employee</label>
@@ -3332,7 +3469,7 @@
     window.open('https://team-ops-share.preview.emergentagent.com/', '_blank', 'noopener');
   }
 
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzljqdbVvSby07oWQgNmx4oR8gbvenjgB2FARbJqn_jeYLkcnR9RYxtwrD0kjPRKpIW/exec";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzrm9hT7v1FVaGOgKDtjdfQG-PNbp4dkpukAghGqekrzOII9LIeF6Oonp_m7Ep7NdEB/exec";
   const SESSION_KEY = "fa_staff_session";
 
   // Identity of the signed-in staff member, used to pin their own
@@ -4954,6 +5091,7 @@
     closeMobileNav();
     populateAdminNameFilter();
     loadAdminHistory();
+    loadManagedEmployees();
   }
 
   function showDashboardPage() {
@@ -4978,6 +5116,111 @@
     if (parts.length !== 3 || parts.some(isNaN)) return isoDate || '';
     const d = new Date(parts[0], parts[1] - 1, parts[2]);
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  /* ---------- Manage Employees (admin) ---------- */
+
+  function toggleAddEmployeeForm() {
+    const form = document.getElementById('addEmployeeForm');
+    const isOpen = form.style.display !== 'none';
+    form.style.display = isOpen ? 'none' : 'block';
+    document.getElementById('addEmployeeToggleBtn').style.display = isOpen ? 'inline-block' : 'none';
+    if (!isOpen) {
+      document.getElementById('newEmployeeName').value = '';
+      document.getElementById('newEmployeeEmail').value = '';
+      document.getElementById('newEmployeeIsAdmin').checked = false;
+      const err = document.getElementById('addEmployeeError');
+      err.textContent = '';
+      err.classList.remove('show');
+      document.getElementById('newEmployeeName').focus();
+    }
+  }
+
+  async function submitAddEmployee() {
+    const name = document.getElementById('newEmployeeName').value.trim();
+    const email = document.getElementById('newEmployeeEmail').value.trim();
+    const isAdmin = document.getElementById('newEmployeeIsAdmin').checked;
+    const errorEl = document.getElementById('addEmployeeError');
+    errorEl.classList.remove('show');
+
+    if (!name || !email) {
+      errorEl.textContent = 'Name and email are both required.';
+      errorEl.classList.add('show');
+      return;
+    }
+
+    const saveBtn = document.getElementById('saveNewEmployeeBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Adding…';
+    try {
+      const result = await jsonp({
+        action: 'addEmployee',
+        email: currentUserEmail,
+        adminToken: currentAdminToken,
+        newName: name,
+        newEmail: email,
+        makeAdmin: isAdmin
+      });
+      if (result.success) {
+        showToast(name + ' added.', 'info');
+        toggleAddEmployeeForm();
+        loadManagedEmployees();
+      } else {
+        errorEl.textContent = result.message || 'Could not add employee.';
+        errorEl.classList.add('show');
+      }
+    } catch (err) {
+      console.error('[Employees] add failed:', err);
+      errorEl.textContent = err.message || 'Could not add employee.';
+      errorEl.classList.add('show');
+    }
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Add Employee';
+  }
+
+  async function loadManagedEmployees() {
+    const list = document.getElementById('managedEmployeesList');
+    if (!list) return;
+    try {
+      const result = await jsonp({ action: 'getManagedEmployees', email: currentUserEmail, adminToken: currentAdminToken });
+      if (!result.success) {
+        list.innerHTML = '';
+        return;
+      }
+      if (result.employees.length === 0) {
+        list.innerHTML = '<div class="admin-employees-empty">No employees added through this panel yet — the original team is managed directly in the code.</div>';
+        return;
+      }
+      list.innerHTML = result.employees.map(emp =>
+        '<div class="admin-employee-row">' +
+        '<div class="admin-employee-info">' +
+        '<span class="admin-employee-name">' + escapeHtml(emp.name) + '</span>' +
+        (emp.isAdmin ? '<span class="admin-employee-badge">Admin</span>' : '') +
+        '<span class="admin-employee-email">' + escapeHtml(emp.email) + '</span>' +
+        '</div>' +
+        '<button type="button" class="admin-employee-remove-btn" onclick="removeManagedEmployee(\'' + emp.email.replace(/'/g, "\\'") + '\', \'' + escapeHtml(emp.name).replace(/'/g, "\\'") + '\')">Remove</button>' +
+        '</div>'
+      ).join('');
+    } catch (err) {
+      console.error('[Employees] load failed:', err);
+      list.innerHTML = '';
+    }
+  }
+
+  async function removeManagedEmployee(email, name) {
+    if (!window.confirm('Remove ' + name + '? They will no longer be able to sign in.')) return;
+    try {
+      const result = await jsonp({ action: 'removeEmployee', email: currentUserEmail, adminToken: currentAdminToken, targetEmail: email });
+      if (result.success) {
+        showToast(name + ' removed.', 'info');
+        loadManagedEmployees();
+      } else {
+        showToast(result.message || 'Could not remove employee.', 'error');
+      }
+    } catch (err) {
+      console.error('[Employees] remove failed:', err);
+      showToast('Could not remove employee.', 'error');
+    }
   }
 
   async function loadAdminHistory() {
