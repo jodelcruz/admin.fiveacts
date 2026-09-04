@@ -173,10 +173,8 @@
   [data-theme="dark"] .note-field label { color: #d5dfdb; }
   [data-theme="dark"] .note-field textarea { background: #1c2b28; border-color: #2f4c46; color: #f0f0f0; }
   [data-theme="dark"] .punch-log h3 { color: #9fb0ac; }
-  [data-theme="dark"] .punch-entry { border-bottom-color: #2f4c46; }
-  [data-theme="dark"] .punch-entry .pe-note, [data-theme="dark"] .punch-entry .pe-time { color: #9fb0ac; }
+  [data-theme="dark"] .punch-entry .pe-note { color: #9fb0ac; }
   [data-theme="dark"] .no-punches { color: #9fb0ac; }
-  [data-theme="dark"] .log-day-label { color: #9fb0ac; }
   [data-theme="dark"] .announcement-image-preview img,
   [data-theme="dark"] .modal-avatar { background: #1c3a2f; }
 
@@ -2617,22 +2615,54 @@
     color: var(--gray-mid);
     margin-bottom: 10px;
   }
+  /* Each day's punches, visually separated as its own group rather
+     than one continuous flat list — this (plus the labeled header
+     below) is what actually fixes the "messy, hard to tell days apart"
+     problem, since before this the day label had no styling at all. */
+  .log-day-group { margin-bottom: 14px; }
+  .log-day-group:last-child { margin-bottom: 0; }
+  .log-day-label {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--gray-dark);
+    background: #f2f6f2;
+    padding: 5px 10px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    display: inline-block;
+  }
   .punch-entry {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 10px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--gray-light);
+    padding: 10px 12px;
+    margin-bottom: 5px;
+    border-radius: 8px;
+    background: #fafcfa;
+    border-left: 3px solid var(--gray-light);
+    transition: background 0.15s;
   }
-  .punch-entry:last-child { border-bottom: none; }
-  .punch-entry .pe-left { display: flex; flex-direction: column; }
-  .punch-entry .pe-type { font-size: 12px; font-weight: 700; }
+  .punch-entry:last-child { margin-bottom: 0; }
+  .punch-entry:hover { background: #f2f6f2; }
+  .punch-entry.in-entry { border-left-color: var(--green); }
+  .punch-entry.out-entry { border-left-color: var(--certiverse-red); }
+  .punch-entry .pe-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .punch-entry .pe-type { font-size: 12.5px; font-weight: 700; display: flex; align-items: center; gap: 5px; }
   .punch-entry .pe-type.in { color: var(--green-dark); }
   .punch-entry .pe-type.out { color: var(--certiverse-red); }
-  .punch-entry .pe-note { font-size: 12px; color: var(--gray-mid); margin-top: 2px; }
-  .punch-entry .pe-time { font-size: 12px; color: var(--gray-mid); white-space: nowrap; }
+  .punch-entry .pe-arrow { font-size: 12px; opacity: 0.8; }
+  .punch-entry .pe-note { font-size: 12px; color: var(--gray-mid); word-break: break-word; }
+  .punch-entry .pe-time { font-size: 12.5px; font-weight: 600; color: var(--gray-dark); white-space: nowrap; flex-shrink: 0; }
   .no-punches { font-size: 13px; color: var(--gray-mid); padding: 6px 0 16px; }
+  [data-theme="dark"] .log-day-label { background: #1c2b28; color: #d5dfdb; }
+  [data-theme="dark"] .punch-entry { background: #1a2523; border-left-color: #2f4c46; }
+  [data-theme="dark"] .punch-entry:hover { background: #21302d; }
+  [data-theme="dark"] .punch-entry.in-entry { border-left-color: var(--green); }
+  [data-theme="dark"] .punch-entry.out-entry { border-left-color: #ff8fa0; }
+  [data-theme="dark"] .punch-entry .pe-time { color: #d5dfdb; }
 
   .toast {
     margin-top: 14px;
@@ -4037,9 +4067,10 @@
     return entries.slice().reverse().map(e => {
       const label = isPunchIn(e) ? 'Time In' : 'Time Out';
       const cls = isPunchIn(e) ? 'in' : 'out';
+      const arrow = isPunchIn(e) ? '↳' : '↰';
       const note = e.note ? '<div class="pe-note">' + escapeHtml(e.note) + '</div>' : '';
-      return '<div class="punch-entry">' +
-        '<div class="pe-left"><span class="pe-type ' + cls + '">' + label + '</span>' + note + '</div>' +
+      return '<div class="punch-entry ' + cls + '-entry">' +
+        '<div class="pe-left"><span class="pe-type ' + cls + '"><span class="pe-arrow">' + arrow + '</span>' + label + '</span>' + note + '</div>' +
         '<div class="pe-time">' + e.time + '</div>' +
         '</div>';
     }).join('');
