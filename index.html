@@ -4932,7 +4932,7 @@
     const anniversaryCount = birthdaysData.filter(b => b.isAnniversary).length;
     if (summaryEl) {
       summaryEl.textContent = 'Five Acts Services Corp. \u00b7 ' + birthdayCount + ' birthday' + (birthdayCount === 1 ? '' : 's') +
-        (anniversaryCount ? ' & ' + anniversaryCount + ' company anniversar' + (anniversaryCount === 1 ? 'y' : 'ies') : '');
+        (anniversaryCount ? ' & ' + anniversaryCount + ' company event' + (anniversaryCount === 1 ? '' : 's') : '');
     }
 
     let html = '';
