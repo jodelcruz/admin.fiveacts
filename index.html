@@ -2219,19 +2219,99 @@
     .birthday-popup-card { animation: none; }
   }
 
-  /* ── Bowling theme decorations ── */
-  /* Small bowling accents next to headings — same shared SVG shape at
+  /* ── Holiday season decorations (ber months) ── */
+  .holiday-lights {
+    position: absolute;
+    top: -6px;
+    left: 0;
+    right: 0;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    padding: 0 16px;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .holiday-bulb {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    box-shadow: 0 0 5px 1.5px currentColor;
+    animation-name: bulbTwinkle;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+  }
+  @keyframes bulbTwinkle {
+    0%, 100% { opacity: 0.35; transform: scale(0.85); }
+    50% { opacity: 1; transform: scale(1.1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .holiday-bulb { animation: none; opacity: 0.8; }
+  }
+  /* Needs an unclipped positioning context to sit on — the avatar
+     circle itself has overflow:hidden (to keep photos cropped round),
+     which would clip the hat down to a barely-visible sliver if placed
+     directly inside it. */
+  .santa-hat-overlay {
+    position: absolute;
+    top: -40%;
+    left: -10%;
+    width: 70%;
+    transform: rotate(-16deg);
+    pointer-events: none;
+    z-index: 3;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+  }
+  /* Wraps just the My Status card's avatar — shrinks to fit its child
+     via inline-block, so it works at every breakpoint without needing
+     matching size rules duplicated here. */
+  .avatar-hat-wrap {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  /* Small holly accents next to headings — same shared SVG shape at
      two sizes, one for the main "Clock System" title and a smaller
      one for the "Team Attendance" section heading. */
-  .bowling-icon {
+  .holly-sprig {
     display: inline-block;
-    width: 28px;
+    width: 30px;
     height: 20px;
     vertical-align: middle;
     margin-left: 6px;
+    transform: rotate(-8deg);
   }
-  .bowling-icon-small { width: 20px; height: 15px; }
-  .bowling-icon svg { width: 100%; height: 100%; }
+  .holly-sprig-small { width: 22px; height: 15px; }
+  .holly-sprig svg { width: 100%; height: 100%; }
+
+  /* A miniature version of the nav's string lights, draped along the
+     top edge of the digital clock so the two festive touches read as
+     one consistent decoration rather than two unrelated ones. */
+  .mini-garland {
+    position: absolute;
+    top: -5px;
+    left: 12%;
+    right: 12%;
+    height: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+  .mini-garland span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    box-shadow: 0 0 4px 1px currentColor;
+    animation-name: bulbTwinkle;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mini-garland span { animation: none; opacity: 0.8; }
+  }
 
   /* ── UPCOMING BIRTHDAYS/EVENTS (dashboard sidebar) ── */
   .upcoming-card {
@@ -2827,6 +2907,7 @@
 <!-- ══════════════ MAIN APP (post-login) ══════════════ -->
 <div class="app-page" id="appPage">
   <nav class="app-nav">
+    <div class="holiday-lights" id="holidayLights"></div>
     <div class="nav-backdrop" id="navBackdrop" onclick="closeMobileNav()"></div>
     <div class="app-nav-inner">
       <button type="button" class="app-brand" onclick="showDashboardPage(); closeMobileNav();" aria-label="Go to dashboard">
@@ -2892,15 +2973,12 @@
     <div id="dashboardView">
       <div class="panel-header">
         <div class="panel-header-left">
-          <h1>Clock System <span class="bowling-icon" aria-hidden="true">
+          <h1>Clock System <span class="holly-sprig" aria-hidden="true">
             <svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
-              <path d="M20 4 Q17 4 17 8 Q17 11 19 13 Q15 17 15 24 Q15 30 13 34 Q13 37 20 37 Q27 37 27 34 Q25 30 25 24 Q25 17 21 13 Q23 11 23 8 Q23 4 20 4 Z" fill="#fff" stroke="#c8102e" stroke-width="1.2"/>
-              <rect x="14" y="19" width="12" height="3" fill="#c8102e"/>
-              <rect x="15" y="27" width="10" height="2.5" fill="#c8102e"/>
-              <circle cx="44" cy="27" r="11" fill="#1a1a2e"/>
-              <circle cx="41" cy="21" r="1.6" fill="#666"/>
-              <circle cx="46" cy="20" r="1.6" fill="#666"/>
-              <circle cx="44" cy="24.5" r="1.6" fill="#666"/>
+              <path d="M14 34 Q2 22 12 8 Q18 18 20 26 Q22 14 32 4 Q30 18 26 28 Q34 16 46 16 Q36 24 28 30 Q40 26 50 32 Q36 32 26 32 Q20 36 14 34 Z" fill="#2a9138"/>
+              <circle cx="18" cy="30" r="4" fill="#d21f3c"/>
+              <circle cx="26" cy="33" r="4" fill="#d21f3c"/>
+              <circle cx="22" cy="27" r="3.5" fill="#e0284f"/>
             </svg>
           </span></h1>
           <div class="date-tag" id="dateTag">Loading date…</div>
@@ -2911,6 +2989,7 @@
         </div>
 
         <div class="digital-clock-wrap">
+          <div class="mini-garland" aria-hidden="true"></div>
           <div class="digital-date" id="digitalDate">Loading date…</div>
           <div class="digital-time" id="digitalTime">
             <span id="digitalTimeText">--:--:--</span><span class="ampm" id="digitalAmPm"></span>
@@ -2922,15 +3001,12 @@
       <div class="dashboard-columns">
         <div class="dashboard-main">
           <div class="section-heading">
-            <h2>Team Attendance <span class="bowling-icon bowling-icon-small" aria-hidden="true">
+            <h2>Team Attendance <span class="holly-sprig holly-sprig-small" aria-hidden="true">
               <svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 4 Q17 4 17 8 Q17 11 19 13 Q15 17 15 24 Q15 30 13 34 Q13 37 20 37 Q27 37 27 34 Q25 30 25 24 Q25 17 21 13 Q23 11 23 8 Q23 4 20 4 Z" fill="#fff" stroke="#c8102e" stroke-width="1.2"/>
-                <rect x="14" y="19" width="12" height="3" fill="#c8102e"/>
-                <rect x="15" y="27" width="10" height="2.5" fill="#c8102e"/>
-                <circle cx="44" cy="27" r="11" fill="#1a1a2e"/>
-                <circle cx="41" cy="21" r="1.6" fill="#666"/>
-                <circle cx="46" cy="20" r="1.6" fill="#666"/>
-                <circle cx="44" cy="24.5" r="1.6" fill="#666"/>
+                <path d="M14 34 Q2 22 12 8 Q18 18 20 26 Q22 14 32 4 Q30 18 26 28 Q34 16 46 16 Q36 24 28 30 Q40 26 50 32 Q36 32 26 32 Q20 36 14 34 Z" fill="#2a9138"/>
+                <circle cx="18" cy="30" r="4" fill="#d21f3c"/>
+                <circle cx="26" cy="33" r="4" fill="#d21f3c"/>
+                <circle cx="22" cy="27" r="3.5" fill="#e0284f"/>
               </svg>
             </span></h2>
           </div>
@@ -3622,6 +3698,7 @@
 
   function handleLogout() {
     sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem('fa_birthday_popup_shown');
     document.getElementById('appPage').classList.remove('open');
     // Clearing the inline override (rather than hardcoding 'block')
     // lets .login-wrap's own `display: flex` — which is what actually
@@ -3817,6 +3894,17 @@
   // profile modal only, right next to #modalAvatar — not generated
   // here, since it's deliberately scoped to just that one view rather
   // than every avatar across the dashboard.
+
+  // A simple cone + pom-pom + fur-trim shape rather than an emoji —
+  // there's no single "Santa hat" emoji reliably supported across every
+  // platform/font, so a small inline SVG guarantees it always renders.
+  // Used only on the My Status card's avatar (top of the dashboard) —
+  // deliberately not on the grid cards or the profile modal.
+  const SANTA_HAT_SVG = '<svg class="santa-hat-overlay" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+    '<path d="M20 72 Q8 38 52 12 Q92 40 82 72 Z" fill="#d21f3c"/>' +
+    '<circle cx="52" cy="12" r="11" fill="#fff"/>' +
+    '<rect x="8" y="64" width="84" height="20" rx="10" fill="#fff"/>' +
+    '</svg>';
 
   function avatarHtmlFor(name) {
     const photo = currentData.photos && currentData.photos[name];
@@ -5428,7 +5516,6 @@
 
   /* ---------- Post-login birthday popup ---------- */
 
-  let birthdayPopupChecked = false;
 
   // "Bob" / "Bob and Jane" / "Bob, Jane, and Alex"
   function joinNamesForBirthdayMessage(names) {
@@ -5442,8 +5529,13 @@
   // every 15-second poll after that, or the popup would keep reappearing
   // all day for anyone who leaves the tab open.
   function checkBirthdayPopup() {
-    if (birthdayPopupChecked) return;
-    birthdayPopupChecked = true;
+    // Tied to sessionStorage rather than a plain in-memory flag —
+    // the login session itself persists across page refreshes via
+    // sessionStorage, so the popup's "already shown" state needs to
+    // persist the same way, or a refresh would reset it and show the
+    // popup again even though the person never actually signed in again.
+    if (sessionStorage.getItem('fa_birthday_popup_shown') === '1') return;
+    sessionStorage.setItem('fa_birthday_popup_shown', '1');
 
     const todaysBirthdays = currentData.todaysBirthdays || [];
     if (todaysBirthdays.length === 0) return;
@@ -5531,7 +5623,7 @@
       card.onclick = function () { openModal(name); };
       card.innerHTML =
         '<div class="my-status-badge">You</div>' +
-        '<div class="my-status-avatar">' + avatarHtmlFor(name) + '</div>' +
+        '<span class="avatar-hat-wrap"><div class="my-status-avatar">' + avatarHtmlFor(name) + '</div>' + SANTA_HAT_SVG + '</span>' +
         '<div class="my-status-info">' +
         '<div class="my-status-name">' + escapeHtml(name) + '</div>' +
         '<div class="my-status-line"><span class="dot"></span>' + statusText + '</div>' +
@@ -5987,6 +6079,47 @@
     if (clearBtn) clearBtn.disabled = false;
   }
 
+  /* ---------- Holiday season decorations (ber months) ---------- */
+  // Purely decorative and not tied to login — these render immediately
+  // so they're visible on the sign-in screen too, not just after
+  // signing in. Both use CSS animations with animation-iteration-count:
+  // infinite, so they only need to be generated once; no ongoing JS
+  // upkeep or re-render loop required.
+
+  function renderHolidayLights() {
+    const container = document.getElementById('holidayLights');
+    if (!container) return;
+    const colors = ['#E0284F', '#3AB54A', '#f0c36d', '#4A90E2'];
+    const bulbCount = 24;
+    for (let i = 0; i < bulbCount; i++) {
+      const bulb = document.createElement('div');
+      bulb.className = 'holiday-bulb';
+      const color = colors[i % colors.length];
+      bulb.style.background = color;
+      bulb.style.color = color; // box-shadow glow uses currentColor
+      bulb.style.animationDuration = (1.3 + Math.random() * 0.8) + 's';
+      bulb.style.animationDelay = (Math.random() * 1.5) + 's';
+      container.appendChild(bulb);
+    }
+  }
+
+  function renderMiniGarland() {
+    const container = document.querySelector('.mini-garland');
+    if (!container) return;
+    const colors = ['#E0284F', '#3AB54A', '#f0c36d', '#4A90E2'];
+    for (let i = 0; i < 6; i++) {
+      const bulb = document.createElement('span');
+      const color = colors[i % colors.length];
+      bulb.style.background = color;
+      bulb.style.color = color;
+      bulb.style.animationDuration = (1.3 + Math.random() * 0.8) + 's';
+      bulb.style.animationDelay = (Math.random() * 1.5) + 's';
+      container.appendChild(bulb);
+    }
+  }
+
+  renderHolidayLights();
+  renderMiniGarland();
 </script>
 </body>
 </html>
