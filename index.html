@@ -3488,7 +3488,7 @@
     window.open('https://team-ops-share.preview.emergentagent.com/', '_blank', 'noopener');
   }
 
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw53wt8Q3KiTsB7K1FedpTgSMtVop1jjUOJ9r6FpevCukV_uHEbLqt_1DMpmze0YSuL/exec";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxTcRvO0JBGXW4i1FmdAnN2aYoYkUOi9sCv3m8ZIik_WotKmvGCSulBxUDnPyKx3Guk/exec";
   const SESSION_KEY = "fa_staff_session";
 
   // Identity of the signed-in staff member, used to pin their own
@@ -3906,15 +3906,54 @@
     '<rect x="8" y="64" width="84" height="20" rx="10" fill="#fff"/>' +
     '</svg>';
 
+  // Client-side cache for actual photo bytes — {name: {dataUri, updatedAt}}.
+  // getAttendanceToday() only sends a lightweight version stamp per
+  // person now (see Code.gs's getPhotoVersions), not the full image —
+  // that was the actual cause of slow/heavy loads (every poll used to
+  // re-transfer everyone's full photo data, whether it had changed or
+  // not). Real bytes are fetched here only for whichever photos this
+  // cache doesn't have yet, or has a stale version of.
+  let photoCache = {};
+  let photoFetchInFlight = {};
+
   function avatarHtmlFor(name) {
-    const photo = currentData.photos && currentData.photos[name];
-    if (photo) {
-      return '<img src="data:image/jpeg;base64,' + photo + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+    const version = currentData.photoVersions && currentData.photoVersions[name];
+    if (!version) return PERSON_ICON_SVG; // no photo on file for this person
+
+    const cached = photoCache[name];
+    if (cached && cached.updatedAt === version) {
+      return '<img src="' + cached.dataUri + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
     }
-    return PERSON_ICON_SVG;
+
+    ensurePhotoCached(name, version); // fire-and-forget; re-renders once it lands
+    return PERSON_ICON_SVG; // placeholder until the fetch completes
   }
 
-  let currentData = { date: '', names: [], records: {}, pinStatus: {}, photos: {}, lastKnownPunch: {}, announcement: { text: '', updatedBy: '', updatedAt: '', hasImage: false, imageUpdatedAt: '', reactions: { counts: {}, reactorsByEmoji: {}, myReaction: null } } };
+  async function ensurePhotoCached(name, version) {
+    if (photoFetchInFlight[name] === version) return; // already fetching this exact version
+    photoFetchInFlight[name] = version;
+    try {
+      const result = await jsonp({ action: 'getEmployeePhoto', name: name });
+      if (result.success) {
+        photoCache[name] = { dataUri: 'data:image/jpeg;base64,' + result.photoBase64, updatedAt: result.updatedAt };
+        // Only re-render if this is still the version currently expected —
+        // guards against a slow response clobbering a newer one that
+        // already arrived and rendered first.
+        if (currentData.photoVersions && currentData.photoVersions[name] === result.updatedAt) {
+          renderGrid();
+          renderMyStatus();
+          if (activeEmployee === name) {
+            document.getElementById('modalAvatar').innerHTML = avatarHtmlFor(name);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[Photo] fetch failed for ' + name + ':', err);
+    }
+    delete photoFetchInFlight[name];
+  }
+
+  let currentData = { date: '', names: [], records: {}, pinStatus: {}, photoVersions: {}, lastKnownPunch: {}, announcement: { text: '', updatedBy: '', updatedAt: '', hasImage: false, imageUpdatedAt: '', reactions: { counts: {}, reactorsByEmoji: {}, myReaction: null } } };
   let activeEmployee = null;
 
   // Attendance-grid search box + status filter pills state.
@@ -4054,7 +4093,7 @@
   }
 
   function renderPunchEntries(entries) {
-    return entries.slice().reverse().map(e => {
+    return entries.map(e => {
       const label = isPunchIn(e) ? 'Time In' : 'Time Out';
       const cls = isPunchIn(e) ? 'in' : 'out';
       const arrow = isPunchIn(e) ? '↳' : '↰';
@@ -4471,9 +4510,16 @@
       await uploadPhotoChunks(name, base64);
       showToast("You've changed your profile photo!", 'info');
       showPhotoSuccessMsg();
-      await loadAttendance(); // refreshes currentData.photos so every avatar picks up the new image
-      if (activeEmployee === name) {
-        document.getElementById('modalAvatar').innerHTML = avatarHtmlFor(name);
+      // Show it immediately rather than waiting for the next poll to
+      // notice a new version and fetch it back — we already have the
+      // exact bytes right here client-side.
+      document.getElementById('modalAvatar').innerHTML =
+        '<img src="data:image/jpeg;base64,' + base64 + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+      await loadAttendance(); // syncs currentData.photoVersions so the grid/My Status pick it up too
+      if (currentData.photoVersions && currentData.photoVersions[name]) {
+        photoCache[name] = { dataUri: 'data:image/jpeg;base64,' + base64, updatedAt: currentData.photoVersions[name] };
+        renderGrid();
+        renderMyStatus();
       }
     } catch (err) {
       console.error('[Photo] upload failed:', err);
