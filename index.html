@@ -2048,6 +2048,23 @@
     text-align: right;
     margin-top: 4px;
   }
+  .announcement-mention-hint {
+    font-size: 11.5px;
+    color: var(--gray-mid);
+    margin-top: 2px;
+    margin-bottom: 8px;
+  }
+  .announcement-mention-hint strong { color: var(--green-dark); }
+  .announcement-mention {
+    background: var(--green-light);
+    color: var(--green-dark);
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+  [data-theme="dark"] .announcement-mention { background: #1c3a2f; color: #8fe0a3; }
+  [data-theme="dark"] .announcement-mention-hint { color: #9fb0ac; }
   .announcement-edit-actions {
     display: flex;
     gap: 8px;
@@ -3536,7 +3553,7 @@
     window.open('https://team-ops-share.preview.emergentagent.com/', '_blank', 'noopener');
   }
 
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycby52p41n2R8HxFy1G5Zz_ZH1erKg63w6KxBnz7i7-hPXsoIGVejOkaTioUq9BAhRFvW/exec";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxW-GWPPKYvwHMTnJqJDz5mZa3n4jKVmeFdqTuIg1gr_9d2HPQ5BQw4CWc3HXqDwTfD/exec";
   const SESSION_KEY = "fa_staff_session";
 
   // Identity of the signed-in staff member, used to pin their own
@@ -5919,6 +5936,32 @@
     if (bar) bar.style.pointerEvents = '';
   }
 
+  // Highlights "@Name" mentions in an announcement — matched against
+  // the actual current employee roster (not just any "@word"), case-
+  // insensitively, and checking longer names first so a two-word name
+  // like "@Rose Ann" matches as one mention rather than just "@Rose".
+  // Everything outside a recognized mention is still escaped normally,
+  // so this is safe to use in place of a plain escapeHtml() call.
+  function renderAnnouncementTextWithMentions(text, names) {
+    const raw = text || '';
+    const roster = (names || []).slice().sort((a, b) => b.length - a.length);
+    if (roster.length === 0) return escapeHtml(raw);
+
+    const escapedForRegex = roster.map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const mentionRegex = new RegExp('@(' + escapedForRegex.join('|') + ')(?![a-zA-Z])', 'gi');
+
+    let result = '';
+    let lastIndex = 0;
+    let match;
+    while ((match = mentionRegex.exec(raw)) !== null) {
+      result += escapeHtml(raw.slice(lastIndex, match.index));
+      result += '<span class="announcement-mention">@' + escapeHtml(match[1]) + '</span>';
+      lastIndex = match.index + match[0].length;
+    }
+    result += escapeHtml(raw.slice(lastIndex));
+    return result;
+  }
+
   function renderAnnouncement() {
     if (editingAnnouncement) return;
 
@@ -5950,7 +5993,7 @@
     const reactionsHtml = hasText ? renderAnnouncementReactionsBar(ann.reactions) : '';
 
     const bodyHtml = hasText
-      ? '<div class="announcement-text">' + escapeHtml(ann.text) + '</div>' + imageHtml + reactionsHtml + metaHtml
+      ? '<div class="announcement-text">' + renderAnnouncementTextWithMentions(ann.text, currentData.names) + '</div>' + imageHtml + reactionsHtml + metaHtml
       : '<div class="announcement-empty">No announcements right now.</div>';
 
     card.innerHTML =
@@ -6021,8 +6064,9 @@
       '<span class="announcement-icon">' + ANNOUNCEMENT_ICON_SVG + '</span>' +
       '<h3>' + (hasExisting ? 'Edit Announcement' : 'Add Announcement') + '</h3>' +
       '</div>' +
-      '<textarea class="announcement-textarea" id="announcementInput" maxlength="' + ANNOUNCEMENT_MAX_LENGTH_JS + '" placeholder="Write an office announcement…">' + escapeHtml(currentText) + '</textarea>' +
+      '<textarea class="announcement-textarea" id="announcementInput" maxlength="' + ANNOUNCEMENT_MAX_LENGTH_JS + '" placeholder="Write an office announcement… (type @Name to mention someone)">' + escapeHtml(currentText) + '</textarea>' +
       '<div class="announcement-char-count" id="announcementCharCount"></div>' +
+      '<div class="announcement-mention-hint">Tip: type <strong>@</strong> followed by someone\'s name (e.g. "@' + escapeHtml((currentData.names && currentData.names[0]) || 'Jodel') + '") to mention them — it\'ll be highlighted once posted.</div>' +
       '<div class="announcement-image-edit-wrap" id="announcementImageEditWrap"></div>' +
       '<div class="announcement-edit-actions">' +
       '<button type="button" class="announcement-save-btn" id="announcementSaveBtn">Save</button>' +
