@@ -1687,8 +1687,10 @@
     gap: 12px;
     padding: 10px 0;
     border-bottom: 1px solid var(--gray-light);
+    transition: opacity 0.15s;
   }
   .admin-employee-row:last-child { border-bottom: none; }
+  .admin-employee-row.inactive { opacity: 0.55; }
   .admin-employee-info {
     display: flex;
     align-items: center;
@@ -1708,20 +1710,38 @@
     padding: 2px 8px;
     border-radius: 10px;
   }
+  .admin-employee-badge.core { background: #eef3fb; color: #2a5db0; border-color: #a9c4e8; }
+  .admin-employee-badge.inactive { background: #f2f2f2; color: #777; border-color: #ccc; }
   .admin-employee-email { font-size: 12.5px; color: var(--gray-mid); }
-  .admin-employee-remove-btn {
-    background: #fff;
-    border: 1.5px solid var(--certiverse-red);
-    color: var(--certiverse-red);
+  .admin-employee-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .admin-employee-remove-btn,
+  .admin-employee-deactivate-btn,
+  .admin-employee-reactivate-btn {
     padding: 6px 12px;
     border-radius: 8px;
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
-    flex-shrink: 0;
+  }
+  .admin-employee-remove-btn {
+    background: #fff;
+    border: 1.5px solid var(--certiverse-red);
+    color: var(--certiverse-red);
   }
   .admin-employee-remove-btn:hover { background: var(--certiverse-red); color: #fff; }
+  .admin-employee-deactivate-btn {
+    background: #fff;
+    border: 1.5px solid var(--gray-mid);
+    color: var(--gray-dark);
+  }
+  .admin-employee-deactivate-btn:hover { border-color: var(--certiverse-red); color: var(--certiverse-red); }
+  .admin-employee-reactivate-btn {
+    background: #fff;
+    border: 1.5px solid var(--green);
+    color: var(--green-dark);
+  }
+  .admin-employee-reactivate-btn:hover { background: var(--green); color: #fff; }
 
   .admin-toolbar {
     display: flex;
@@ -1779,6 +1799,28 @@
     margin-bottom: 14px;
   }
   .admin-truncated-notice.show { display: block; }
+
+  .admin-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .admin-page-btn {
+    background: #fff;
+    border: 1.5px solid var(--gray-light);
+    color: var(--gray-dark);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .admin-page-btn:hover:not(:disabled) { border-color: var(--green); color: var(--green-dark); }
+  .admin-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .admin-page-info { font-size: 12.5px; color: var(--gray-mid); white-space: nowrap; }
 
   .admin-table-wrap {
     background: #fff;
@@ -3103,7 +3145,7 @@
           <label for="adminToDate">To</label>
           <input type="date" id="adminToDate">
         </div>
-        <button type="button" class="admin-apply-btn" onclick="loadAdminHistory()">Apply Filters</button>
+        <button type="button" class="admin-apply-btn" onclick="applyAdminFilters()">Apply Filters</button>
         <button type="button" class="admin-export-btn" onclick="exportAdminCSV()">⬇ Export CSV</button>
       </div>
 
@@ -3118,6 +3160,12 @@
             <tr><td colspan="6" class="admin-table-loading">Loading attendance history…</td></tr>
           </tbody>
         </table>
+      </div>
+
+      <div class="admin-pagination" id="adminPagination" style="display:none;">
+        <button type="button" class="admin-page-btn" id="adminPrevPageBtn" onclick="goToAdminHistoryPage(-1)">&larr; Previous</button>
+        <span class="admin-page-info" id="adminPageInfo"></span>
+        <button type="button" class="admin-page-btn" id="adminNextPageBtn" onclick="goToAdminHistoryPage(1)">Next &rarr;</button>
       </div>
     </div>
 
@@ -3488,7 +3536,7 @@
     window.open('https://team-ops-share.preview.emergentagent.com/', '_blank', 'noopener');
   }
 
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxTcRvO0JBGXW4i1FmdAnN2aYoYkUOi9sCv3m8ZIik_WotKmvGCSulBxUDnPyKx3Guk/exec";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycby52p41n2R8HxFy1G5Zz_ZH1erKg63w6KxBnz7i7-hPXsoIGVejOkaTioUq9BAhRFvW/exec;
   const SESSION_KEY = "fa_staff_session";
 
   // Identity of the signed-in staff member, used to pin their own
@@ -5255,32 +5303,83 @@
         return;
       }
       if (result.employees.length === 0) {
-        list.innerHTML = '<div class="admin-employees-empty">No employees added through this panel yet — the original team is managed directly in the code.</div>';
+        list.innerHTML = '<div class="admin-employees-empty">No employees found.</div>';
         return;
       }
-      list.innerHTML = result.employees.map(emp =>
-        '<div class="admin-employee-row">' +
-        '<div class="admin-employee-info">' +
-        '<span class="admin-employee-name">' + escapeHtml(emp.name) + '</span>' +
-        (emp.isAdmin ? '<span class="admin-employee-badge">Admin</span>' : '') +
-        '<span class="admin-employee-email">' + escapeHtml(emp.email) + '</span>' +
-        '</div>' +
-        '<button type="button" class="admin-employee-remove-btn" onclick="removeManagedEmployee(\'' + emp.email.replace(/'/g, "\\'") + '\', \'' + escapeHtml(emp.name).replace(/'/g, "\\'") + '\')">Remove</button>' +
-        '</div>'
-      ).join('');
+      list.innerHTML = result.employees.map(emp => {
+        const safeName = escapeHtml(emp.name).replace(/'/g, "\\'");
+        const safeEmail = (emp.email || '').replace(/'/g, "\\'");
+        const badges =
+          (emp.source === 'base' ? '<span class="admin-employee-badge core">Core Team</span>' : '') +
+          (emp.isAdmin ? '<span class="admin-employee-badge admin">Admin</span>' : '') +
+          (!emp.active ? '<span class="admin-employee-badge inactive">Deactivated</span>' : '');
+
+        const toggleBtn = emp.active
+          ? '<button type="button" class="admin-employee-deactivate-btn" onclick="deactivateManagedEmployee(\'' + safeName + '\')">Deactivate</button>'
+          : '<button type="button" class="admin-employee-reactivate-btn" onclick="reactivateManagedEmployee(\'' + safeName + '\')">Reactivate</button>';
+        // Permanent removal only ever applies to people added through
+        // this panel — the original team can be deactivated (hidden +
+        // blocked from signing in) but never truly deleted from here.
+        const removeBtn = emp.source === 'added'
+          ? '<button type="button" class="admin-employee-remove-btn" onclick="removeManagedEmployee(\'' + safeEmail + '\', \'' + safeName + '\')">Remove</button>'
+          : '';
+
+        return '<div class="admin-employee-row' + (!emp.active ? ' inactive' : '') + '">' +
+          '<div class="admin-employee-info">' +
+          '<span class="admin-employee-name">' + escapeHtml(emp.name) + '</span>' +
+          badges +
+          '<span class="admin-employee-email">' + escapeHtml(emp.email || '(no email on file)') + '</span>' +
+          '</div>' +
+          '<div class="admin-employee-actions">' + toggleBtn + removeBtn + '</div>' +
+          '</div>';
+      }).join('');
     } catch (err) {
       console.error('[Employees] load failed:', err);
       list.innerHTML = '';
     }
   }
 
+  async function deactivateManagedEmployee(name) {
+    if (!window.confirm('Deactivate ' + name + '? They\'ll be hidden from the attendance board and blocked from signing in until reactivated.')) return;
+    try {
+      const result = await jsonp({ action: 'deactivateEmployee', email: currentUserEmail, adminToken: currentAdminToken, targetName: name });
+      if (result.success) {
+        showToast(name + ' deactivated.', 'info');
+        loadManagedEmployees();
+        loadAttendance(); // they should disappear from the live grid right away too
+      } else {
+        showToast(result.message || 'Could not deactivate employee.', 'error');
+      }
+    } catch (err) {
+      console.error('[Employees] deactivate failed:', err);
+      showToast('Could not deactivate employee.', 'error');
+    }
+  }
+
+  async function reactivateManagedEmployee(name) {
+    try {
+      const result = await jsonp({ action: 'reactivateEmployee', email: currentUserEmail, adminToken: currentAdminToken, targetName: name });
+      if (result.success) {
+        showToast(name + ' reactivated.', 'info');
+        loadManagedEmployees();
+        loadAttendance();
+      } else {
+        showToast(result.message || 'Could not reactivate employee.', 'error');
+      }
+    } catch (err) {
+      console.error('[Employees] reactivate failed:', err);
+      showToast('Could not reactivate employee.', 'error');
+    }
+  }
+
   async function removeManagedEmployee(email, name) {
-    if (!window.confirm('Remove ' + name + '? They will no longer be able to sign in.')) return;
+    if (!window.confirm('Permanently remove ' + name + '? This cannot be undone — unlike deactivating, there\'s no "un-remove." They will no longer be able to sign in.')) return;
     try {
       const result = await jsonp({ action: 'removeEmployee', email: currentUserEmail, adminToken: currentAdminToken, targetEmail: email });
       if (result.success) {
         showToast(name + ' removed.', 'info');
         loadManagedEmployees();
+        loadAttendance();
       } else {
         showToast(result.message || 'Could not remove employee.', 'error');
       }
@@ -5288,6 +5387,21 @@
       console.error('[Employees] remove failed:', err);
       showToast('Could not remove employee.', 'error');
     }
+  }
+
+  let adminHistoryPage = 1;
+  let adminHistoryTotalPages = 1;
+
+  function applyAdminFilters() {
+    adminHistoryPage = 1; // a new filter is a new search — always start from page 1
+    loadAdminHistory();
+  }
+
+  function goToAdminHistoryPage(delta) {
+    const target = adminHistoryPage + delta;
+    if (target < 1 || target > adminHistoryTotalPages) return;
+    adminHistoryPage = target;
+    loadAdminHistory();
   }
 
   async function loadAdminHistory() {
@@ -5309,7 +5423,8 @@
         adminToken: currentAdminToken,
         name: name,
         from: from,
-        to: to
+        to: to,
+        page: adminHistoryPage
       });
       console.debug('[Admin] getAttendanceHistory response:', result);
       if (!result.success) {
@@ -5317,19 +5432,35 @@
         return;
       }
       adminHistoryRows = result.rows || [];
+      adminHistoryPage = result.page || 1;
+      adminHistoryTotalPages = result.totalPages || 1;
       renderAdminTable(adminHistoryRows);
-
-      const notice = document.getElementById('adminTruncatedNotice');
-      if (result.truncated) {
-        notice.textContent = 'Showing the most recent 500 entries out of ' + result.totalMatched + '. Use the date filters above to narrow this down further.';
-        notice.classList.add('show');
-      } else {
-        notice.classList.remove('show');
-      }
+      renderAdminPagination(result);
     } catch (err) {
       console.error('[Admin] getAttendanceHistory failed:', err);
       tbody.innerHTML = '<tr><td colspan="6" class="admin-table-empty">' + escapeHtml(err.message) + '</td></tr>';
     }
+  }
+
+  function renderAdminPagination(result) {
+    const wrap = document.getElementById('adminPagination');
+    const notice = document.getElementById('adminTruncatedNotice');
+    const totalPages = result.totalPages || 1;
+
+    if (totalPages <= 1) {
+      wrap.style.display = 'none';
+      notice.classList.remove('show');
+      return;
+    }
+
+    wrap.style.display = 'flex';
+    document.getElementById('adminPrevPageBtn').disabled = (adminHistoryPage <= 1);
+    document.getElementById('adminNextPageBtn').disabled = (adminHistoryPage >= totalPages);
+    document.getElementById('adminPageInfo').textContent =
+      'Page ' + adminHistoryPage + ' of ' + totalPages + ' (' + result.totalMatched + ' total entries)';
+
+    notice.textContent = 'This range has ' + result.totalMatched + ' entries across ' + totalPages + ' pages (' + result.pageSize + ' per page) — use the page controls below to browse the rest, or narrow the date filters above.';
+    notice.classList.add('show');
   }
 
   // ---- Pair consecutive IN/OUT punches into "sessions" ----
