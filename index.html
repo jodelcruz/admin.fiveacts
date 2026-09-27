@@ -6500,9 +6500,19 @@
     return !!(box && box.value.trim().length > 0);
   }
 
+  // Guarded entry point — used by the 15-second poll and anything else
+  // that's just "refresh with whatever's current," where we don't want
+  // to stomp on someone's in-progress typing. Deliberate actions that
+  // NEED to render immediately (like actually entering comment-edit
+  // mode) call renderAnnouncementNow() directly instead — otherwise
+  // setting editingCommentId and then going through this guard would
+  // immediately block on the very flag it just set.
   function renderAnnouncement() {
     if (editingAnnouncement || isComposingComment()) return;
+    renderAnnouncementNow();
+  }
 
+  function renderAnnouncementNow() {
     const section = document.getElementById('announcementSection');
     const card = document.getElementById('announcementCard');
     if (!section || !card) return;
@@ -6655,13 +6665,13 @@
 
   function startEditComment(id) {
     editingCommentId = id;
-    renderAnnouncement();
+    renderAnnouncementNow();
     setupMentionAutocomplete('editCommentInput_' + id);
   }
 
   function cancelEditComment() {
     editingCommentId = null;
-    renderAnnouncement();
+    renderAnnouncementNow();
   }
 
   async function submitEditComment(id) {
