@@ -207,6 +207,35 @@
   [data-theme="dark"] .theme-toggle-btn:hover { border-color: var(--green); color: #8fe0a3; }
   [data-theme="dark"] .theme-toggle-btn .icon-sun { display: none; }
   [data-theme="dark"] .theme-toggle-btn .icon-moon { display: flex; }
+  #snowToggleBtn.active { background: #eaf4fb; border-color: #4A90E2; color: #2a6db3; }
+  [data-theme="dark"] #snowToggleBtn.active { background: #16283a; border-color: #4A90E2; color: #8fc4f0; }
+
+  .snowfall-layer {
+    display: none;
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 150;
+  }
+  .snowfall-layer.show { display: block; }
+  .snowflake-piece {
+    position: absolute;
+    top: -12px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.9);
+    box-shadow: 0 0 4px rgba(255,255,255,0.7);
+    animation-name: snowfallDrift;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+  @keyframes snowfallDrift {
+    0%   { transform: translateY(-12px) translateX(0); }
+    100% { transform: translateY(105vh) translateX(var(--drift, 20px)); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .snowfall-layer { display: none !important; }
+  }
 
   html { -webkit-text-size-adjust: 100%; }
   body {
@@ -3162,6 +3191,9 @@
           <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
           <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
         </button>
+        <button type="button" class="theme-toggle-btn" id="snowToggleBtn" onclick="toggleSnowEffect()" aria-label="Toggle snow effect" title="Toggle snow effect">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="19.1" y2="4.9"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+        </button>
         <button type="button" class="app-user-trigger" id="userMenuTrigger" onclick="toggleUserMenu()" aria-haspopup="true" aria-expanded="false">
           <span class="app-user-avatar" id="userAvatar"></span>
           <span class="app-user-tag" id="userLabel"></span>
@@ -3615,6 +3647,15 @@
   <button type="button" class="img-lightbox-close" onclick="closeAnnouncementImageLightbox()">&times;</button>
   <img id="announcementImgLightboxImg" src="" alt="Announcement attachment" onclick="event.stopPropagation()">
 </div>
+
+<!-- Gentle falling snow — opt-in via the snowflake toggle in the nav
+     (see toggleSnowEffect), not always-on. Fixed + pointer-events:
+     none, so it drifts over everything without ever blocking a click.
+     Generated once by renderSnowfall(); shown/hidden purely via the
+     "show" class rather than being added/removed from the DOM, so
+     toggling it on and off doesn't need to regenerate the flakes
+     each time. -->
+<div class="snowfall-layer" id="snowfallLayer"></div>
 
 <!-- Post-login birthday popup. Shown at most once per page session
      (see checkBirthdayPopup in the script below) — not re-triggered by
@@ -6723,8 +6764,48 @@
     }
   }
 
+  // Snow is opt-in (toggled via the snowflake button in the nav),
+  // unlike the always-on lights/garland/holly above. The flakes are
+  // generated once, here, regardless of whether snow starts on or off
+  // — toggling later just adds/removes the "show" class rather than
+  // regenerating anything, so turning it on responds instantly.
+  function renderSnowfall() {
+    const layer = document.getElementById('snowfallLayer');
+    if (!layer) return;
+    const flakeCount = 28;
+    for (let i = 0; i < flakeCount; i++) {
+      const flake = document.createElement('div');
+      flake.className = 'snowflake-piece';
+      const size = 3 + Math.random() * 5;
+      flake.style.width = size + 'px';
+      flake.style.height = size + 'px';
+      flake.style.left = Math.random() * 100 + 'vw';
+      flake.style.opacity = (0.4 + Math.random() * 0.5).toFixed(2);
+      flake.style.setProperty('--drift', (Math.random() * 80 - 40) + 'px');
+      flake.style.animationDuration = (8 + Math.random() * 10) + 's';
+      flake.style.animationDelay = (Math.random() * -15) + 's'; // negative delay so they start mid-fall, not all clustered at the top
+      layer.appendChild(flake);
+    }
+  }
+
+  function applySnowPreference() {
+    const enabled = localStorage.getItem('fa_snow_enabled') === 'true';
+    const layer = document.getElementById('snowfallLayer');
+    const btn = document.getElementById('snowToggleBtn');
+    if (layer) layer.classList.toggle('show', enabled);
+    if (btn) btn.classList.toggle('active', enabled);
+  }
+
+  function toggleSnowEffect() {
+    const currentlyEnabled = localStorage.getItem('fa_snow_enabled') === 'true';
+    localStorage.setItem('fa_snow_enabled', currentlyEnabled ? 'false' : 'true');
+    applySnowPreference();
+  }
+
   renderHolidayLights();
   renderMiniGarland();
+  renderSnowfall();
+  applySnowPreference();
 </script>
 </body>
 </html>
