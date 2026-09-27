@@ -2016,6 +2016,94 @@
     line-height: 1.6;
     white-space: pre-line;
   }
+  /* ── Announcement comments ── */
+  .announcement-comments {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--gray-light);
+  }
+  .announcement-comments-loading, .announcement-comments-empty {
+    font-size: 12.5px;
+    color: var(--gray-mid);
+    padding: 4px 0;
+  }
+  .comments-list {
+    max-height: 260px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .comment-row {
+    background: #f7faf7;
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+  .comment-row-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 3px;
+  }
+  .comment-author { font-size: 12.5px; font-weight: 700; color: var(--black); }
+  .comment-time { font-size: 10.5px; color: var(--gray-mid); white-space: nowrap; }
+  .comment-text { font-size: 12.5px; color: var(--gray-dark); line-height: 1.45; white-space: pre-line; }
+  .comment-actions { display: flex; gap: 10px; margin-top: 4px; }
+  .comment-action-btn {
+    background: none;
+    border: none;
+    color: var(--gray-mid);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+  }
+  .comment-action-btn:hover { color: var(--green-dark); }
+  .comment-action-btn.delete:hover { color: var(--certiverse-red); }
+  .comment-row-editing { background: #eef4ee; }
+  .comment-edit-actions { display: flex; gap: 8px; margin-top: 6px; }
+  .comment-compose { display: flex; gap: 8px; align-items: flex-end; }
+  .comment-input {
+    flex: 1;
+    min-height: 36px;
+    max-height: 100px;
+    border: 1.5px solid var(--gray-light);
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 12.5px;
+    font-family: 'Inter', sans-serif;
+    resize: vertical;
+    box-sizing: border-box;
+    background: #fff;
+    color: var(--black);
+  }
+  .comment-input:focus { outline: none; border-color: var(--green); }
+  .comment-post-btn {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .comment-post-btn:hover:not(:disabled) { background: var(--green-dark); }
+  .comment-post-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  [data-theme="dark"] .announcement-comments { border-top-color: #2f4c46; }
+  [data-theme="dark"] .announcement-comments-loading,
+  [data-theme="dark"] .announcement-comments-empty,
+  [data-theme="dark"] .comment-time { color: #9fb0ac; }
+  [data-theme="dark"] .comment-row { background: #16211f; }
+  [data-theme="dark"] .comment-row-editing { background: #1c2b28; }
+  [data-theme="dark"] .comment-author { color: #f0f0f0; }
+  [data-theme="dark"] .comment-text { color: #d5dfdb; }
+  [data-theme="dark"] .comment-input { background: #16211f; border-color: #2f4c46; color: #f0f0f0; }
+
   .announcement-reactions-bar {
     display: flex;
     gap: 6px;
@@ -3755,7 +3843,7 @@
     window.open('https://team-ops-share.preview.emergentagent.com/', '_blank', 'noopener');
   }
 
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxtxBrgwg7qYq8Sox-agRo1aeMsG8ppoD09J_KPiMcerLuFr-cl5wIKHg8tu3y_s5l4/exec";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzljZd8gJRZKeP-7sI_FmSTt84TFx7yvs7imEahamYMi7QsxPgGvc2nQbNSqfeXxMNY/exec";
   const SESSION_KEY = "fa_staff_session";
 
   // Identity of the signed-in staff member, used to pin their own
@@ -6194,8 +6282,24 @@
     return result;
   }
 
+  /* ---------- Announcement comments ---------- */
+  let announcementComments = [];
+  let commentsLoadedForUpdatedAt = null;
+  let commentsFetchInFlight = false;
+  let editingCommentId = null; // non-null while a specific existing comment is being edited in place
+
+  // Guards renderAnnouncement() from wiping out an in-progress comment
+  // (new or being edited) every time the 15-second poll runs — same
+  // problem editingAnnouncement already solves for the admin's own
+  // edit box, just extended to cover comments too.
+  function isComposingComment() {
+    if (editingCommentId !== null) return true;
+    const box = document.getElementById('newCommentInput');
+    return !!(box && box.value.trim().length > 0);
+  }
+
   function renderAnnouncement() {
-    if (editingAnnouncement) return;
+    if (editingAnnouncement || isComposingComment()) return;
 
     const section = document.getElementById('announcementSection');
     const card = document.getElementById('announcementCard');
@@ -6223,9 +6327,10 @@
 
     const imageHtml = (hasText && ann.hasImage) ? renderAnnouncementImageBlock(ann) : '';
     const reactionsHtml = hasText ? renderAnnouncementReactionsBar(ann.reactions) : '';
+    const commentsHtml = hasText ? renderCommentsSection(ann) : '';
 
     const bodyHtml = hasText
-      ? '<div class="announcement-text">' + renderAnnouncementTextWithMentions(ann.text, currentData.names) + '</div>' + imageHtml + reactionsHtml + metaHtml
+      ? '<div class="announcement-text">' + renderAnnouncementTextWithMentions(ann.text, currentData.names) + '</div>' + imageHtml + reactionsHtml + metaHtml + commentsHtml
       : '<div class="announcement-empty">No announcements right now.</div>';
 
     card.innerHTML =
@@ -6236,6 +6341,162 @@
 
     const editBtn = document.getElementById('announcementEditBtn');
     if (editBtn) editBtn.addEventListener('click', startEditAnnouncement);
+  }
+
+  // Comments belong to whichever announcement is currently posted
+  // (ann.updatedAt identifies it) — fetched once per announcement,
+  // not re-fetched on every 15-second poll, mirroring the same
+  // versioned-cache approach used for the announcement image.
+  function renderCommentsSection(ann) {
+    if (commentsLoadedForUpdatedAt !== ann.updatedAt) {
+      if (!commentsFetchInFlight) loadAnnouncementComments(ann.updatedAt);
+      return '<div class="announcement-comments"><div class="announcement-comments-loading">Loading comments…</div></div>';
+    }
+
+    const listHtml = announcementComments.length === 0
+      ? '<div class="announcement-comments-empty">No comments yet.</div>'
+      : announcementComments.map(c => {
+          if (editingCommentId === c.id) return renderCommentEditForm(c);
+          const editedTag = c.updatedAt ? ' (edited)' : '';
+          const actions = c.canEdit
+            ? '<div class="comment-actions">' +
+              '<button type="button" class="comment-action-btn" onclick="startEditComment(\'' + c.id + '\')">Edit</button>' +
+              '<button type="button" class="comment-action-btn delete" onclick="deleteAnnouncementCommentClick(\'' + c.id + '\')">Delete</button>' +
+              '</div>'
+            : '';
+          return '<div class="comment-row">' +
+            '<div class="comment-row-top">' +
+            '<span class="comment-author">' + escapeHtml(c.postedByName) + '</span>' +
+            '<span class="comment-time">' + formatAnnouncementDate(c.createdAt) + editedTag + '</span>' +
+            '</div>' +
+            '<div class="comment-text">' + renderAnnouncementTextWithMentions(c.text, currentData.names) + '</div>' +
+            actions +
+            '</div>';
+        }).join('');
+
+    return '<div class="announcement-comments">' +
+      '<div class="comments-list">' + listHtml + '</div>' +
+      '<div class="comment-compose">' +
+      '<textarea id="newCommentInput" class="comment-input" maxlength="500" placeholder="Write a comment… (@Name to mention)" oninput="updateCommentPostButtonState()"></textarea>' +
+      '<button type="button" class="comment-post-btn" id="newCommentPostBtn" onclick="submitNewComment()" disabled>Post</button>' +
+      '</div>' +
+      '<div class="announcement-error" id="newCommentError"></div>' +
+      '</div>';
+  }
+
+  function renderCommentEditForm(c) {
+    return '<div class="comment-row comment-row-editing">' +
+      '<textarea id="editCommentInput_' + c.id + '" class="comment-input" maxlength="500">' + escapeHtml(c.text) + '</textarea>' +
+      '<div class="announcement-error" id="editCommentError_' + c.id + '"></div>' +
+      '<div class="comment-edit-actions">' +
+      '<button type="button" class="announcement-save-btn" onclick="submitEditComment(\'' + c.id + '\')">Save</button>' +
+      '<button type="button" class="announcement-cancel-btn" onclick="cancelEditComment()">Cancel</button>' +
+      '</div>' +
+      '</div>';
+  }
+
+  async function loadAnnouncementComments(forUpdatedAt) {
+    commentsFetchInFlight = true;
+    try {
+      const result = await jsonp({ action: 'getAnnouncementComments', email: currentUserEmail });
+      if (result.success) {
+        announcementComments = result.comments || [];
+        commentsLoadedForUpdatedAt = forUpdatedAt;
+        renderAnnouncement();
+      }
+    } catch (err) {
+      console.error('[Comments] load failed:', err);
+    }
+    commentsFetchInFlight = false;
+  }
+
+  function updateCommentPostButtonState() {
+    const box = document.getElementById('newCommentInput');
+    const btn = document.getElementById('newCommentPostBtn');
+    if (box && btn) btn.disabled = box.value.trim().length === 0;
+  }
+
+  async function submitNewComment() {
+    const box = document.getElementById('newCommentInput');
+    const text = box.value.trim();
+    const errorEl = document.getElementById('newCommentError');
+    errorEl.classList.remove('show');
+    if (!text) return;
+
+    const btn = document.getElementById('newCommentPostBtn');
+    btn.disabled = true;
+    btn.textContent = 'Posting…';
+    try {
+      const result = await jsonp({ action: 'addAnnouncementComment', email: currentUserEmail, text: text });
+      if (result.success) {
+        box.value = '';
+        commentsLoadedForUpdatedAt = null; // force a fresh fetch to pick up the new comment
+        await loadAnnouncementComments(currentData.announcement.updatedAt);
+      } else {
+        errorEl.textContent = result.message || 'Could not post comment.';
+        errorEl.classList.add('show');
+        btn.disabled = false;
+      }
+    } catch (err) {
+      console.error('[Comments] add failed:', err);
+      errorEl.textContent = err.message || 'Could not post comment.';
+      errorEl.classList.add('show');
+      btn.disabled = false;
+    }
+    btn.textContent = 'Post';
+  }
+
+  function startEditComment(id) {
+    editingCommentId = id;
+    renderAnnouncement();
+  }
+
+  function cancelEditComment() {
+    editingCommentId = null;
+    renderAnnouncement();
+  }
+
+  async function submitEditComment(id) {
+    const box = document.getElementById('editCommentInput_' + id);
+    const text = box.value.trim();
+    const errorEl = document.getElementById('editCommentError_' + id);
+    errorEl.classList.remove('show');
+    if (!text) {
+      errorEl.textContent = 'Comment can\'t be empty.';
+      errorEl.classList.add('show');
+      return;
+    }
+    try {
+      const result = await jsonp({ action: 'updateAnnouncementComment', email: currentUserEmail, id: id, text: text });
+      if (result.success) {
+        editingCommentId = null;
+        commentsLoadedForUpdatedAt = null;
+        await loadAnnouncementComments(currentData.announcement.updatedAt);
+      } else {
+        errorEl.textContent = result.message || 'Could not update comment.';
+        errorEl.classList.add('show');
+      }
+    } catch (err) {
+      console.error('[Comments] edit failed:', err);
+      errorEl.textContent = err.message || 'Could not update comment.';
+      errorEl.classList.add('show');
+    }
+  }
+
+  async function deleteAnnouncementCommentClick(id) {
+    if (!window.confirm('Delete this comment?')) return;
+    try {
+      const result = await jsonp({ action: 'deleteAnnouncementComment', email: currentUserEmail, id: id });
+      if (result.success) {
+        commentsLoadedForUpdatedAt = null;
+        await loadAnnouncementComments(currentData.announcement.updatedAt);
+      } else {
+        showToast(result.message || 'Could not delete comment.', 'error');
+      }
+    } catch (err) {
+      console.error('[Comments] delete failed:', err);
+      showToast('Could not delete comment.', 'error');
+    }
   }
 
   // Returns the markup for the image portion of a posted announcement —
