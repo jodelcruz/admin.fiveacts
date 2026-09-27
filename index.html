@@ -2094,6 +2094,60 @@
   }
   .comment-post-btn:hover:not(:disabled) { background: var(--green-dark); }
   .comment-post-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .comment-compose-input-wrap { flex: 1; display: flex; flex-direction: column; }
+
+  /* ── Emoji quick bar (shared by the announcement + comment boxes) ── */
+  .emoji-quick-bar {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 5px;
+    margin-bottom: 4px;
+  }
+  .emoji-quick-btn {
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-size: 15px;
+    line-height: 1;
+    padding: 3px 5px;
+    cursor: pointer;
+  }
+  .emoji-quick-btn:hover { background: var(--green-light); border-color: var(--green); }
+  [data-theme="dark"] .emoji-quick-btn:hover { background: #1c3a2f; }
+
+  /* ── @Mention suggestions dropdown (appended to body, positioned
+       via JS next to whichever textarea is focused) ── */
+  .mention-suggestions {
+    display: none;
+    position: absolute;
+    z-index: 300;
+    background: #fff;
+    border: 1px solid var(--gray-light);
+    border-radius: 8px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.16);
+    max-height: 180px;
+    overflow-y: auto;
+    padding: 4px;
+  }
+  .mention-suggestion-item {
+    padding: 6px 10px;
+    font-size: 13px;
+    color: var(--gray-dark);
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .mention-suggestion-item.active, .mention-suggestion-item:hover {
+    background: var(--green-light);
+    color: var(--green-dark);
+  }
+  [data-theme="dark"] .mention-suggestions { background: #16211f; border-color: #2f4c46; }
+  [data-theme="dark"] .mention-suggestion-item { color: #d5dfdb; }
+  [data-theme="dark"] .mention-suggestion-item.active, [data-theme="dark"] .mention-suggestion-item:hover {
+    background: #1c3a2f; color: #8fe0a3;
+  }
+
   [data-theme="dark"] .announcement-comments { border-top-color: #2f4c46; }
   [data-theme="dark"] .announcement-comments-loading,
   [data-theme="dark"] .announcement-comments-empty,
@@ -6282,6 +6336,154 @@
     return result;
   }
 
+  /* ---------- Emoji quick bar (announcement + comment boxes) ---------- */
+  // A small always-visible row rather than a toggled picker popup —
+  // simpler to attach reliably across three different text boxes
+  // (the announcement edit box, new comments, comment edits) without
+  // needing per-box positioning logic.
+  const QUICK_EMOJI = ['😊', '😂', '👍', '❤️', '🎉', '🔥', '💯', '✅', '⚠️', '📌'];
+
+  function emojiQuickBarHtml(textareaId) {
+    return '<div class="emoji-quick-bar">' + QUICK_EMOJI.map(e =>
+      '<button type="button" class="emoji-quick-btn" onmousedown="event.preventDefault();" onclick="insertEmojiAtCursor(\'' + textareaId + '\', \'' + e + '\')">' + e + '</button>'
+    ).join('') + '</div>';
+  }
+
+  function insertEmojiAtCursor(textareaId, emoji) {
+    const textarea = document.getElementById(textareaId);
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const value = textarea.value;
+    textarea.value = value.slice(0, start) + emoji + value.slice(end);
+    const newCursor = start + emoji.length;
+    textarea.focus();
+    textarea.selectionStart = textarea.selectionEnd = newCursor;
+    if (textareaId === 'newCommentInput') updateCommentPostButtonState();
+    if (textareaId === 'announcementInput') updateAnnouncementCharCount();
+  }
+
+  /* ---------- @Mention autocomplete (shared across the same three
+     text boxes as the emoji bar above) ---------- */
+  // One shared suggestion dropdown, repositioned/repurposed for
+  // whichever textarea is currently focused, rather than duplicating
+  // dropdown markup per text box.
+  let mentionSuggestionState = { activeTextareaId: null, matches: [], selectedIndex: -1 };
+
+  function setupMentionAutocomplete(textareaId) {
+    const box = document.getElementById(textareaId);
+    if (!box || box.dataset.mentionBound === '1') return;
+    box.dataset.mentionBound = '1';
+    box.addEventListener('input', () => handleMentionInput(textareaId));
+    box.addEventListener('keydown', (e) => handleMentionKeydown(e, textareaId));
+    // A short delay so a click on a suggestion (which itself blurs the
+    // textarea first) still has a chance to register before this
+    // closes the dropdown out from under it.
+    box.addEventListener('blur', () => setTimeout(hideMentionSuggestions, 150));
+  }
+
+  function getMentionQuery(textarea) {
+    const value = textarea.value;
+    const cursor = textarea.selectionStart;
+    const beforeCursor = value.slice(0, cursor);
+    const match = beforeCursor.match(/@([a-zA-Z ]{0,30})$/);
+    return match ? match[1] : null;
+  }
+
+  function handleMentionInput(textareaId) {
+    const textarea = document.getElementById(textareaId);
+    if (!textarea) return;
+    const query = getMentionQuery(textarea);
+    if (query === null) { hideMentionSuggestions(); return; }
+
+    const q = query.trim().toLowerCase();
+    const names = currentData.names || [];
+    // Names starting with what's typed come first, then names that
+    // merely contain it (e.g. typing "ann" surfaces "Rose Ann" too).
+    const starts = names.filter(n => n.toLowerCase().startsWith(q));
+    const contains = names.filter(n => !n.toLowerCase().startsWith(q) && n.toLowerCase().includes(q));
+    const matches = (q === '' ? names.slice(0, 6) : starts.concat(contains)).slice(0, 6);
+
+    if (matches.length === 0) { hideMentionSuggestions(); return; }
+    showMentionSuggestions(textareaId, matches);
+  }
+
+  function showMentionSuggestions(textareaId, matches) {
+    let box = document.getElementById('mentionSuggestions');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'mentionSuggestions';
+      box.className = 'mention-suggestions';
+      document.body.appendChild(box);
+    }
+    mentionSuggestionState = { activeTextareaId: textareaId, matches: matches, selectedIndex: 0 };
+    renderMentionSuggestions();
+
+    const textarea = document.getElementById(textareaId);
+    const rect = textarea.getBoundingClientRect();
+    box.style.left = (rect.left + window.scrollX) + 'px';
+    box.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+    box.style.width = Math.max(140, Math.min(rect.width, 220)) + 'px';
+    box.style.display = 'block';
+  }
+
+  function renderMentionSuggestions() {
+    const box = document.getElementById('mentionSuggestions');
+    if (!box) return;
+    box.innerHTML = mentionSuggestionState.matches.map((name, idx) =>
+      '<div class="mention-suggestion-item' + (idx === mentionSuggestionState.selectedIndex ? ' active' : '') + '" ' +
+      'onmousedown="event.preventDefault(); selectMentionSuggestion(' + idx + ');">' + escapeHtml(name) + '</div>'
+    ).join('');
+  }
+
+  function hideMentionSuggestions() {
+    const box = document.getElementById('mentionSuggestions');
+    if (box) box.style.display = 'none';
+    mentionSuggestionState = { activeTextareaId: null, matches: [], selectedIndex: -1 };
+  }
+
+  function handleMentionKeydown(e, textareaId) {
+    if (mentionSuggestionState.activeTextareaId !== textareaId || mentionSuggestionState.matches.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      mentionSuggestionState.selectedIndex = (mentionSuggestionState.selectedIndex + 1) % mentionSuggestionState.matches.length;
+      renderMentionSuggestions();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      mentionSuggestionState.selectedIndex = (mentionSuggestionState.selectedIndex - 1 + mentionSuggestionState.matches.length) % mentionSuggestionState.matches.length;
+      renderMentionSuggestions();
+    } else if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault();
+      selectMentionSuggestion(mentionSuggestionState.selectedIndex);
+    } else if (e.key === 'Escape') {
+      hideMentionSuggestions();
+    }
+  }
+
+  function selectMentionSuggestion(idx) {
+    const name = mentionSuggestionState.matches[idx];
+    const textareaId = mentionSuggestionState.activeTextareaId;
+    const textarea = document.getElementById(textareaId);
+    if (!name || !textarea) { hideMentionSuggestions(); return; }
+
+    const value = textarea.value;
+    const cursor = textarea.selectionStart;
+    const beforeCursor = value.slice(0, cursor);
+    const match = beforeCursor.match(/@([a-zA-Z ]{0,30})$/);
+    if (!match) { hideMentionSuggestions(); return; }
+
+    const atIndex = cursor - match[0].length;
+    const newValue = value.slice(0, atIndex) + '@' + name + ' ' + value.slice(cursor);
+    textarea.value = newValue;
+    const newCursor = atIndex + name.length + 2;
+    hideMentionSuggestions();
+    textarea.focus();
+    textarea.selectionStart = textarea.selectionEnd = newCursor;
+
+    if (textareaId === 'newCommentInput') updateCommentPostButtonState();
+    if (textareaId === 'announcementInput') updateAnnouncementCharCount();
+  }
+
   /* ---------- Announcement comments ---------- */
   let announcementComments = [];
   let commentsLoadedForUpdatedAt = null;
@@ -6341,6 +6543,7 @@
 
     const editBtn = document.getElementById('announcementEditBtn');
     if (editBtn) editBtn.addEventListener('click', startEditAnnouncement);
+    setupMentionAutocomplete('newCommentInput');
   }
 
   // Comments belong to whichever announcement is currently posted
@@ -6377,7 +6580,10 @@
     return '<div class="announcement-comments">' +
       '<div class="comments-list">' + listHtml + '</div>' +
       '<div class="comment-compose">' +
+      '<div class="comment-compose-input-wrap">' +
       '<textarea id="newCommentInput" class="comment-input" maxlength="500" placeholder="Write a comment… (@Name to mention)" oninput="updateCommentPostButtonState()"></textarea>' +
+      emojiQuickBarHtml('newCommentInput') +
+      '</div>' +
       '<button type="button" class="comment-post-btn" id="newCommentPostBtn" onclick="submitNewComment()" disabled>Post</button>' +
       '</div>' +
       '<div class="announcement-error" id="newCommentError"></div>' +
@@ -6387,6 +6593,7 @@
   function renderCommentEditForm(c) {
     return '<div class="comment-row comment-row-editing">' +
       '<textarea id="editCommentInput_' + c.id + '" class="comment-input" maxlength="500">' + escapeHtml(c.text) + '</textarea>' +
+      emojiQuickBarHtml('editCommentInput_' + c.id) +
       '<div class="announcement-error" id="editCommentError_' + c.id + '"></div>' +
       '<div class="comment-edit-actions">' +
       '<button type="button" class="announcement-save-btn" onclick="submitEditComment(\'' + c.id + '\')">Save</button>' +
@@ -6449,6 +6656,7 @@
   function startEditComment(id) {
     editingCommentId = id;
     renderAnnouncement();
+    setupMentionAutocomplete('editCommentInput_' + id);
   }
 
   function cancelEditComment() {
@@ -6558,6 +6766,7 @@
       '<h3>' + (hasExisting ? 'Edit Announcement' : 'Add Announcement') + '</h3>' +
       '</div>' +
       '<textarea class="announcement-textarea" id="announcementInput" maxlength="' + ANNOUNCEMENT_MAX_LENGTH_JS + '" placeholder="Write an office announcement… (type @Name to mention someone)">' + escapeHtml(currentText) + '</textarea>' +
+      emojiQuickBarHtml('announcementInput') +
       '<div class="announcement-char-count" id="announcementCharCount"></div>' +
       '<div class="announcement-mention-hint">Tip: type <strong>@</strong> followed by someone\'s name (e.g. "@' + escapeHtml((currentData.names && currentData.names[0]) || 'Jodel') + '") to mention them — it\'ll be highlighted once posted.</div>' +
       '<div class="announcement-image-edit-wrap" id="announcementImageEditWrap"></div>' +
@@ -6579,6 +6788,7 @@
     if (clearBtn) clearBtn.addEventListener('click', clearAnnouncement);
     if (cancelBtn) cancelBtn.addEventListener('click', cancelEditAnnouncement);
     updateAnnouncementCharCount();
+    setupMentionAutocomplete('announcementInput');
   }
 
   // Renders whichever image state currently applies while editing: a
