@@ -6080,19 +6080,49 @@
   // stores one reaction per person, matching that mental model.
   async function toggleAnnouncementReaction(emoji) {
     if (!currentUserEmail) return;
+    const ann = currentData.announcement;
+    if (!ann || !ann.reactions) return;
+
     const bar = document.querySelector('.announcement-reactions-bar');
-    if (bar) bar.style.pointerEvents = 'none';
+    if (bar) bar.style.pointerEvents = 'none'; // guard against a rapid double-click firing two requests
+
+    // Snapshot so a failed request can be rolled back cleanly.
+    const previous = JSON.parse(JSON.stringify(ann.reactions));
+
+    const myName = resolveMyName(currentData.names) || currentUserEmail;
+    const current = ann.reactions.myReaction;
+    const removing = (current === emoji);
+
+    // Optimistic update — reflect the change instantly rather than
+    // waiting on a round-trip (and previously, an entire extra
+    // loadAttendance() call) before the count/highlight updates. If
+    // the request below fails, this gets rolled back; otherwise the
+    // next routine 15-second poll will just confirm the same state
+    // the server already agrees on.
+    if (current && ann.reactions.counts[current] != null) {
+      ann.reactions.counts[current] = Math.max(0, ann.reactions.counts[current] - 1);
+      const idx = (ann.reactions.reactorsByEmoji[current] || []).indexOf(myName);
+      if (idx !== -1) ann.reactions.reactorsByEmoji[current].splice(idx, 1);
+    }
+    if (!removing) {
+      ann.reactions.counts[emoji] = (ann.reactions.counts[emoji] || 0) + 1;
+      if (!ann.reactions.reactorsByEmoji[emoji]) ann.reactions.reactorsByEmoji[emoji] = [];
+      ann.reactions.reactorsByEmoji[emoji].push(myName);
+    }
+    ann.reactions.myReaction = removing ? null : emoji;
+    renderAnnouncement();
+
     try {
-      const current = (currentData.announcement && currentData.announcement.reactions) ? currentData.announcement.reactions.myReaction : null;
-      if (current === emoji) {
+      if (removing) {
         await jsonp({ action: 'removeAnnouncementReaction', email: currentUserEmail });
       } else {
         await jsonp({ action: 'setAnnouncementReaction', email: currentUserEmail, emoji: emoji });
       }
-      await loadAttendance();
     } catch (err) {
       console.error('[Announcement] reaction failed:', err);
       showToast('Could not update reaction.', 'error');
+      currentData.announcement.reactions = previous; // roll back the optimistic change
+      renderAnnouncement();
     }
     if (bar) bar.style.pointerEvents = '';
   }
