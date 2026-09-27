@@ -2372,6 +2372,136 @@
     .mini-garland span { animation: none; opacity: 0.8; }
   }
 
+  /* ── PROCTORING ANNOUNCEMENTS LOG (dashboard sidebar) ── */
+  .proctoring-log-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .proctoring-log-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .proctoring-log-header h3 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 17px;
+    color: var(--black);
+    flex: 1;
+  }
+  .proctoring-log-add-btn {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .proctoring-log-add-btn:hover { background: var(--green-dark); }
+  .proctoring-log-form {
+    background: #f7faf7;
+    border: 1px solid var(--gray-light);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 14px;
+  }
+  .proctoring-log-category-select {
+    width: 100%;
+    border: 1.5px solid var(--gray-light);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    background: #fff;
+    color: var(--black);
+    margin-bottom: 8px;
+  }
+  .proctoring-log-textarea {
+    width: 100%;
+    min-height: 70px;
+    border: 1.5px solid var(--gray-light);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    resize: vertical;
+    box-sizing: border-box;
+    background: #fff;
+    color: var(--black);
+    margin-bottom: 8px;
+  }
+  .proctoring-log-category-select:focus, .proctoring-log-textarea:focus { outline: none; border-color: var(--green); }
+  .proctoring-log-form-actions { display: flex; gap: 8px; }
+  .proctoring-log-list {
+    max-height: 420px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .proctoring-log-empty { font-size: 13px; color: var(--gray-mid); padding: 6px 2px; }
+  .proctoring-log-entry {
+    background: #fafcfa;
+    border: 1px solid var(--gray-light);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .proctoring-log-entry-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .proctoring-log-category-badge {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+  }
+  .proctoring-log-category-badge.cat-guide { background: var(--green-light); color: var(--green-dark); }
+  .proctoring-log-category-badge.cat-exam { background: #eef3fb; color: #2a5db0; }
+  .proctoring-log-category-badge.cat-tech { background: #fdf0e3; color: #a15c1f; }
+  .proctoring-log-entry-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .proctoring-log-icon-btn {
+    background: none;
+    border: none;
+    color: var(--gray-mid);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 4px;
+  }
+  .proctoring-log-icon-btn:hover { color: var(--green-dark); }
+  .proctoring-log-icon-btn.delete:hover { color: var(--certiverse-red); }
+  .proctoring-log-entry-text {
+    font-size: 13.5px;
+    color: var(--gray-dark);
+    line-height: 1.5;
+    white-space: pre-line;
+    margin-bottom: 6px;
+  }
+  .proctoring-log-entry-meta { font-size: 11px; color: var(--gray-mid); }
+  [data-theme="dark"] .proctoring-log-card { background: #1c2b28; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+  [data-theme="dark"] .proctoring-log-header h3 { color: #f0f0f0; }
+  [data-theme="dark"] .proctoring-log-form { background: #16211f; border-color: #2f4c46; }
+  [data-theme="dark"] .proctoring-log-category-select,
+  [data-theme="dark"] .proctoring-log-textarea { background: #16211f; border-color: #2f4c46; color: #f0f0f0; }
+  [data-theme="dark"] .proctoring-log-entry { background: #16211f; border-color: #2f4c46; }
+  [data-theme="dark"] .proctoring-log-entry-text { color: #d5dfdb; }
+  [data-theme="dark"] .proctoring-log-entry-meta, [data-theme="dark"] .proctoring-log-empty { color: #9fb0ac; }
+  [data-theme="dark"] .proctoring-log-category-badge.cat-guide { background: #1c3a2f; color: #8fe0a3; }
+  [data-theme="dark"] .proctoring-log-category-badge.cat-exam { background: #1c2b3a; color: #7ba7e8; }
+  [data-theme="dark"] .proctoring-log-category-badge.cat-tech { background: #3a2a1c; color: #e0a76f; }
+
   /* ── UPCOMING BIRTHDAYS/EVENTS (dashboard sidebar) ── */
   .upcoming-card {
     background: #fff;
@@ -3094,6 +3224,30 @@
           </div>
           <input type="file" id="announcementImageFileInput" accept="image/*" style="display:none;">
 
+          <div class="proctoring-log-card">
+            <div class="proctoring-log-header">
+              <span class="upcoming-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+              </span>
+              <h3>Proctoring Announcements</h3>
+              <button type="button" class="proctoring-log-add-btn" id="proctoringLogAddBtn" onclick="toggleProctoringLogForm()">+ Add</button>
+            </div>
+
+            <div class="proctoring-log-form" id="proctoringLogForm" style="display:none;">
+              <select id="proctoringLogCategoryInput" class="proctoring-log-category-select"></select>
+              <textarea id="proctoringLogTextInput" class="proctoring-log-textarea" maxlength="1000" placeholder="Write your announcement…"></textarea>
+              <div class="announcement-error" id="proctoringLogError"></div>
+              <div class="proctoring-log-form-actions">
+                <button type="button" class="announcement-save-btn" id="proctoringLogSaveBtn" onclick="submitProctoringLogEntry()">Post</button>
+                <button type="button" class="announcement-cancel-btn" onclick="toggleProctoringLogForm()">Cancel</button>
+              </div>
+            </div>
+
+            <div class="proctoring-log-list" id="proctoringLogList">
+              <div class="loading">Loading announcements…</div>
+            </div>
+          </div>
+
           <div class="upcoming-card">
             <div class="upcoming-header">
               <span class="upcoming-icon">
@@ -3553,7 +3707,7 @@
     window.open('https://team-ops-share.preview.emergentagent.com/', '_blank', 'noopener');
   }
 
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxW-GWPPKYvwHMTnJqJDz5mZa3n4jKVmeFdqTuIg1gr_9d2HPQ5BQw4CWc3HXqDwTfD/exec";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxtxBrgwg7qYq8Sox-agRo1aeMsG8ppoD09J_KPiMcerLuFr-cl5wIKHg8tu3y_s5l4/exec";
   const SESSION_KEY = "fa_staff_session";
 
   // Identity of the signed-in staff member, used to pin their own
@@ -3755,6 +3909,7 @@
 
     loadAttendance();
     loadBirthdays();
+    loadProctoringLog();
     if (!window.__attendancePollStarted) {
       window.__attendancePollStarted = true;
       setInterval(loadAttendance, 15000);
@@ -6298,6 +6453,199 @@
       showAnnouncementError(err.message || 'Could not clear announcement.');
     }
     if (clearBtn) clearBtn.disabled = false;
+  }
+
+  /* ---------- Proctoring Announcements (a scrollable log, not a
+     single post — anyone signed in can add one, but only the person
+     who posted a given entry can edit or delete it). ---------- */
+
+  let proctoringLogEntries = [];
+  let proctoringLogCategories = [];
+  let editingProctoringEntryId = null;
+
+  function categoryBadgeClass(category) {
+    if (category === 'Proctor Guide') return 'cat-guide';
+    if (category === 'Exam Announcements') return 'cat-exam';
+    if (category === 'Technical Solutions') return 'cat-tech';
+    return '';
+  }
+
+  async function loadProctoringLog() {
+    const list = document.getElementById('proctoringLogList');
+    if (!list) return;
+    try {
+      const result = await jsonp({ action: 'getProctoringAnnouncements', email: currentUserEmail });
+      if (!result.success) {
+        list.innerHTML = '<div class="proctoring-log-empty">Could not load announcements.</div>';
+        return;
+      }
+      proctoringLogEntries = result.entries || [];
+      proctoringLogCategories = result.categories || [];
+      populateProctoringCategorySelect();
+      renderProctoringLog();
+    } catch (err) {
+      console.error('[ProctoringLog] load failed:', err);
+      list.innerHTML = '<div class="proctoring-log-empty">Could not load announcements.</div>';
+    }
+  }
+
+  function populateProctoringCategorySelect() {
+    const select = document.getElementById('proctoringLogCategoryInput');
+    if (!select || select.dataset.populated === '1') return;
+    proctoringLogCategories.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = cat;
+      select.appendChild(opt);
+    });
+    select.dataset.populated = '1';
+  }
+
+  function renderProctoringLog() {
+    const list = document.getElementById('proctoringLogList');
+    if (!list) return;
+
+    if (proctoringLogEntries.length === 0) {
+      list.innerHTML = '<div class="proctoring-log-empty">No announcements yet.</div>';
+      return;
+    }
+
+    list.innerHTML = proctoringLogEntries.map(entry => {
+      if (editingProctoringEntryId === entry.id) {
+        return renderProctoringEntryEditForm(entry);
+      }
+      const editedTag = entry.updatedAt ? ' (edited)' : '';
+      const actions = entry.canEdit
+        ? '<div class="proctoring-log-entry-actions">' +
+          '<button type="button" class="proctoring-log-icon-btn" onclick="startEditProctoringEntry(\'' + entry.id + '\')">Edit</button>' +
+          '<button type="button" class="proctoring-log-icon-btn delete" onclick="deleteProctoringEntry(\'' + entry.id + '\')">Delete</button>' +
+          '</div>'
+        : '';
+      return '<div class="proctoring-log-entry">' +
+        '<div class="proctoring-log-entry-top">' +
+        '<span class="proctoring-log-category-badge ' + categoryBadgeClass(entry.category) + '">' + escapeHtml(entry.category) + '</span>' +
+        actions +
+        '</div>' +
+        '<div class="proctoring-log-entry-text">' + escapeHtml(entry.text) + '</div>' +
+        '<div class="proctoring-log-entry-meta">' + formatAnnouncementDate(entry.createdAt) + ' by ' + escapeHtml(entry.postedByName) + editedTag + '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  function renderProctoringEntryEditForm(entry) {
+    const optionsHtml = proctoringLogCategories.map(cat =>
+      '<option value="' + escapeHtml(cat) + '"' + (cat === entry.category ? ' selected' : '') + '>' + escapeHtml(cat) + '</option>'
+    ).join('');
+    return '<div class="proctoring-log-entry">' +
+      '<select id="proctoringEditCategory_' + entry.id + '" class="proctoring-log-category-select">' + optionsHtml + '</select>' +
+      '<textarea id="proctoringEditText_' + entry.id + '" class="proctoring-log-textarea" maxlength="1000">' + escapeHtml(entry.text) + '</textarea>' +
+      '<div class="announcement-error" id="proctoringEditError_' + entry.id + '"></div>' +
+      '<div class="proctoring-log-form-actions">' +
+      '<button type="button" class="announcement-save-btn" onclick="submitProctoringEntryEdit(\'' + entry.id + '\')">Save</button>' +
+      '<button type="button" class="announcement-cancel-btn" onclick="cancelEditProctoringEntry()">Cancel</button>' +
+      '</div>' +
+      '</div>';
+  }
+
+  function toggleProctoringLogForm() {
+    const form = document.getElementById('proctoringLogForm');
+    const isOpen = form.style.display !== 'none';
+    form.style.display = isOpen ? 'none' : 'block';
+    if (!isOpen) {
+      document.getElementById('proctoringLogTextInput').value = '';
+      const err = document.getElementById('proctoringLogError');
+      err.textContent = '';
+      err.classList.remove('show');
+      document.getElementById('proctoringLogTextInput').focus();
+    }
+  }
+
+  async function submitProctoringLogEntry() {
+    const category = document.getElementById('proctoringLogCategoryInput').value;
+    const text = document.getElementById('proctoringLogTextInput').value.trim();
+    const errorEl = document.getElementById('proctoringLogError');
+    errorEl.classList.remove('show');
+
+    if (!text) {
+      errorEl.textContent = 'Announcement text is required.';
+      errorEl.classList.add('show');
+      return;
+    }
+
+    const saveBtn = document.getElementById('proctoringLogSaveBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Posting…';
+    try {
+      const result = await jsonp({ action: 'addProctoringAnnouncement', email: currentUserEmail, category: category, text: text });
+      if (result.success) {
+        showToast('Announcement posted.', 'info');
+        toggleProctoringLogForm();
+        await loadProctoringLog();
+      } else {
+        errorEl.textContent = result.message || 'Could not post announcement.';
+        errorEl.classList.add('show');
+      }
+    } catch (err) {
+      console.error('[ProctoringLog] add failed:', err);
+      errorEl.textContent = err.message || 'Could not post announcement.';
+      errorEl.classList.add('show');
+    }
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Post';
+  }
+
+  function startEditProctoringEntry(id) {
+    editingProctoringEntryId = id;
+    renderProctoringLog();
+  }
+
+  function cancelEditProctoringEntry() {
+    editingProctoringEntryId = null;
+    renderProctoringLog();
+  }
+
+  async function submitProctoringEntryEdit(id) {
+    const category = document.getElementById('proctoringEditCategory_' + id).value;
+    const text = document.getElementById('proctoringEditText_' + id).value.trim();
+    const errorEl = document.getElementById('proctoringEditError_' + id);
+    errorEl.classList.remove('show');
+
+    if (!text) {
+      errorEl.textContent = 'Announcement text is required.';
+      errorEl.classList.add('show');
+      return;
+    }
+    try {
+      const result = await jsonp({ action: 'updateProctoringAnnouncement', email: currentUserEmail, id: id, category: category, text: text });
+      if (result.success) {
+        showToast('Announcement updated.', 'info');
+        editingProctoringEntryId = null;
+        await loadProctoringLog();
+      } else {
+        errorEl.textContent = result.message || 'Could not update announcement.';
+        errorEl.classList.add('show');
+      }
+    } catch (err) {
+      console.error('[ProctoringLog] edit failed:', err);
+      errorEl.textContent = err.message || 'Could not update announcement.';
+      errorEl.classList.add('show');
+    }
+  }
+
+  async function deleteProctoringEntry(id) {
+    if (!window.confirm('Delete this announcement?')) return;
+    try {
+      const result = await jsonp({ action: 'deleteProctoringAnnouncement', email: currentUserEmail, id: id });
+      if (result.success) {
+        showToast('Announcement deleted.', 'info');
+        await loadProctoringLog();
+      } else {
+        showToast(result.message || 'Could not delete announcement.', 'error');
+      }
+    } catch (err) {
+      console.error('[ProctoringLog] delete failed:', err);
+      showToast('Could not delete announcement.', 'error');
+    }
   }
 
   /* ---------- Holiday season decorations (ber months) ---------- */
