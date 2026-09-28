@@ -5995,7 +5995,21 @@
         showToast(activeEmployee + (type === 'in' ? ' timed in at ' : ' timed out at ') + result.time, 'info');
         document.getElementById('noteInput').value = '';
         pinInput.value = '';
-        await loadAttendance(); // re-derives correct disabled state from fresh data
+
+        // Optimistic update — reflect the new punch instantly instead
+        // of waiting on a full loadAttendance() round-trip (which
+        // re-fetched EVERYONE's records, the whole grid, announcement
+        // reactions, birthdays, etc. just to update this one person's
+        // status). The next routine 15-second poll will just confirm
+        // the same state the server already agrees on.
+        if (!currentData.records[activeEmployee]) currentData.records[activeEmployee] = [];
+        currentData.records[activeEmployee].push({ type: type, time: result.time, note: note });
+        currentData.lastKnownPunch[activeEmployee] = { type: type, time: result.time, date: currentData.date };
+
+        renderGrid();
+        renderMyStatus();
+        updateModalPunchButtons(activeEmployee);
+        loadPunchHistory(activeEmployee); // refresh the Time Log in the background, doesn't block the above
       } else {
         pinInput.value = '';
         pinInput.focus();
