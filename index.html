@@ -2988,6 +2988,44 @@
     color: var(--gray-mid);
     margin-bottom: 10px;
   }
+  /* Title on the left, month navigator on the right. */
+  .punch-log-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .punch-log-header h3 { margin-bottom: 0; }
+  .log-month-nav { display: flex; align-items: center; gap: 6px; }
+  .log-month-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid var(--gray-light);
+    background: #fff;
+    color: var(--gray-dark);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0 2px;
+  }
+  .log-month-btn:hover:not(:disabled) { border-color: var(--green); color: var(--green-dark); }
+  .log-month-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .log-month-label {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--gray-dark);
+    min-width: 104px;
+    text-align: center;
+  }
+  [data-theme="dark"] .log-month-btn { background: #1c2b28; border-color: #2f4c46; color: #d5dfdb; }
+  [data-theme="dark"] .log-month-btn:hover:not(:disabled) { border-color: var(--green); color: #8fe0a3; }
+  [data-theme="dark"] .log-month-label { color: #d5dfdb; }
   /* Each day's punches, visually separated as its own group rather
      than one continuous flat list — this (plus the labeled header
      below) is what actually fixes the "messy, hard to tell days apart"
@@ -3773,7 +3811,14 @@
     </div>
 
     <div class="punch-log">
-      <h3>Time Log (last 15 days)</h3>
+      <div class="punch-log-header">
+        <h3>Time Log</h3>
+        <div class="log-month-nav">
+          <button type="button" class="log-month-btn" id="logPrevMonthBtn" onclick="changeLogMonth(-1)" aria-label="Previous month">&lsaquo;</button>
+          <span class="log-month-label" id="logMonthLabel"></span>
+          <button type="button" class="log-month-btn" id="logNextMonthBtn" onclick="changeLogMonth(1)" aria-label="Next month">&rsaquo;</button>
+        </div>
+      </div>
       <div id="punchLogList"></div>
     </div>
 
@@ -3897,7 +3942,7 @@
     window.open('https://team-ops-share.preview.emergentagent.com/', '_blank', 'noopener');
   }
 
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzljZd8gJRZKeP-7sI_FmSTt84TFx7yvs7imEahamYMi7QsxPgGvc2nQbNSqfeXxMNY/exec";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx6QqqY7RYbdeHmX03kSF8gbnSAQn9aceLYBKXHyQ7i_avcXb8o3LF6DLQlW4C9FOC4/exec";
   const SESSION_KEY = "fa_staff_session";
 
   // Identity of the signed-in staff member, used to pin their own
@@ -4516,7 +4561,7 @@
 
   // Renders a list of {date, entries} groups (most recent day first).
   // Falls back to rendering a single today-only list if groups aren't
-  // available yet (e.g. the 15-day fetch hasn't returned, or failed) —
+  // available yet (e.g. the month fetch hasn't returned, or failed) —
   // keeps the modal from showing nothing while that request is in flight.
   function renderPunchLog(groupsOrTodayEntries) {
     const list = document.getElementById('punchLogList');
@@ -4541,29 +4586,77 @@
     list.innerHTML = renderPunchEntries(todayEntries);
   }
 
-  // Fetches the last 15 days of punches for the given name and renders
+  // The profile's Time Log is a full calendar month at a time (all
+  // records stay on file — older months are one click away via the
+  // arrows), rather than the old rolling 15-day window.
+  let punchLogMonth = null; // "yyyy-MM" currently shown in the modal
+
+  function currentMonthKey() {
+    const d = (currentData && currentData.date) || '';
+    return /^\d{4}-\d{2}/.test(d) ? d.slice(0, 7) : '';
+  }
+
+  function formatMonthLabel(monthKey) {
+    const [y, m] = monthKey.split('-').map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }
+
+  function updateLogMonthControls() {
+    const label = document.getElementById('logMonthLabel');
+    const next = document.getElementById('logNextMonthBtn');
+    if (!label || !punchLogMonth) return;
+    label.textContent = formatMonthLabel(punchLogMonth);
+    // Can't browse into the future — nothing's been logged there yet.
+    if (next) next.disabled = (punchLogMonth >= currentMonthKey());
+  }
+
+  function changeLogMonth(delta) {
+    if (!activeEmployee || !punchLogMonth) return;
+    let [y, m] = punchLogMonth.split('-').map(Number);
+    m += delta;
+    if (m < 1) { m = 12; y--; }
+    if (m > 12) { m = 1; y++; }
+    const target = y + '-' + String(m).padStart(2, '0');
+    if (target > currentMonthKey()) return;
+    punchLogMonth = target;
+    updateLogMonthControls();
+    document.getElementById('punchLogList').innerHTML = '<div class="no-punches">Loading time log…</div>';
+    loadPunchHistory(activeEmployee);
+  }
+
+  // Background refreshes (the 15-second poll, or right after a punch)
+  // only matter when the month on screen is the current one — a past
+  // month can't change, so there's no point re-fetching it.
+  function refreshPunchLogIfCurrentMonth(name) {
+    if (punchLogMonth && punchLogMonth === currentMonthKey()) loadPunchHistory(name);
+  }
+
+  // Fetches the selected month's punches for the given name and renders
   // them into the open modal. Only applies its result if the modal is
-  // still showing that same person by the time the request finishes —
-  // avoids a slow response clobbering a different profile the user has
-  // since clicked into.
+  // still showing that same person AND month by the time the request
+  // finishes — avoids a slow response clobbering a different profile
+  // (or a different month) the user has since moved on to.
   async function loadPunchHistory(name) {
+    const requestedMonth = punchLogMonth;
     try {
-      const result = await jsonp({ action: 'getEmployeeHistory', name: name, days: 15 });
-      if (activeEmployee !== name) return; // modal moved on already
+      const result = await jsonp({ action: 'getEmployeeHistory', name: name, month: requestedMonth });
+      if (activeEmployee !== name || punchLogMonth !== requestedMonth) return; // moved on already
       if (!result.success) {
         showToast(result.message || 'Could not load time log.', 'error');
         return;
       }
       if (!result.groups || result.groups.length === 0) {
-        document.getElementById('punchLogList').innerHTML = '<div class="no-punches">No punches in the last 15 days.</div>';
+        document.getElementById('punchLogList').innerHTML =
+          '<div class="no-punches">No punches in ' + escapeHtml(formatMonthLabel(requestedMonth)) + '.</div>';
         return;
       }
       renderPunchLog(result.groups);
     } catch (err) {
-      if (activeEmployee !== name) return;
+      if (activeEmployee !== name || punchLogMonth !== requestedMonth) return;
       console.error('[Attendance] getEmployeeHistory failed:', err);
-      // Fall back to at least showing today's entries rather than nothing.
-      renderPunchLog(getEntriesForName(name));
+      // Fall back to at least showing today's entries rather than nothing
+      // (only meaningful when looking at the current month).
+      if (requestedMonth === currentMonthKey()) renderPunchLog(getEntriesForName(name));
     }
   }
 
@@ -4634,6 +4727,24 @@
         '<div class="pin-section-error" id="pinCreateError"></div>';
       const btn = document.getElementById('pinCreateBtn');
       if (btn) btn.addEventListener('click', () => setupPin(name));
+
+      // Enter on the first field jumps to "Confirm PIN"; Enter on the
+      // confirm field saves — same as clicking Save PIN.
+      const newPinField = document.getElementById('pinCreateInput');
+      const confirmPinField = document.getElementById('pinCreateConfirm');
+      if (newPinField && confirmPinField) {
+        newPinField.addEventListener('keydown', e => {
+          if (e.key !== 'Enter' || e.isComposing) return;
+          e.preventDefault();
+          confirmPinField.focus();
+        });
+        confirmPinField.addEventListener('keydown', e => {
+          if (e.key !== 'Enter' || e.repeat || e.isComposing) return;
+          e.preventDefault();
+          const saveBtn = document.getElementById('pinCreateBtn');
+          if (saveBtn && !saveBtn.disabled) setupPin(name);
+        });
+      }
     } else {
       section.className = 'pin-section pin-enter';
       section.innerHTML =
@@ -4645,7 +4756,25 @@
         '<button type="button" class="pin-forgot-link" id="pinForgotBtn">Forgot your PIN?</button>';
       const forgotBtn = document.getElementById('pinForgotBtn');
       if (forgotBtn) forgotBtn.addEventListener('click', () => confirmResetPin(name));
+      const enterField = document.getElementById('pinEnterInput');
+      if (enterField) enterField.addEventListener('keydown', onPinEnterKeydown);
     }
+  }
+
+  // Pressing Enter in the PIN field punches with whichever button is
+  // currently available. Exactly one of Time In / Time Out is enabled at
+  // any moment (see updateModalPunchButtons — you can't time in twice in
+  // a row), and handlePunch disables both synchronously before doing any
+  // async work, so reading the buttons' state here also makes this
+  // naturally ignore a second Enter while a punch is already in flight.
+  // e.repeat is ignored so holding the key down can't fire repeatedly.
+  function onPinEnterKeydown(e) {
+    if (e.key !== 'Enter' || e.repeat || e.isComposing) return;
+    e.preventDefault();
+    const btnIn = document.getElementById('btnTimeIn');
+    const btnOut = document.getElementById('btnTimeOut');
+    if (btnIn && !btnIn.disabled) handlePunch('in');
+    else if (btnOut && !btnOut.disabled) handlePunch('out');
   }
 
   function showPinError(id, message) {
@@ -4751,8 +4880,10 @@
     document.getElementById('modalDate').textContent = formatFullDate(currentData.date);
     document.getElementById('noteInput').value = '';
     hidePhotoSuccessMsg();
+    punchLogMonth = currentMonthKey(); // always open on the current month
+    updateLogMonthControls();
     renderPunchLog(getEntriesForName(name)); // today's entries immediately, no wait
-    loadPunchHistory(name); // then swap in the full 15-day view once it arrives
+    loadPunchHistory(name); // then swap in the full month once it arrives
     updateModalPunchButtons(name);
     renderPinSection(name);
     applyProfileAccessState(name);
@@ -4968,7 +5099,7 @@
       renderAnnouncement();
       checkBirthdayPopup();
       if (activeEmployee) {
-        loadPunchHistory(activeEmployee);
+        refreshPunchLogIfCurrentMonth(activeEmployee);
         updateModalPunchButtons(activeEmployee);
 
         // Only re-render the PIN section if its state actually flipped
@@ -6009,7 +6140,7 @@
         renderGrid();
         renderMyStatus();
         updateModalPunchButtons(activeEmployee);
-        loadPunchHistory(activeEmployee); // refresh the Time Log in the background, doesn't block the above
+        refreshPunchLogIfCurrentMonth(activeEmployee); // refresh the Time Log in the background, doesn't block the above
       } else {
         pinInput.value = '';
         pinInput.focus();
