@@ -116,7 +116,7 @@
   [data-theme="dark"] .app-logout { background: #1c2b28; }
   [data-theme="dark"] .nav-drawer-header { border-bottom-color: #2f4c46; }
   [data-theme="dark"] .nav-drawer-header span { color: #9fb0ac; }
-  @media (max-width: 1400px) {
+  @media (max-width: 1900px) {
     [data-theme="dark"] .app-nav-links { background: #16211f; box-shadow: 6px 0 30px rgba(0,0,0,0.5); }
   }
 
@@ -184,6 +184,123 @@
   [data-theme="dark"] .toast.error { background: #3a1c22; color: #ff8fa0; }
   [data-theme="dark"] .toast.info { background: #1c3a2f; color: #8fe0a3; }
   [data-theme="dark"] .loading { color: #9fb0ac; }
+
+  /* =========================================================
+     DARK MODE — Phase 2
+     Org Chart, Event Calendar, APAC Schedule and Admin Dashboard.
+     Same palette as the dashboard: card #1c2b28, deeper surface
+     #16211f, border #2f4c46, text #f0f0f0 / #d5dfdb / #9fb0ac.
+     ========================================================= */
+  [data-theme="dark"] .back-to-dashboard-btn { background: #1c2b28; border-color: #2f4c46; color: #d5dfdb; }
+  [data-theme="dark"] .back-to-dashboard-btn:hover { border-color: var(--green); color: #8fe0a3; }
+
+  /* ── Org chart ── */
+  [data-theme="dark"] .org-chart-wrap { background: #16211f; box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+  [data-theme="dark"] .org-tier-label { color: #9fb0ac; }
+  [data-theme="dark"] .org-node { background: #1c2b28; border-color: #2f4c46; box-shadow: 0 6px 18px rgba(0,0,0,0.3); }
+  [data-theme="dark"] .org-node-president { background: linear-gradient(135deg, #2f9e3e 0%, #257a32 100%); border: none; box-shadow: 0 10px 28px rgba(46,150,62,0.28); }
+  [data-theme="dark"] .org-avatar-manager { background: #1c3a2f; color: #8fe0a3; border-color: #2f5a45; }
+  [data-theme="dark"] .org-node-title { color: #9fb0ac; }
+  [data-theme="dark"] .org-node-name { color: #f0f0f0; }
+  [data-theme="dark"] .org-vline,
+  [data-theme="dark"] .org-branch::before,
+  [data-theme="dark"] .org-branch::after { background: #2f4c46; }
+  [data-theme="dark"] .org-branch-dot { box-shadow: 0 0 0 3px #16211f; }
+  [data-theme="dark"] .org-team-box { background: #1c2b28; border-color: #2f4c46; }
+  [data-theme="dark"] .org-team-label { color: #d5dfdb; }
+  [data-theme="dark"] .org-team-count { background: #1c3a2f; color: #8fe0a3; }
+  [data-theme="dark"] .org-member-chip { background: #16211f; border-color: #2f4c46; }
+  [data-theme="dark"] .org-member-avatar { background: #2a3b37; color: #d5dfdb; }
+  [data-theme="dark"] .org-member-name { color: #d5dfdb; }
+
+  /* ── Event calendar ── */
+  [data-theme="dark"] .bday-month-card { background: #1c2b28; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+  [data-theme="dark"] .bday-month-header { border-bottom-color: #2f4c46; }
+  [data-theme="dark"] .bday-month-header span:first-child { color: #f0f0f0; }
+  [data-theme="dark"] .bday-count { background: #1c3a2f; color: #8fe0a3; }
+  [data-theme="dark"] .bday-row:hover { background: #21302d; }
+  [data-theme="dark"] .bday-row-anniversary:hover { background: #2e2510; }
+  [data-theme="dark"] .bday-name { color: #d5dfdb; }
+  [data-theme="dark"] .bday-row-anniversary .bday-name { color: #e8c96a; }
+  [data-theme="dark"] .bday-empty { color: #9fb0ac; }
+  [data-theme="dark"] .bday-edit-btn, [data-theme="dark"] .bday-delete-btn { color: #9fb0ac; }
+  [data-theme="dark"] .bday-edit-btn:hover { background: #1c3a2f; color: #8fe0a3; }
+  [data-theme="dark"] .bday-delete-btn:hover { background: #3a1c22; color: #ff8fa0; }
+  [data-theme="dark"] .bday-form-panel { background: #16211f; box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+  [data-theme="dark"] .bday-form-title { color: #f0f0f0; }
+  [data-theme="dark"] .bday-form-row label { color: #9fb0ac; }
+  [data-theme="dark"] .bday-form-row input[type="text"],
+  [data-theme="dark"] .bday-form-row input[type="number"],
+  [data-theme="dark"] .bday-form-row select { background: #1c2b28; border-color: #2f4c46; color: #f0f0f0; }
+  [data-theme="dark"] .bday-form-checkbox { color: #d5dfdb; }
+  [data-theme="dark"] .bday-delete-btn-form { background: transparent; }
+  [data-theme="dark"] .bday-delete-btn-form:hover { background: var(--certiverse-red); color: #fff; }
+  [data-theme="dark"] .bday-cancel-btn { background: #1c2b28; border-color: #2f4c46; color: #d5dfdb; }
+
+  /* ── APAC schedule (view + editor) ── */
+  [data-theme="dark"] .apac-legend-item { background: #1c2b28; border-color: #2f4c46; color: #9fb0ac; }
+  [data-theme="dark"] .apac-table-wrap { background: #16211f; box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+  [data-theme="dark"] .apac-table td { border-bottom-color: #2f4c46; }
+  [data-theme="dark"] .apac-table td.apac-shift-col { background: #1c2b28; }
+  [data-theme="dark"] .apac-table tbody tr:hover td:not(.apac-shift-col) { background: #21302d; }
+  [data-theme="dark"] .apac-table td.apac-today { background: #1a3a2c; }
+  [data-theme="dark"] .apac-table tbody tr:hover td.apac-today { background: #1f4734; }
+  [data-theme="dark"] .apac-shift-name { color: #f0f0f0; }
+  [data-theme="dark"] .apac-shift-time, [data-theme="dark"] .apac-empty-cell { color: #9fb0ac; }
+  [data-theme="dark"] .apac-crew-chip { background: #2a3b37; color: #d5dfdb; }
+  [data-theme="dark"] .apac-crew-chip.cs { background: #1c3a2f; color: #8fe0a3; }
+  [data-theme="dark"] .apac-crew-chip.tbc { background: #14343a; color: #7fd3dc; }
+  [data-theme="dark"] .apac-edit-hint { background: #1c2b28; border-color: #2f4c46; color: #9fb0ac; }
+  [data-theme="dark"] .apac-edit-shift-card { background: #16211f; box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+  [data-theme="dark"] .apac-edit-shift-header { border-bottom-color: #2f4c46; }
+  [data-theme="dark"] .apac-edit-shift-name,
+  [data-theme="dark"] .apac-edit-shift-time,
+  [data-theme="dark"] .apac-edit-textarea { background: #1c2b28; border-color: #2f4c46; color: #f0f0f0; }
+  [data-theme="dark"] .apac-edit-remove-shift-btn { background: transparent; }
+  [data-theme="dark"] .apac-edit-remove-shift-btn:hover { background: var(--certiverse-red); color: #fff; }
+  [data-theme="dark"] .apac-edit-day label { color: #9fb0ac; }
+  [data-theme="dark"] .apac-add-shift-btn { background: #1c2b28; border-color: #4a5e5a; color: #d5dfdb; }
+  [data-theme="dark"] .apac-add-shift-btn:hover { border-color: var(--green); color: #8fe0a3; }
+
+  /* ── Admin dashboard ── */
+  [data-theme="dark"] .admin-employees-panel,
+  [data-theme="dark"] .admin-toolbar,
+  [data-theme="dark"] .admin-table-wrap { background: #16211f; box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+  [data-theme="dark"] .admin-employees-header h3 { color: #f0f0f0; }
+  [data-theme="dark"] .admin-employees-count { color: #9fb0ac; }
+  [data-theme="dark"] .admin-employees-form { border-top-color: #2f4c46; }
+  [data-theme="dark"] .admin-employees-field label,
+  [data-theme="dark"] .admin-filter-group label { color: #9fb0ac; }
+  [data-theme="dark"] .admin-employees-field input,
+  [data-theme="dark"] .admin-employees-search,
+  [data-theme="dark"] .admin-filter-group select,
+  [data-theme="dark"] .admin-filter-group input[type="date"] { background: #1c2b28; border-color: #2f4c46; color: #f0f0f0; }
+  [data-theme="dark"] .admin-employees-admin-check { color: #d5dfdb; }
+  [data-theme="dark"] .admin-employees-empty { color: #9fb0ac; }
+  [data-theme="dark"] .admin-employee-row { border-bottom-color: #2f4c46; }
+  [data-theme="dark"] .admin-employee-name { color: #f0f0f0; }
+  [data-theme="dark"] .admin-employee-email { color: #9fb0ac; }
+  [data-theme="dark"] .admin-employee-badge { background: #2e2510; color: #e8c96a; border-color: #a37f22; }
+  [data-theme="dark"] .admin-employee-badge.core { background: #1c2b3a; color: #7ba7e8; border-color: #2f4c6e; }
+  [data-theme="dark"] .admin-employee-badge.inactive { background: #2a2f2e; color: #9fb0ac; border-color: #3c4a47; }
+  [data-theme="dark"] .admin-employee-remove-btn,
+  [data-theme="dark"] .admin-employee-deactivate-btn,
+  [data-theme="dark"] .admin-employee-reactivate-btn { background: transparent; }
+  [data-theme="dark"] .admin-employee-deactivate-btn { border-color: #4a5e5a; color: #d5dfdb; }
+  [data-theme="dark"] .admin-employee-remove-btn:hover { background: var(--certiverse-red); color: #fff; }
+  [data-theme="dark"] .admin-employee-deactivate-btn:hover { border-color: var(--certiverse-red); color: #ff8fa0; }
+  [data-theme="dark"] .admin-employee-reactivate-btn { color: #8fe0a3; }
+  [data-theme="dark"] .admin-employee-reactivate-btn:hover { background: var(--green); color: #fff; }
+  [data-theme="dark"] .admin-export-btn,
+  [data-theme="dark"] .admin-page-btn { background: #1c2b28; border-color: #2f4c46; color: #d5dfdb; }
+  [data-theme="dark"] .admin-truncated-notice { background: #3a2f14; border-color: #7a5b00; color: #f0c36d; }
+  [data-theme="dark"] .admin-page-info { color: #9fb0ac; }
+  [data-theme="dark"] .admin-table th { background: #16211f; color: #9fb0ac; border-bottom-color: #2f4c46; }
+  [data-theme="dark"] .admin-table td { border-bottom-color: #2f4c46; color: #d5dfdb; }
+  [data-theme="dark"] .admin-table tbody tr:hover { background: #1c2b28; }
+  [data-theme="dark"] .admin-table-loading,
+  [data-theme="dark"] .admin-table-empty,
+  [data-theme="dark"] .admin-cell-muted { color: #9fb0ac; }
 
   /* ── Theme toggle button (nav) ── */
   .theme-toggle-btn {
@@ -923,44 +1040,6 @@
   .filter-pill.active { background: var(--green); border-color: var(--green); color: #fff; }
   .filter-pill.active:hover { background: var(--green-dark); border-color: var(--green-dark); }
 
-  /* ── COMING SOON / UNDER CONSTRUCTION VIEW ── */
-  .coming-soon-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 50vh;
-    padding: 20px;
-  }
-  .coming-soon-card {
-    background: #fff;
-    border-radius: 16px;
-    padding: 48px 40px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-    text-align: center;
-    max-width: 420px;
-    width: 100%;
-    border-top: 4px solid var(--green);
-  }
-  .coming-soon-icon {
-    width: 56px;
-    height: 56px;
-    margin: 0 auto 20px;
-    color: var(--green);
-  }
-  .coming-soon-icon svg { width: 100%; height: 100%; }
-  .coming-soon-card h1 {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 24px;
-    color: var(--black);
-    margin-bottom: 10px;
-  }
-  .coming-soon-card p {
-    font-size: 14px;
-    color: var(--gray-mid);
-    line-height: 1.6;
-    margin-bottom: 24px;
-  }
-  .coming-soon-card .back-to-dashboard-btn { margin-bottom: 0; }
 
   /* ── ORGANIZATIONAL CHART ── */
   .org-chart-wrap {
@@ -1709,6 +1788,22 @@
     color: var(--gray-mid);
     padding: 10px 2px;
   }
+  .admin-employees-count { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; color: var(--gray-mid); margin-left: 4px; }
+  .admin-employees-search {
+    width: 100%;
+    margin: 10px 0 4px;
+    border: 1.5px solid var(--gray-light);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    box-sizing: border-box;
+    background: #fff;
+    color: var(--black);
+  }
+  .admin-employees-search:focus { outline: none; border-color: var(--green); }
+  /* The roster is ~25 rows long and used to push the attendance table
+     (the page's main purpose) far off-screen — scroll it in place. */
+  #managedEmployeesList { max-height: 300px; overflow-y: auto; }
   .admin-employee-row {
     display: flex;
     align-items: center;
@@ -1929,7 +2024,7 @@
   .emp-card.status-out .emp-avatar { background: var(--gray-light); color: var(--gray-mid); }
   .emp-info { flex: 1; min-width: 0; }
   .emp-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
-  .emp-status { font-size: 11px; color: var(--gray-mid); }
+  .emp-status { font-size: 12px; color: var(--gray-mid); }
   .emp-status .dot {
     display: inline-block;
     width: 7px; height: 7px;
@@ -2048,14 +2143,14 @@
     margin-bottom: 3px;
   }
   .comment-author { font-size: 12.5px; font-weight: 700; color: var(--black); }
-  .comment-time { font-size: 10.5px; color: var(--gray-mid); white-space: nowrap; }
+  .comment-time { font-size: 12px; color: var(--gray-mid); white-space: nowrap; }
   .comment-text { font-size: 12.5px; color: var(--gray-dark); line-height: 1.45; white-space: pre-line; }
   .comment-actions { display: flex; gap: 10px; margin-top: 4px; }
   .comment-action-btn {
     background: none;
     border: none;
     color: var(--gray-mid);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     padding: 0;
@@ -2192,7 +2287,7 @@
   [data-theme="dark"] .announcement-reaction-btn.mine { background: #1c3a2f; border-color: var(--green); }
   [data-theme="dark"] .announcement-reaction-btn.mine .reaction-count { color: #8fe0a3; }
   .announcement-meta {
-    font-size: 11.5px;
+    font-size: 12px;
     color: var(--gray-mid);
     margin-top: 10px;
   }
@@ -2214,13 +2309,13 @@
   }
   .announcement-textarea:focus { outline: none; border-color: var(--green); }
   .announcement-char-count {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--gray-mid);
     text-align: right;
     margin-top: 4px;
   }
   .announcement-mention-hint {
-    font-size: 11.5px;
+    font-size: 12px;
     color: var(--gray-mid);
     margin-top: 2px;
     margin-bottom: 8px;
@@ -2236,6 +2331,24 @@
   }
   [data-theme="dark"] .announcement-mention { background: #1c3a2f; color: #8fe0a3; }
   [data-theme="dark"] .announcement-mention-hint { color: #9fb0ac; }
+  /* Your own mention stands out from everyone else's. */
+  .announcement-mention.mention-me { background: var(--green); color: #fff; }
+  [data-theme="dark"] .announcement-mention.mention-me { background: #2f8a43; color: #fff; }
+  .mention-me-row { margin-bottom: 8px; }
+  .mention-me-pill {
+    display: inline-block;
+    background: var(--green);
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding: 2px 9px;
+    border-radius: 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  [data-theme="dark"] .mention-me-pill { background: #2f8a43; }
   .announcement-edit-actions {
     display: flex;
     gap: 8px;
@@ -2543,7 +2656,7 @@
     .mini-garland span { animation: none; opacity: 0.8; }
   }
 
-  /* ── PROCTORING ANNOUNCEMENTS LOG (dashboard sidebar) ── */
+  /* ── PROCTORING ANNOUNCEMENTS link card (dashboard sidebar) ── */
   .proctoring-log-card {
     background: #fff;
     border-radius: 16px;
@@ -2581,115 +2694,8 @@
     color: var(--black);
     flex: 1;
   }
-  .proctoring-log-add-btn {
-    background: var(--green);
-    color: #fff;
-    border: none;
-    padding: 6px 14px;
-    border-radius: 16px;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .proctoring-log-add-btn:hover { background: var(--green-dark); }
-  .proctoring-log-form {
-    background: #f7faf7;
-    border: 1px solid var(--gray-light);
-    border-radius: 10px;
-    padding: 12px;
-    margin-bottom: 14px;
-  }
-  .proctoring-log-category-select {
-    width: 100%;
-    border: 1.5px solid var(--gray-light);
-    border-radius: 8px;
-    padding: 8px 10px;
-    font-size: 13px;
-    background: #fff;
-    color: var(--black);
-    margin-bottom: 8px;
-  }
-  .proctoring-log-textarea {
-    width: 100%;
-    min-height: 70px;
-    border: 1.5px solid var(--gray-light);
-    border-radius: 8px;
-    padding: 8px 10px;
-    font-size: 13px;
-    font-family: 'Inter', sans-serif;
-    resize: vertical;
-    box-sizing: border-box;
-    background: #fff;
-    color: var(--black);
-    margin-bottom: 8px;
-  }
-  .proctoring-log-category-select:focus, .proctoring-log-textarea:focus { outline: none; border-color: var(--green); }
-  .proctoring-log-form-actions { display: flex; gap: 8px; }
-  .proctoring-log-list {
-    max-height: 420px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .proctoring-log-empty { font-size: 13px; color: var(--gray-mid); padding: 6px 2px; }
-  .proctoring-log-entry {
-    background: #fafcfa;
-    border: 1px solid var(--gray-light);
-    border-radius: 10px;
-    padding: 10px 12px;
-  }
-  .proctoring-log-entry-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 6px;
-  }
-  .proctoring-log-category-badge {
-    font-size: 10px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    padding: 2px 8px;
-    border-radius: 10px;
-    white-space: nowrap;
-  }
-  .proctoring-log-category-badge.cat-guide { background: var(--green-light); color: var(--green-dark); }
-  .proctoring-log-category-badge.cat-exam { background: #eef3fb; color: #2a5db0; }
-  .proctoring-log-category-badge.cat-tech { background: #fdf0e3; color: #a15c1f; }
-  .proctoring-log-entry-actions { display: flex; gap: 6px; flex-shrink: 0; }
-  .proctoring-log-icon-btn {
-    background: none;
-    border: none;
-    color: var(--gray-mid);
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 2px 4px;
-  }
-  .proctoring-log-icon-btn:hover { color: var(--green-dark); }
-  .proctoring-log-icon-btn.delete:hover { color: var(--certiverse-red); }
-  .proctoring-log-entry-text {
-    font-size: 13.5px;
-    color: var(--gray-dark);
-    line-height: 1.5;
-    white-space: pre-line;
-    margin-bottom: 6px;
-  }
-  .proctoring-log-entry-meta { font-size: 11px; color: var(--gray-mid); }
   [data-theme="dark"] .proctoring-log-card { background: #1c2b28; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
   [data-theme="dark"] .proctoring-log-header h3 { color: #f0f0f0; }
-  [data-theme="dark"] .proctoring-log-form { background: #16211f; border-color: #2f4c46; }
-  [data-theme="dark"] .proctoring-log-category-select,
-  [data-theme="dark"] .proctoring-log-textarea { background: #16211f; border-color: #2f4c46; color: #f0f0f0; }
-  [data-theme="dark"] .proctoring-log-entry { background: #16211f; border-color: #2f4c46; }
-  [data-theme="dark"] .proctoring-log-entry-text { color: #d5dfdb; }
-  [data-theme="dark"] .proctoring-log-entry-meta, [data-theme="dark"] .proctoring-log-empty { color: #9fb0ac; }
-  [data-theme="dark"] .proctoring-log-category-badge.cat-guide { background: #1c3a2f; color: #8fe0a3; }
-  [data-theme="dark"] .proctoring-log-category-badge.cat-exam { background: #1c2b3a; color: #7ba7e8; }
-  [data-theme="dark"] .proctoring-log-category-badge.cat-tech { background: #3a2a1c; color: #e0a76f; }
 
   /* ── UPCOMING BIRTHDAYS/EVENTS (dashboard sidebar) ── */
   .upcoming-card {
@@ -2717,7 +2723,7 @@
     background: none;
     border: none;
     color: var(--green-dark);
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 700;
     cursor: pointer;
     padding: 0;
@@ -2755,7 +2761,7 @@
     text-overflow: ellipsis;
   }
   .upcoming-event-when {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--gray-mid);
   }
   .upcoming-empty {
@@ -2892,7 +2898,7 @@
     margin-bottom: 4px;
   }
   .pin-section-sub {
-    font-size: 11.5px;
+    font-size: 12px;
     color: var(--gray-mid);
     margin-bottom: 10px;
   }
@@ -2923,7 +2929,7 @@
   }
   .pin-section-btn:hover { background: var(--green-dark); }
   .pin-section-error {
-    font-size: 11.5px;
+    font-size: 12px;
     color: var(--certiverse-red);
     margin-top: 8px;
     display: none;
@@ -2936,7 +2942,7 @@
     border: none;
     padding: 0;
     color: var(--gray-mid);
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 600;
     text-decoration: underline;
     cursor: pointer;
@@ -3088,12 +3094,59 @@
 
   .loading { font-size: 13px; color: var(--gray-mid); padding: 20px; text-align: center; }
 
+  /* Skeleton placeholder cards for the attendance grid's first load. */
+  .emp-card.skeleton { pointer-events: none; cursor: default; box-shadow: none; border-color: var(--gray-light); }
+  .skel-circle, .skel-line {
+    background: linear-gradient(90deg, #eceeec 25%, #f6f7f6 50%, #eceeec 75%);
+    background-size: 200% 100%;
+    animation: skelShimmer 1.3s linear infinite;
+  }
+  .skel-circle { width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; }
+  .skel-lines { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .skel-line { height: 10px; border-radius: 6px; }
+  .skel-line.w60 { width: 60%; }
+  .skel-line.w40 { width: 40%; }
+  @keyframes skelShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  @media (prefers-reduced-motion: reduce) { .skel-circle, .skel-line { animation: none; } }
+  [data-theme="dark"] .emp-card.skeleton { border-color: #2f4c46; }
+  [data-theme="dark"] .skel-circle, [data-theme="dark"] .skel-line {
+    background: linear-gradient(90deg, #24342f 25%, #2c3f39 50%, #24342f 75%);
+    background-size: 200% 100%;
+  }
+
+  .grid-load-error {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 28px 16px;
+    font-size: 13.5px;
+    color: var(--gray-dark);
+  }
+  .grid-retry-btn {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 18px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .grid-retry-btn:hover { background: var(--green-dark); }
+  [data-theme="dark"] .grid-load-error { color: #d5dfdb; }
+
   /* =========================================================
      RESPONSIVE BREAKPOINTS
      Desktop: > 1024px  (default styles above)
      Tablet:  641px – 1024px
      Mobile:  <= 640px
-     Hamburger nav kicks in at <= 1400px — with 8 nav items now
+     Hamburger nav kicks in at <= 1900px — measured in a real browser:
+     the 8 inline pills (plus logo and profile chip) only fit at about
+     1900px or wider, and below that they were silently clipped by the
+     links row's hidden horizontal scroll. Also with 8 nav items now
      (Handbook, Proctoring, Org Chart, Birthdays, APAC Schedule,
      Admin, etc.) plus the logo and profile chip, they no longer fit
      comfortably even on a modest, non-maximized laptop window.
@@ -3118,7 +3171,7 @@
   }
 
   /* ---------- Hamburger takes over the top nav ---------- */
-  @media (max-width: 1400px) {
+  @media (max-width: 1900px) {
     .hamburger-btn { display: flex; }
 
     .app-nav-links {
@@ -3494,7 +3547,7 @@
 
       <div class="admin-employees-panel">
         <div class="admin-employees-header">
-          <h3>Manage Employees</h3>
+          <h3>Manage Employees <span class="admin-employees-count" id="managedEmployeesCount"></span></h3>
           <button type="button" class="bday-add-btn" id="addEmployeeToggleBtn" onclick="toggleAddEmployeeForm()">+ Add Employee</button>
         </div>
 
@@ -3519,6 +3572,7 @@
           <div class="announcement-error" id="addEmployeeError"></div>
         </div>
 
+        <input type="text" id="managedEmployeesSearch" class="admin-employees-search" name="employee-list-filter" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" readonly onfocus="this.removeAttribute('readonly');" placeholder="Search employees by name or email…" oninput="renderManagedEmployees()">
         <div id="managedEmployeesList"></div>
       </div>
 
@@ -3556,22 +3610,6 @@
         <button type="button" class="admin-page-btn" id="adminPrevPageBtn" onclick="goToAdminHistoryPage(-1)">&larr; Previous</button>
         <span class="admin-page-info" id="adminPageInfo"></span>
         <button type="button" class="admin-page-btn" id="adminNextPageBtn" onclick="goToAdminHistoryPage(1)">Next &rarr;</button>
-      </div>
-    </div>
-
-    <div id="comingSoonView" style="display:none;">
-      <div class="coming-soon-wrap">
-        <div class="coming-soon-card">
-          <div class="coming-soon-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
-            </svg>
-          </div>
-          <h1 id="comingSoonTitle">This feature is under construction</h1>
-          <p id="comingSoonMessage">The Proctoring Guide isn't ready yet — we're still building it out. Check back soon.</p>
-          <button type="button" class="back-to-dashboard-btn" onclick="showDashboardPage()">&larr; Back to Dashboard</button>
-        </div>
       </div>
     </div>
 
@@ -3868,7 +3906,7 @@
      Guide, which opens an in-app "under construction" view
      instead of an external link until that content is ready.
 
-     On narrower windows (<= 1400px) the nav links collapse into a
+     On narrower windows (<= 1900px) the nav links collapse into a
      slide-in drawer toggled by the hamburger button.
      ========================================================= */
 
@@ -3975,7 +4013,24 @@
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
   }
 
+  // One automatic retry for requests that are SAFE to repeat: reads and
+  // login. Deliberately not applied to anything that writes or sends an
+  // email (punch, register, comments, reactions, ...) — if the first
+  // attempt actually reached the server and only the reply was slow,
+  // repeating it would do the action twice (e.g. a double punch).
+  const RETRY_SAFE_ACTIONS = new Set([
+    'login', 'getAttendanceToday', 'getEmployeeHistory', 'getEmployeePhoto',
+    'getAnnouncementImage', 'getAnnouncementComments', 'getBirthdays',
+    'getApacSchedule', 'getAttendanceHistory', 'getManagedEmployees',
+    'getProctoringAnnouncements'
+  ]);
+
   function jsonp(params) {
+    if (!params || !RETRY_SAFE_ACTIONS.has(params.action)) return jsonpOnce(params);
+    return jsonpOnce(params).catch(() => jsonpOnce(params));
+  }
+
+  function jsonpOnce(params) {
     return new Promise((resolve, reject) => {
       const callbackName = "jsonp_cb_" + Math.random().toString(36).slice(2);
       params = Object.assign({}, params, { callback: callbackName });
@@ -3987,7 +4042,7 @@
       script.onerror = () => { reject(new Error("Network error contacting the server.")); cleanup(); };
       document.body.appendChild(script);
       setTimeout(() => {
-        if (window[callbackName]) { reject(new Error("Request timed out.")); cleanup(); }
+        if (window[callbackName]) { reject(new Error("The server is taking too long to respond. Please try again in a moment.")); cleanup(); }
       }, 10000);
     });
   }
@@ -4146,7 +4201,7 @@
     loadBirthdays();
     if (!window.__attendancePollStarted) {
       window.__attendancePollStarted = true;
-      setInterval(loadAttendance, 15000);
+      setInterval(() => loadAttendance(true), 15000);
     }
   }
 
@@ -4326,7 +4381,7 @@
   // Collapse the drawer automatically if the viewport is resized back
   // up past the hamburger breakpoint (e.g. rotating a tablet).
   window.addEventListener('resize', function () {
-    if (window.innerWidth > 1400) closeMobileNav();
+    if (window.innerWidth > 1900) closeMobileNav();
   });
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') closeMobileNav();
@@ -4888,6 +4943,15 @@
     renderPinSection(name);
     applyProfileAccessState(name);
     document.getElementById('modalOverlay').classList.add('open');
+
+    // Drop the cursor straight into the PIN box on your own profile, so
+    // punching is: open, type PIN, Enter. Skipped on touch devices, where
+    // focusing would pop the keyboard up over the Time Log every time
+    // someone just opens their profile to look at it.
+    if (isOwnProfile(name) && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      const pinField = document.getElementById('pinEnterInput') || document.getElementById('pinCreateInput');
+      if (pinField) pinField.focus();
+    }
   }
 
   function closeModal() {
@@ -4900,6 +4964,16 @@
   });
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') closeModal();
+  });
+
+  // The image preview and birthday popup used to close only on click —
+  // Esc now closes them too, same as the profile modal and menus.
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    const lightbox = document.getElementById('announcementImgLightbox');
+    if (lightbox && lightbox.classList.contains('open')) closeAnnouncementImageLightbox();
+    const birthday = document.getElementById('birthdayPopupOverlay');
+    if (birthday && birthday.classList.contains('open')) closeBirthdayPopup();
   });
 
   /* ---------- Profile photo upload (own profile only) ---------- */
@@ -5086,12 +5160,50 @@
     return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   }
 
-  async function loadAttendance() {
+  // Placeholder cards shown while the first load is in flight (and again
+  // when someone presses Retry) — keeps the layout from jumping around the
+  // way a single line of "Loading…" text does.
+  function skeletonGridHtml() {
+    const card = '<div class="emp-card skeleton" aria-hidden="true">' +
+      '<div class="skel-circle"></div>' +
+      '<div class="skel-lines"><div class="skel-line w60"></div><div class="skel-line w40"></div></div>' +
+      '</div>';
+    return card.repeat(9);
+  }
+
+  function showAttendanceLoadFailure(message, isBackground) {
+    console.error('[Attendance] load failed:', message);
+    // Background polls stay quiet — a toast every 15 seconds during an
+    // outage would just be noise. Only a person-initiated load toasts.
+    if (!isBackground) showToast(message, 'error');
+    // If the very first load never succeeded, the grid would otherwise sit
+    // on its placeholder forever — give it a way out.
+    const grid = document.getElementById('empGrid');
+    if (grid && (!currentData.names || currentData.names.length === 0)) {
+      grid.innerHTML = '<div class="grid-load-error"><span>Couldn\u2019t load attendance.</span>' +
+        '<button type="button" class="grid-retry-btn" onclick="retryLoadAttendance()">Retry</button></div>';
+    }
+  }
+
+  function retryLoadAttendance() {
+    const grid = document.getElementById('empGrid');
+    if (grid) grid.innerHTML = skeletonGridHtml();
+    loadAttendance();
+  }
+
+  // Swap the static "Loading attendance…" line for skeleton cards as soon
+  // as this script runs (the grid isn't visible until sign-in anyway).
+  (function showInitialSkeleton() {
+    const grid = document.getElementById('empGrid');
+    if (grid) grid.innerHTML = skeletonGridHtml();
+  })();
+
+  async function loadAttendance(isBackground) {
     if (!isConfigured()) return;
     try {
       const result = await jsonp({ action: 'getAttendanceToday', email: currentUserEmail });
       console.debug('[Attendance] getAttendanceToday response:', result);
-      if (!result.success) { showToast(result.message || 'Could not load attendance.', 'error'); return; }
+      if (!result.success) { showAttendanceLoadFailure(result.message || 'Could not load attendance.', isBackground); return; }
       currentData = result;
       document.getElementById('dateTag').textContent = formatFullDate(result.date);
       renderGrid();
@@ -5114,14 +5226,13 @@
         }
       }
     } catch (err) {
-      console.error('[Attendance] getAttendanceToday failed:', err);
-      showToast(err.message, 'error');
+      showAttendanceLoadFailure(err.message, isBackground);
     }
   }
 
-  /* ---------- Main content view switching (dashboard / admin / coming-soon / org chart / birthdays) ---------- */
+  /* ---------- Main content view switching (dashboard / admin / org chart / events / APAC schedule) ---------- */
 
-  const MAIN_VIEW_IDS = ['dashboardView', 'adminView', 'comingSoonView', 'orgChartView', 'birthdayCalendarView', 'apacScheduleView'];
+  const MAIN_VIEW_IDS = ['dashboardView', 'adminView', 'orgChartView', 'birthdayCalendarView', 'apacScheduleView'];
 
   function showMainView(viewId) {
     MAIN_VIEW_IDS.forEach(id => {
@@ -5133,16 +5244,6 @@
   // Reused for nav items that don't have real content yet (Proctoring
   // Guide, APAC Schedule) — one shared view, just with the feature name
   // swapped into the message.
-  function showComingSoonPage(featureName) {
-    const name = featureName || 'This feature';
-    const titleEl = document.getElementById('comingSoonTitle');
-    const msgEl = document.getElementById('comingSoonMessage');
-    if (titleEl) titleEl.textContent = 'This feature is under construction';
-    if (msgEl) msgEl.textContent = name + " isn't ready yet — we're still building it out. Check back soon.";
-    showMainView('comingSoonView');
-    closeMobileNav();
-  }
-
   function showOrgChartPage() {
     showMainView('orgChartView');
     closeMobileNav();
@@ -5502,7 +5603,7 @@
       html += '<div class="bday-month-header"><span>' + BDAY_MONTH_NAMES[m - 1] + '</span><span class="bday-count">' + monthBdayCount + '</span></div>';
       html += '<div class="bday-list">';
       if (entries.length === 0) {
-        html += '<div class="bday-empty">No birthdays this month</div>';
+        html += '<div class="bday-empty">No events this month</div>';
       } else {
         entries.forEach(e => {
           const dateStr = BDAY_MONTH_NAMES[m - 1].slice(0, 3) + ' ' + String(e.day).padStart(2, '0');
@@ -5785,6 +5886,10 @@
     saveBtn.textContent = 'Add Employee';
   }
 
+  // The full list is cached here so the search box can filter it
+  // instantly, without another round-trip to the server for every keystroke.
+  let managedEmployeesCache = [];
+
   async function loadManagedEmployees() {
     const list = document.getElementById('managedEmployeesList');
     if (!list) return;
@@ -5794,41 +5899,69 @@
         list.innerHTML = '';
         return;
       }
-      if (result.employees.length === 0) {
-        list.innerHTML = '<div class="admin-employees-empty">No employees found.</div>';
-        return;
-      }
-      list.innerHTML = result.employees.map(emp => {
-        const safeName = escapeHtml(emp.name).replace(/'/g, "\\'");
-        const safeEmail = (emp.email || '').replace(/'/g, "\\'");
-        const badges =
-          (emp.source === 'base' ? '<span class="admin-employee-badge core">Core Team</span>' : '') +
-          (emp.isAdmin ? '<span class="admin-employee-badge admin">Admin</span>' : '') +
-          (!emp.active ? '<span class="admin-employee-badge inactive">Deactivated</span>' : '');
-
-        const toggleBtn = emp.active
-          ? '<button type="button" class="admin-employee-deactivate-btn" onclick="deactivateManagedEmployee(\'' + safeName + '\')">Deactivate</button>'
-          : '<button type="button" class="admin-employee-reactivate-btn" onclick="reactivateManagedEmployee(\'' + safeName + '\')">Reactivate</button>';
-        // Permanent removal only ever applies to people added through
-        // this panel — the original team can be deactivated (hidden +
-        // blocked from signing in) but never truly deleted from here.
-        const removeBtn = emp.source === 'added'
-          ? '<button type="button" class="admin-employee-remove-btn" onclick="removeManagedEmployee(\'' + safeEmail + '\', \'' + safeName + '\')">Remove</button>'
-          : '';
-
-        return '<div class="admin-employee-row' + (!emp.active ? ' inactive' : '') + '">' +
-          '<div class="admin-employee-info">' +
-          '<span class="admin-employee-name">' + escapeHtml(emp.name) + '</span>' +
-          badges +
-          '<span class="admin-employee-email">' + escapeHtml(emp.email || '(no email on file)') + '</span>' +
-          '</div>' +
-          '<div class="admin-employee-actions">' + toggleBtn + removeBtn + '</div>' +
-          '</div>';
-      }).join('');
+      managedEmployeesCache = result.employees || [];
+      renderManagedEmployees();
     } catch (err) {
       console.error('[Employees] load failed:', err);
       list.innerHTML = '';
     }
+  }
+
+  function renderManagedEmployees() {
+    const list = document.getElementById('managedEmployeesList');
+    if (!list) return;
+
+    const active = managedEmployeesCache.filter(e => e.active).length;
+    const inactive = managedEmployeesCache.length - active;
+    const countEl = document.getElementById('managedEmployeesCount');
+    if (countEl) {
+      countEl.textContent = managedEmployeesCache.length
+        ? '\u00b7 ' + active + ' active' + (inactive ? ', ' + inactive + ' deactivated' : '')
+        : '';
+    }
+
+    const searchBox = document.getElementById('managedEmployeesSearch');
+    const query = searchBox ? searchBox.value.trim().toLowerCase() : '';
+    const employees = query
+      ? managedEmployeesCache.filter(e => (e.name || '').toLowerCase().includes(query) || (e.email || '').toLowerCase().includes(query))
+      : managedEmployeesCache;
+
+    if (managedEmployeesCache.length === 0) {
+      list.innerHTML = '<div class="admin-employees-empty">No employees found.</div>';
+      return;
+    }
+    if (employees.length === 0) {
+      list.innerHTML = '<div class="admin-employees-empty">No employees match \u201c' + escapeHtml(searchBox.value.trim()) + '\u201d.</div>';
+      return;
+    }
+
+    list.innerHTML = employees.map(emp => {
+      const safeName = escapeHtml(emp.name).replace(/'/g, "\\'");
+      const safeEmail = (emp.email || '').replace(/'/g, "\\'");
+      const badges =
+        (emp.source === 'base' ? '<span class="admin-employee-badge core">Core Team</span>' : '') +
+        (emp.isAdmin ? '<span class="admin-employee-badge admin">Admin</span>' : '') +
+        (!emp.active ? '<span class="admin-employee-badge inactive">Deactivated</span>' : '');
+
+      const toggleBtn = emp.active
+        ? '<button type="button" class="admin-employee-deactivate-btn" onclick="deactivateManagedEmployee(\'' + safeName + '\')">Deactivate</button>'
+        : '<button type="button" class="admin-employee-reactivate-btn" onclick="reactivateManagedEmployee(\'' + safeName + '\')">Reactivate</button>';
+      // Permanent removal only ever applies to people added through
+      // this panel — the original team can be deactivated (hidden +
+      // blocked from signing in) but never truly deleted from here.
+      const removeBtn = emp.source === 'added'
+        ? '<button type="button" class="admin-employee-remove-btn" onclick="removeManagedEmployee(\'' + safeEmail + '\', \'' + safeName + '\')">Remove</button>'
+        : '';
+
+      return '<div class="admin-employee-row' + (!emp.active ? ' inactive' : '') + '">' +
+        '<div class="admin-employee-info">' +
+        '<span class="admin-employee-name">' + escapeHtml(emp.name) + '</span>' +
+        badges +
+        '<span class="admin-employee-email">' + escapeHtml(emp.email || '(no email on file)') + '</span>' +
+        '</div>' +
+        '<div class="admin-employee-actions">' + toggleBtn + removeBtn + '</div>' +
+        '</div>';
+    }).join('');
   }
 
   async function deactivateManagedEmployee(name) {
@@ -6461,7 +6594,13 @@
   // like "@Rose Ann" matches as one mention rather than just "@Rose".
   // Everything outside a recognized mention is still escaped normally,
   // so this is safe to use in place of a plain escapeHtml() call.
-  function renderAnnouncementTextWithMentions(text, names) {
+  function textMentionsName(text, name) {
+    if (!text || !name) return false;
+    const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp('@' + esc + '(?![a-zA-Z])', 'i').test(text);
+  }
+
+  function renderAnnouncementTextWithMentions(text, names, myName) {
     const raw = text || '';
     const roster = (names || []).slice().sort((a, b) => b.length - a.length);
     if (roster.length === 0) return escapeHtml(raw);
@@ -6474,7 +6613,8 @@
     let match;
     while ((match = mentionRegex.exec(raw)) !== null) {
       result += escapeHtml(raw.slice(lastIndex, match.index));
-      result += '<span class="announcement-mention">@' + escapeHtml(match[1]) + '</span>';
+      const isMe = !!myName && match[1].toLowerCase() === myName.toLowerCase();
+      result += '<span class="announcement-mention' + (isMe ? ' mention-me' : '') + '">@' + escapeHtml(match[1]) + '</span>';
       lastIndex = match.index + match[0].length;
     }
     result += escapeHtml(raw.slice(lastIndex));
@@ -6686,8 +6826,17 @@
     const reactionsHtml = hasText ? renderAnnouncementReactionsBar(ann.reactions) : '';
     const commentsHtml = hasText ? renderCommentsSection(ann) : '';
 
+    // Mentions were purely visual before — nobody could tell they'd been
+    // mentioned without reading everything. Flag it at the top of the card.
+    const myName = resolveMyName(currentData.names);
+    const iAmMentioned = hasText && !!myName && (
+      textMentionsName(ann.text, myName) ||
+      (commentsLoadedForUpdatedAt === ann.updatedAt && announcementComments.some(c => c.postedByName !== myName && textMentionsName(c.text, myName)))
+    );
+    const mentionPillHtml = iAmMentioned ? '<div class="mention-me-row"><span class="mention-me-pill">You\u2019re mentioned</span></div>' : '';
+
     const bodyHtml = hasText
-      ? '<div class="announcement-text">' + renderAnnouncementTextWithMentions(ann.text, currentData.names) + '</div>' + imageHtml + reactionsHtml + metaHtml + commentsHtml
+      ? mentionPillHtml + '<div class="announcement-text">' + renderAnnouncementTextWithMentions(ann.text, currentData.names, myName) + '</div>' + imageHtml + reactionsHtml + metaHtml + commentsHtml
       : '<div class="announcement-empty">No announcements right now.</div>';
 
     card.innerHTML =
@@ -6727,7 +6876,7 @@
             '<span class="comment-author">' + escapeHtml(c.postedByName) + '</span>' +
             '<span class="comment-time">' + formatAnnouncementDate(c.createdAt) + editedTag + '</span>' +
             '</div>' +
-            '<div class="comment-text">' + renderAnnouncementTextWithMentions(c.text, currentData.names) + '</div>' +
+            '<div class="comment-text">' + renderAnnouncementTextWithMentions(c.text, currentData.names, resolveMyName(currentData.names)) + '</div>' +
             actions +
             '</div>';
         }).join('');
@@ -7156,199 +7305,6 @@
       showAnnouncementError(err.message || 'Could not clear announcement.');
     }
     if (clearBtn) clearBtn.disabled = false;
-  }
-
-  /* ---------- Proctoring Announcements (a scrollable log, not a
-     single post — anyone signed in can add one, but only the person
-     who posted a given entry can edit or delete it). ---------- */
-
-  let proctoringLogEntries = [];
-  let proctoringLogCategories = [];
-  let editingProctoringEntryId = null;
-
-  function categoryBadgeClass(category) {
-    if (category === 'Proctor Guide') return 'cat-guide';
-    if (category === 'Exam Announcements') return 'cat-exam';
-    if (category === 'Technical Solutions') return 'cat-tech';
-    return '';
-  }
-
-  async function loadProctoringLog() {
-    const list = document.getElementById('proctoringLogList');
-    if (!list) return;
-    try {
-      const result = await jsonp({ action: 'getProctoringAnnouncements', email: currentUserEmail });
-      if (!result.success) {
-        list.innerHTML = '<div class="proctoring-log-empty">Could not load announcements.</div>';
-        return;
-      }
-      proctoringLogEntries = result.entries || [];
-      proctoringLogCategories = result.categories || [];
-      populateProctoringCategorySelect();
-      renderProctoringLog();
-    } catch (err) {
-      console.error('[ProctoringLog] load failed:', err);
-      list.innerHTML = '<div class="proctoring-log-empty">Could not load announcements.</div>';
-    }
-  }
-
-  function populateProctoringCategorySelect() {
-    const select = document.getElementById('proctoringLogCategoryInput');
-    if (!select || select.dataset.populated === '1') return;
-    proctoringLogCategories.forEach(cat => {
-      const opt = document.createElement('option');
-      opt.value = cat;
-      opt.textContent = cat;
-      select.appendChild(opt);
-    });
-    select.dataset.populated = '1';
-  }
-
-  function renderProctoringLog() {
-    const list = document.getElementById('proctoringLogList');
-    if (!list) return;
-
-    if (proctoringLogEntries.length === 0) {
-      list.innerHTML = '<div class="proctoring-log-empty">No announcements yet.</div>';
-      return;
-    }
-
-    list.innerHTML = proctoringLogEntries.map(entry => {
-      if (editingProctoringEntryId === entry.id) {
-        return renderProctoringEntryEditForm(entry);
-      }
-      const editedTag = entry.updatedAt ? ' (edited)' : '';
-      const actions = entry.canEdit
-        ? '<div class="proctoring-log-entry-actions">' +
-          '<button type="button" class="proctoring-log-icon-btn" onclick="startEditProctoringEntry(\'' + entry.id + '\')">Edit</button>' +
-          '<button type="button" class="proctoring-log-icon-btn delete" onclick="deleteProctoringEntry(\'' + entry.id + '\')">Delete</button>' +
-          '</div>'
-        : '';
-      return '<div class="proctoring-log-entry">' +
-        '<div class="proctoring-log-entry-top">' +
-        '<span class="proctoring-log-category-badge ' + categoryBadgeClass(entry.category) + '">' + escapeHtml(entry.category) + '</span>' +
-        actions +
-        '</div>' +
-        '<div class="proctoring-log-entry-text">' + escapeHtml(entry.text) + '</div>' +
-        '<div class="proctoring-log-entry-meta">' + formatAnnouncementDate(entry.createdAt) + ' by ' + escapeHtml(entry.postedByName) + editedTag + '</div>' +
-        '</div>';
-    }).join('');
-  }
-
-  function renderProctoringEntryEditForm(entry) {
-    const optionsHtml = proctoringLogCategories.map(cat =>
-      '<option value="' + escapeHtml(cat) + '"' + (cat === entry.category ? ' selected' : '') + '>' + escapeHtml(cat) + '</option>'
-    ).join('');
-    return '<div class="proctoring-log-entry">' +
-      '<select id="proctoringEditCategory_' + entry.id + '" class="proctoring-log-category-select">' + optionsHtml + '</select>' +
-      '<textarea id="proctoringEditText_' + entry.id + '" class="proctoring-log-textarea" maxlength="1000">' + escapeHtml(entry.text) + '</textarea>' +
-      '<div class="announcement-error" id="proctoringEditError_' + entry.id + '"></div>' +
-      '<div class="proctoring-log-form-actions">' +
-      '<button type="button" class="announcement-save-btn" onclick="submitProctoringEntryEdit(\'' + entry.id + '\')">Save</button>' +
-      '<button type="button" class="announcement-cancel-btn" onclick="cancelEditProctoringEntry()">Cancel</button>' +
-      '</div>' +
-      '</div>';
-  }
-
-  function toggleProctoringLogForm() {
-    const form = document.getElementById('proctoringLogForm');
-    const isOpen = form.style.display !== 'none';
-    form.style.display = isOpen ? 'none' : 'block';
-    if (!isOpen) {
-      document.getElementById('proctoringLogTextInput').value = '';
-      const err = document.getElementById('proctoringLogError');
-      err.textContent = '';
-      err.classList.remove('show');
-      document.getElementById('proctoringLogTextInput').focus();
-    }
-  }
-
-  async function submitProctoringLogEntry() {
-    const category = document.getElementById('proctoringLogCategoryInput').value;
-    const text = document.getElementById('proctoringLogTextInput').value.trim();
-    const errorEl = document.getElementById('proctoringLogError');
-    errorEl.classList.remove('show');
-
-    if (!text) {
-      errorEl.textContent = 'Announcement text is required.';
-      errorEl.classList.add('show');
-      return;
-    }
-
-    const saveBtn = document.getElementById('proctoringLogSaveBtn');
-    saveBtn.disabled = true;
-    saveBtn.textContent = 'Posting…';
-    try {
-      const result = await jsonp({ action: 'addProctoringAnnouncement', email: currentUserEmail, category: category, text: text });
-      if (result.success) {
-        showToast('Announcement posted.', 'info');
-        toggleProctoringLogForm();
-        await loadProctoringLog();
-      } else {
-        errorEl.textContent = result.message || 'Could not post announcement.';
-        errorEl.classList.add('show');
-      }
-    } catch (err) {
-      console.error('[ProctoringLog] add failed:', err);
-      errorEl.textContent = err.message || 'Could not post announcement.';
-      errorEl.classList.add('show');
-    }
-    saveBtn.disabled = false;
-    saveBtn.textContent = 'Post';
-  }
-
-  function startEditProctoringEntry(id) {
-    editingProctoringEntryId = id;
-    renderProctoringLog();
-  }
-
-  function cancelEditProctoringEntry() {
-    editingProctoringEntryId = null;
-    renderProctoringLog();
-  }
-
-  async function submitProctoringEntryEdit(id) {
-    const category = document.getElementById('proctoringEditCategory_' + id).value;
-    const text = document.getElementById('proctoringEditText_' + id).value.trim();
-    const errorEl = document.getElementById('proctoringEditError_' + id);
-    errorEl.classList.remove('show');
-
-    if (!text) {
-      errorEl.textContent = 'Announcement text is required.';
-      errorEl.classList.add('show');
-      return;
-    }
-    try {
-      const result = await jsonp({ action: 'updateProctoringAnnouncement', email: currentUserEmail, id: id, category: category, text: text });
-      if (result.success) {
-        showToast('Announcement updated.', 'info');
-        editingProctoringEntryId = null;
-        await loadProctoringLog();
-      } else {
-        errorEl.textContent = result.message || 'Could not update announcement.';
-        errorEl.classList.add('show');
-      }
-    } catch (err) {
-      console.error('[ProctoringLog] edit failed:', err);
-      errorEl.textContent = err.message || 'Could not update announcement.';
-      errorEl.classList.add('show');
-    }
-  }
-
-  async function deleteProctoringEntry(id) {
-    if (!window.confirm('Delete this announcement?')) return;
-    try {
-      const result = await jsonp({ action: 'deleteProctoringAnnouncement', email: currentUserEmail, id: id });
-      if (result.success) {
-        showToast('Announcement deleted.', 'info');
-        await loadProctoringLog();
-      } else {
-        showToast(result.message || 'Could not delete announcement.', 'error');
-      }
-    } catch (err) {
-      console.error('[ProctoringLog] delete failed:', err);
-      showToast('Could not delete announcement.', 'error');
-    }
   }
 
   /* ---------- Holiday season decorations (ber months) ---------- */
