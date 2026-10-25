@@ -3323,6 +3323,178 @@
     .emp-avatar svg { width: 18px; height: 18px; }
     .emp-name { font-size: 10.5px; }
   }
+
+  /* =========================================================
+     UI REFRESH LAYER — Oct 2026
+     Appended last on purpose: every rule here overrides an
+     earlier one at equal specificity, so the original rules
+     above stay untouched and this whole block can be removed
+     in one cut if anything needs rolling back.
+     ========================================================= */
+
+  /* ── Keyboard focus: visible everywhere, mouse clicks unaffected ── */
+  :focus-visible { outline: 2.5px solid var(--green); outline-offset: 2px; }
+  button:focus:not(:focus-visible), a:focus:not(:focus-visible) { outline: none; }
+
+  /* ── Nav: controls pinned right; closed drawer fully hidden ── */
+  .app-nav-right { margin-left: auto; }
+  @media (max-width: 1900px) {
+    /* The closed drawer sat at translateX(-100%) but still cast its
+       30px shadow onto the page's left edge, and its links stayed
+       reachable by Tab. Hide it properly once it has slid away. */
+    .app-nav-links:not(.open),
+    [data-theme="dark"] .app-nav-links:not(.open) {
+      box-shadow: none;
+      visibility: hidden;
+      transition: transform 0.25s ease, visibility 0s linear 0.25s;
+    }
+    .app-nav-links.open { visibility: visible; transition: transform 0.25s ease, visibility 0s; }
+  }
+
+  /* ── Dashboard header: even spacing, one line of status text ── */
+  .panel-header { padding: 20px 24px; }
+  .panel-header .date-tag { margin: 4px 0 0; }
+  .my-status-card, .digital-clock-wrap { margin-bottom: 0; }
+  .my-status-card { max-width: 440px; }
+  .my-status-line { white-space: nowrap; }
+  .my-status-badge { left: auto; right: 16px; }
+
+  /* ── Attendance grid: avatar colour now matches status ──
+     Previously everyone without a punch had the same green avatar
+     as people who are timed in, so the grid read as "all in". */
+  .emp-avatar { background: #f0f2f1; color: #8a9590; }
+  .emp-card.status-in .emp-avatar { background: var(--green-light); color: var(--green-dark); }
+  .emp-card.status-out .emp-avatar { background: var(--gray-light); color: var(--gray-mid); }
+  .emp-card:hover { transform: translateY(-2px); }
+
+  .filter-pill .pill-count {
+    display: inline-block;
+    min-width: 18px;
+    margin-left: 6px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.06);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    line-height: 18px;
+    text-align: center;
+  }
+  .filter-pill.active .pill-count { background: rgba(255,255,255,0.25); }
+  .filter-pill .pill-count:empty { display: none; }
+
+  /* ── Sidebar: room for headings, even gaps between cards ── */
+  .dashboard-sidebar { width: 360px; }
+  .proctoring-log-card { margin-bottom: 0; }
+  .comment-compose-input-wrap .comment-input { width: 100%; }
+
+  /* ── Org chart: unbroken connector line ──
+     The horizontal bar is drawn per-branch across its own box, so a
+     flex gap between branches left visible breaks in it. Spacing now
+     comes from padding inside each branch, which the bar spans. */
+  .org-managers-row { gap: 0; }
+  .org-managers-row > .org-branch { padding-left: 20px; padding-right: 20px; }
+  .org-managers-row-nested { gap: 0; }
+  .org-managers-row-nested > .org-branch { padding-left: 12px; padding-right: 12px; }
+
+  /* ── APAC schedule: all seven days fit on a laptop screen ── */
+  .apac-table { min-width: 980px; }
+  .apac-table td { padding: 12px 10px; }
+  .apac-day-cell { min-width: 108px; }
+
+  /* ── Dark mode: avatars and chips no longer glow white ── */
+  [data-theme="dark"] .emp-avatar { background: #24332f; color: #8fa39d; }
+  [data-theme="dark"] .emp-card.status-in .emp-avatar { background: #1d3b30; color: #8fe0a3; }
+  [data-theme="dark"] .emp-card.status-out .emp-avatar { background: #262d2b; color: #75847f; }
+  [data-theme="dark"] .emp-status-chip.in { background: #1d3b30; color: #8fe0a3; }
+  [data-theme="dark"] .emp-status-chip.out { background: #3b1d25; color: #ff94aa; }
+  [data-theme="dark"] .my-status-avatar { background: #1d3b30; color: #8fe0a3; }
+  [data-theme="dark"] .my-status-card.status-out .my-status-avatar { background: #3b1d25; color: #ff94aa; }
+  [data-theme="dark"] .filter-pill .pill-count { background: rgba(255,255,255,0.08); }
+
+  /* ── Tablet ── */
+  @media (max-width: 1024px) {
+    .dashboard-sidebar { width: 100%; }
+  }
+
+  /* ── Phones ── */
+  @media (max-width: 640px) {
+    /* The full email in the user chip pushed the page 90px wider than
+       the screen; the avatar alone is enough here (the dropdown still
+       shows the address). */
+    .app-user-tag, .user-caret { display: none; }
+    .app-user-trigger { padding: 4px; }
+    .app-nav-inner { padding: 8px 14px; gap: 10px; }
+    .app-nav-right { gap: 6px; }
+
+    .panel-header { padding: 16px; gap: 12px; }
+    .digital-clock-wrap { align-self: stretch; }
+    .filter-pill .pill-count { margin-left: 4px; padding: 0 4px; min-width: 0; }
+  }
+
+  /* ── Round 2: phones, touch, sign-in ── */
+  .nav-mobile-only { display: none !important; }
+
+  .pw-wrap { position: relative; }
+  .pw-wrap input { padding-right: 64px; }
+  .auth-form .pw-toggle {
+    position: absolute; top: 50%; right: 6px; transform: translateY(-50%);
+    width: auto; margin: 0;
+    background: none; border: none; color: var(--green-dark);
+    font-size: 12.5px; font-weight: 700; padding: 8px 10px; border-radius: 6px; cursor: pointer;
+  }
+  .auth-form .pw-toggle:hover { background: var(--green-light); }
+  .auth-form .remember-check {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 500; color: var(--gray-dark); margin: 4px 0 14px; cursor: pointer;
+  }
+  .auth-form .remember-check input { width: 16px; height: 16px; margin: 0; padding: 0; accent-color: var(--green); }
+  [data-theme="dark"] .auth-form .remember-check { color: #d5dfdb; }
+  [data-theme="dark"] .auth-form .pw-toggle { color: #8fe0a3; }
+  [data-theme="dark"] .auth-form .pw-toggle:hover { background: #1c3a2f; }
+
+  /* Small labels brought up to a readable size */
+  .org-member-avatar { width: 28px; height: 28px; min-width: 28px; font-size: 11.5px; }
+  .admin-employee-badge { font-size: 11.5px; }
+
+  /* Bigger tap targets on touch screens only; mouse layouts unchanged */
+  @media (pointer: coarse) {
+    .announcement-reaction-btn,
+    .emoji-quick-btn,
+    .bday-edit-btn, .bday-delete-btn,
+    .log-month-btn { min-width: 40px; min-height: 40px; }
+    .emoji-quick-btn { font-size: 18px; }
+    .bday-edit-btn, .bday-delete-btn { display: inline-flex; align-items: center; justify-content: center; }
+    .emoji-quick-bar { gap: 6px; }
+    .mini-btn,
+    .admin-employee-remove-btn,
+    .admin-employee-deactivate-btn,
+    .admin-employee-reactivate-btn,
+    .filter-pill { min-height: 40px; }
+  }
+
+  @media (max-width: 640px) {
+    /* Snow toggle lives in the Quick Links menu on phones */
+    #snowToggleBtn { display: none; }
+    .nav-mobile-only { display: flex !important; }
+
+    /* Org chart: stacked top-to-bottom instead of a wide tree */
+    .org-chart-wrap { padding: 20px 14px 24px; overflow-x: visible; }
+    .org-tree { min-width: 0; width: 100%; align-items: stretch; }
+    .org-node, .org-team-box, .org-team-box-wide { width: 100%; max-width: none; }
+    .org-tier-label, .org-vline { align-self: center; }
+    .org-managers-row, .org-managers-row-nested { flex-direction: column; align-items: stretch; gap: 16px; }
+    .org-managers-row > .org-branch,
+    .org-managers-row-nested > .org-branch { padding: 0; }
+    .org-branch::before, .org-branch::after, .org-branch-dot { display: none; }
+    .org-branch-group > .org-vline:not(.org-vline-team) { display: none; }
+    .org-team-members-grid { grid-template-columns: 1fr; }
+    .org-managers-row > .org-branch:not(.org-branch-group) > .org-vline-team { display: none; }
+    .org-managers-row-nested { margin: 0; width: 100%; }
+  }
+  @media (max-width: 360px) {
+    .app-nav-inner { padding: 8px 10px; gap: 8px; }
+    .app-brand img { height: 26px; }
+  }
 </style>
 </head>
 <body>
@@ -3343,7 +3515,8 @@
       <label for="signInEmail">Email</label>
       <input type="email" id="signInEmail" autocomplete="username" required>
       <label for="signInPassword">Password</label>
-      <input type="password" id="signInPassword" autocomplete="current-password" required>
+      <div class="pw-wrap"><input type="password" id="signInPassword" autocomplete="current-password" required><button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" onclick="togglePasswordVisibility(this)">Show</button></div>
+      <label class="remember-check"><input type="checkbox" id="rememberDevice"> Keep me signed in on this device</label>
       <button type="submit" class="primary" id="signInBtn">Sign In</button>
       <button type="button" class="forgot-link" onclick="handleForgotPassword()">Forgot password?</button>
     </form>
@@ -3352,9 +3525,9 @@
       <label for="createEmail">Email</label>
       <input type="email" id="createEmail" autocomplete="username" required>
       <label for="createPassword">Password</label>
-      <input type="password" id="createPassword" autocomplete="new-password" minlength="8" required>
+      <div class="pw-wrap"><input type="password" id="createPassword" autocomplete="new-password" minlength="8" required><button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" onclick="togglePasswordVisibility(this)">Show</button></div>
       <label for="createPasswordConfirm">Confirm password</label>
-      <input type="password" id="createPasswordConfirm" autocomplete="new-password" minlength="8" required>
+      <div class="pw-wrap"><input type="password" id="createPasswordConfirm" autocomplete="new-password" minlength="8" required><button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" onclick="togglePasswordVisibility(this)">Show</button></div>
       <button type="submit" class="primary" id="createBtn">Create Account</button>
     </form>
 
@@ -3413,6 +3586,9 @@
         </a>
         <a href="#" id="apacNavLink" onclick="event.preventDefault(); showApacSchedulePage();">
           <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a13.5 13.5 0 0 1 0 18M12 3a13.5 13.5 0 0 0 0 18"/></svg></span>APAC Schedule
+        </a>
+        <a href="#" id="snowNavLink" class="nav-mobile-only" role="button" aria-pressed="false" onclick="event.preventDefault(); toggleSnowEffect();">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="19.1" y2="4.9"/><line x1="2" y1="12" x2="22" y2="12"/></svg></span><span id="snowNavLabel">Snow effect: off</span>
         </a>
         <a href="#" id="adminNavLink" class="admin-nav-link" style="display:none;" onclick="event.preventDefault(); showAdminPage();">
           <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.3 5 6v5.5c0 4.6 3 7.9 7 9.2 4-1.3 7-4.6 7-9.2V6l-7-2.7Z"/></svg></span>Admin
@@ -3489,10 +3665,10 @@
               <input type="text" id="empSearchInput" name="staff-directory-search" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" readonly onfocus="this.removeAttribute('readonly');" placeholder="Search employee…" oninput="handleGridFilterChange()">
             </div>
             <div class="grid-filter-pills" id="gridFilterPills">
-              <button type="button" class="filter-pill active" data-filter="all" onclick="setGridFilter('all')">All</button>
-              <button type="button" class="filter-pill" data-filter="in" onclick="setGridFilter('in')">Timed In</button>
-              <button type="button" class="filter-pill" data-filter="out" onclick="setGridFilter('out')">Timed Out</button>
-              <button type="button" class="filter-pill" data-filter="none" onclick="setGridFilter('none')">Not Yet In</button>
+              <button type="button" class="filter-pill active" data-filter="all" onclick="setGridFilter('all')">All<span class="pill-count" id="pillCount_all"></span></button>
+              <button type="button" class="filter-pill" data-filter="in" onclick="setGridFilter('in')">Timed In<span class="pill-count" id="pillCount_in"></span></button>
+              <button type="button" class="filter-pill" data-filter="out" onclick="setGridFilter('out')">Timed Out<span class="pill-count" id="pillCount_out"></span></button>
+              <button type="button" class="filter-pill" data-filter="none" onclick="setGridFilter('none')">Not Yet In<span class="pill-count" id="pillCount_none"></span></button>
             </div>
           </div>
 
@@ -3982,6 +4158,26 @@
 
   const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx6QqqY7RYbdeHmX03kSF8gbnSAQn9aceLYBKXHyQ7i_avcXb8o3LF6DLQlW4C9FOC4/exec";
   const SESSION_KEY = "fa_staff_session";
+  // Opt-in "Keep me signed in": a copy of the session in localStorage so
+  // a new tab or browser restart skips the sign-in screen. Everything
+  // else still reads sessionStorage; this copy is only used to refill it
+  // on load. Expires after 30 days; Sign Out always removes it.
+  const PERSIST_KEY = "fa_staff_session_persist";
+  const PERSIST_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+  function savePersistedSession(sessionObj) {
+    try { localStorage.setItem(PERSIST_KEY, JSON.stringify(Object.assign({}, sessionObj, { savedAt: Date.now() }))); } catch (e) {}
+  }
+  function clearPersistedSession() {
+    try { localStorage.removeItem(PERSIST_KEY); } catch (e) {}
+  }
+  function togglePasswordVisibility(btn) {
+    const input = btn.parentElement.querySelector('input');
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    btn.textContent = show ? 'Hide' : 'Show';
+    btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+  }
 
   // Identity of the signed-in staff member, used to pin their own
   // attendance status ("My Status") beside the clock. `trustedNameHint`
@@ -4127,12 +4323,16 @@
       const passwordHash = await sha256Hex(password);
       const result = await jsonp({ action: 'login', email, passwordHash });
       if (result.success) {
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+        const newSession = {
           email: result.email,
           matchedName: result.name || null,
           isAdmin: !!result.isAdmin,
           adminToken: result.adminToken || null
-        }));
+        };
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(newSession));
+        const remember = document.getElementById('rememberDevice');
+        if (remember && remember.checked) savePersistedSession(newSession);
+        else clearPersistedSession();
         showApp(result.email);
       } else if (result.needsVerification) {
         document.getElementById('verifyBox').classList.add('show');
@@ -4207,6 +4407,7 @@
 
   function handleLogout() {
     sessionStorage.removeItem(SESSION_KEY);
+    clearPersistedSession();
     sessionStorage.removeItem('fa_birthday_popup_shown');
     document.getElementById('appPage').classList.remove('open');
     // Clearing the inline override (rather than hardcoding 'block')
@@ -4285,7 +4486,16 @@
 
   (function restoreSession() {
     try {
-      const existing = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+      let existing = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+      if (!existing || !existing.email) {
+        const saved = JSON.parse(localStorage.getItem(PERSIST_KEY));
+        if (saved && saved.email && Date.now() - (saved.savedAt || 0) < PERSIST_MAX_AGE_MS) {
+          existing = saved;
+          sessionStorage.setItem(SESSION_KEY, JSON.stringify(saved));
+        } else if (saved) {
+          clearPersistedSession();
+        }
+      }
       if (existing && existing.email) showApp(existing.email);
     } catch (e) { /* no-op */ }
   })();
@@ -4302,7 +4512,7 @@
   // business's reference timezone is what's always displayed, not the
   // viewer's.
   const CLOCK_TIMEZONE = 'Asia/Manila';
-  const CLOCK_TZ_LABEL = 'PST'; // Philippine Standard Time
+  const CLOCK_TZ_LABEL = 'PHT'; // Philippine Time — 'PST' read as US Pacific to Certiverse colleagues
 
   function getManilaParts(date) {
     const parts = new Intl.DateTimeFormat('en-US', {
@@ -4540,7 +4750,25 @@
     renderGrid();
   }
 
+  // Live counts on the status filter pills, so "how many are in right
+  // now" is answerable without clicking through each filter.
+  function updateGridFilterCounts() {
+    const names = currentData.names || [];
+    const counts = { all: names.length, in: 0, out: 0, none: 0 };
+    names.forEach(name => {
+      const status = getCurrentStatusForName(name);
+      if (!status) counts.none++;
+      else if (isPunchIn(status)) counts.in++;
+      else counts.out++;
+    });
+    Object.keys(counts).forEach(key => {
+      const el = document.getElementById('pillCount_' + key);
+      if (el) el.textContent = names.length ? counts[key] : '';
+    });
+  }
+
   function renderGrid() {
+    updateGridFilterCounts();
     const grid = document.getElementById('empGrid');
     grid.innerHTML = '';
 
@@ -6419,6 +6647,7 @@
         existing.email = currentUserEmail;
         existing.matchedName = name;
         sessionStorage.setItem(SESSION_KEY, JSON.stringify(existing));
+        if (localStorage.getItem(PERSIST_KEY)) savePersistedSession(existing);
       } catch (e) { /* no-op */ }
 
       const status = getCurrentStatusForName(name);
@@ -6507,7 +6736,7 @@
     try {
       return new Date(isoString).toLocaleString('en-US', {
         timeZone: 'Asia/Manila', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit'
-      }) + ' PST';
+      }) + ' PHT';
     } catch (e) {
       return '';
     }
@@ -7376,6 +7605,10 @@
     const btn = document.getElementById('snowToggleBtn');
     if (layer) layer.classList.toggle('show', enabled);
     if (btn) btn.classList.toggle('active', enabled);
+    const navLink = document.getElementById('snowNavLink');
+    const navLabel = document.getElementById('snowNavLabel');
+    if (navLink) navLink.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+    if (navLabel) navLabel.textContent = 'Snow effect: ' + (enabled ? 'on' : 'off');
   }
 
   function toggleSnowEffect() {
