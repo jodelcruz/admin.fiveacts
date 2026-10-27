@@ -3495,6 +3495,12 @@
     .app-nav-inner { padding: 8px 10px; gap: 8px; }
     .app-brand img { height: 26px; }
   }
+
+  /* ── Last-seen for people not in yet today ── */
+  .emp-status-chip.away { background: #f0f2f1; color: #6b7672; }
+  .emp-status-chip.away.long { background: #fdf3e1; color: #9a6a12; }
+  [data-theme="dark"] .emp-status-chip.away { background: #262d2b; color: #9fb0ac; }
+  [data-theme="dark"] .emp-status-chip.away.long { background: #3a2f17; color: #f0c56a; }
 </style>
 </head>
 <body>
@@ -4736,6 +4742,44 @@
     return null;
   }
 
+  // Which filter pill a person belongs to. "Timed Out" means they timed
+  // out TODAY; someone whose last punch was an "out" on an earlier day
+  // hasn't started today, so they belong under "Not Yet In". Anyone still
+  // clocked in (today or carried over) is "Timed In".
+  function gridBucketFor(status) {
+    if (status && isPunchIn(status)) return 'in';
+    if (status && status.isToday) return 'out';
+    return 'none';
+  }
+
+  // Whole days between an earlier ISO date and today's attendance date.
+  function daysBeforeToday(isoDate) {
+    const parse = v => {
+      const p = String(v || '').split('-').map(Number);
+      return (p.length === 3 && !p.some(isNaN)) ? Date.UTC(p[0], p[1] - 1, p[2]) : NaN;
+    };
+    const diff = Math.round((parse(currentData.date) - parse(isoDate)) / 86400000);
+    return isNaN(diff) ? null : diff;
+  }
+
+  // Short "when" for a past date: Yesterday / Thu / Oct 12 (older than
+  // a week, so a weekday name would be ambiguous).
+  function shortPastDay(isoDate) {
+    const days = daysBeforeToday(isoDate);
+    if (days === 1) return 'Yesterday';
+    const p = String(isoDate || '').split('-').map(Number);
+    if (p.length !== 3 || p.some(isNaN)) return isoDate || '';
+    const d = new Date(p[0], p[1] - 1, p[2]);
+    if (days !== null && days > 1 && days < 7) return d.toLocaleDateString('en-US', { weekday: 'short' });
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  function shortMonthDay(isoDate) {
+    const p = String(isoDate || '').split('-').map(Number);
+    if (p.length !== 3 || p.some(isNaN)) return isoDate || '';
+    return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
   function handleGridFilterChange() {
     const input = document.getElementById('empSearchInput');
     gridSearchTerm = input ? input.value.trim().toLowerCase() : '';
@@ -4755,12 +4799,7 @@
   function updateGridFilterCounts() {
     const names = currentData.names || [];
     const counts = { all: names.length, in: 0, out: 0, none: 0 };
-    names.forEach(name => {
-      const status = getCurrentStatusForName(name);
-      if (!status) counts.none++;
-      else if (isPunchIn(status)) counts.in++;
-      else counts.out++;
-    });
+    names.forEach(name => { counts[gridBucketFor(getCurrentStatusForName(name))]++; });
     Object.keys(counts).forEach(key => {
       const el = document.getElementById('pillCount_' + key);
       if (el) el.textContent = names.length ? counts[key] : '';
@@ -4775,10 +4814,7 @@
     const visibleNames = currentData.names.filter(name => {
       if (gridSearchTerm && !name.toLowerCase().includes(gridSearchTerm)) return false;
       if (gridStatusFilter === 'all') return true;
-      const status = getCurrentStatusForName(name);
-      if (gridStatusFilter === 'none') return !status;
-      if (!status) return false;
-      return gridStatusFilter === 'in' ? isPunchIn(status) : !isPunchIn(status);
+      return gridBucketFor(getCurrentStatusForName(name)) === gridStatusFilter;
     });
 
     if (visibleNames.length === 0) {
@@ -4789,25 +4825,33 @@
     visibleNames.forEach(name => {
       const status = getCurrentStatusForName(name);
       const currentlyIn = isPunchIn(status);
-      const statusClass = status ? (currentlyIn ? 'status-in' : 'status-out') : '';
+      const bucket = gridBucketFor(status);
+      const statusClass = bucket === 'in' ? 'status-in' : bucket === 'out' ? 'status-out' : 'status-away';
       let statusText;
+      let chipHtml = '';
       if (!status) {
-        statusText = 'No activity today';
+        statusText = 'No recent logs';
       } else if (status.isToday) {
         statusText = (currentlyIn ? 'In ' : 'Out ') + status.time;
       } else if (currentlyIn) {
         // Carried over from an earlier day — the actionable case: they
         // forgot to time out, so make that obvious rather than showing
         // "no activity today" (which would hide that they're still in).
-        statusText = 'Still in since ' + formatAdminDate(status.date);
+        statusText = 'Still in since ' + shortMonthDay(status.date);
       } else {
-        // Last known state was already "out" from an earlier day —
-        // functionally the same as no activity today.
-        statusText = 'No activity today';
+        // Last punch was an "out" on an earlier day: show when, so a
+        // run of days away is visible at a glance instead of a blank
+        // "no activity today".
+        const when = shortPastDay(status.date);
+        statusText = 'Last out ' + shortMonthDay(status.date);
+        const days = daysBeforeToday(status.date);
+        chipHtml = '<div class="emp-status-chip away' + (days !== null && days >= 3 ? ' long' : '') +
+          '" title="Last log: ' + formatAdminDate(status.date) + (status.time ? ', ' + status.time : '') + '">' +
+          (days === 1 ? 'YDAY' : (days !== null && days > 1 ? days + 'D AGO' : when.toUpperCase())) + '</div>';
       }
-      const chipHtml = status
-        ? '<div class="emp-status-chip ' + (currentlyIn ? 'in' : 'out') + '">' + (currentlyIn ? 'IN' : 'OUT') + '</div>'
-        : '';
+      if (bucket !== 'none') {
+        chipHtml = '<div class="emp-status-chip ' + (currentlyIn ? 'in' : 'out') + '">' + (currentlyIn ? 'IN' : 'OUT') + '</div>';
+      }
 
       const card = document.createElement('div');
       card.className = 'emp-card ' + statusClass;
