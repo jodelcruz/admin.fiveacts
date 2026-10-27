@@ -3501,6 +3501,28 @@
   .emp-status-chip.away.long { background: #fdf3e1; color: #9a6a12; }
   [data-theme="dark"] .emp-status-chip.away { background: #262d2b; color: #9fb0ac; }
   [data-theme="dark"] .emp-status-chip.away.long { background: #3a2f17; color: #f0c56a; }
+
+  /* ── Profile photo hover preview ── */
+  .avatar-peek {
+    position: fixed; z-index: 2500; pointer-events: none;
+    padding: 8px; border-radius: 18px;
+    background: #fff; box-shadow: 0 14px 40px rgba(0,0,0,0.22), 0 0 0 1px rgba(0,0,0,0.04);
+    opacity: 0; transform: scale(0.6);
+    transition: opacity 0.14s ease, transform 0.16s ease;
+  }
+  .avatar-peek.show { opacity: 1; transform: scale(1); }
+  .avatar-peek img { display: block; width: 160px; height: 160px; object-fit: cover; border-radius: 12px; }
+  .avatar-peek-name {
+    margin-top: 7px; text-align: center;
+    font-size: 13px; font-weight: 700; color: var(--black);
+    max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .emp-avatar:has(img), .my-status-avatar:has(img) { cursor: zoom-in; }
+  [data-theme="dark"] .avatar-peek { background: #1f2b28; box-shadow: 0 14px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06); }
+  [data-theme="dark"] .avatar-peek-name { color: #e8efec; }
+  @media (prefers-reduced-motion: reduce) {
+    .avatar-peek { transition: opacity 0.1s; transform: none; }
+  }
 </style>
 </head>
 <body>
@@ -4806,7 +4828,75 @@
     });
   }
 
+
+  /* ---------- Profile photo hover preview ----------
+     Hovering a profile photo (attendance grid or the My Status card)
+     shows it enlarged in a floating bubble. Mouse/trackpad only: on
+     touch screens a tap already opens the profile, so nothing changes
+     there. One shared element, positioned against the viewport, so it
+     is never clipped by a card and survives the grid re-rendering. */
+  const AVATAR_PEEK_SIZE = 160; // photos are stored at 160x160, so this stays sharp
+  let avatarPeekEl = null;
+  let avatarPeekTarget = null;
+
+  function getAvatarPeekEl() {
+    if (avatarPeekEl) return avatarPeekEl;
+    avatarPeekEl = document.createElement('div');
+    avatarPeekEl.className = 'avatar-peek';
+    avatarPeekEl.setAttribute('aria-hidden', 'true');
+    avatarPeekEl.innerHTML = '<img alt=""><div class="avatar-peek-name"></div>';
+    document.body.appendChild(avatarPeekEl);
+    return avatarPeekEl;
+  }
+
+  function showAvatarPeek(avatar) {
+    const img = avatar.querySelector('img');
+    if (!img || !img.src) return; // placeholder icon only: nothing to enlarge
+    const card = avatar.closest('.emp-card, .my-status-card');
+    const nameEl = card && card.querySelector('.emp-name, .my-status-name');
+    const peek = getAvatarPeekEl();
+    peek.querySelector('img').src = img.src;
+    peek.querySelector('.avatar-peek-name').textContent = nameEl ? nameEl.textContent.trim() : '';
+
+    const r = avatar.getBoundingClientRect();
+    const boxW = AVATAR_PEEK_SIZE + 16;
+    const boxH = AVATAR_PEEK_SIZE + 44;
+    const margin = 10;
+    let left = r.left + r.width / 2 - boxW / 2;
+    left = Math.max(margin, Math.min(left, window.innerWidth - boxW - margin));
+    let top = r.top - boxH - 10;
+    let below = false;
+    if (top < 70) { top = r.bottom + 10; below = true; } // no room above (under the nav): show below
+    peek.style.left = left + 'px';
+    peek.style.top = top + 'px';
+    peek.style.transformOrigin = (r.left + r.width / 2 - left) + 'px ' + (below ? '0' : '100%');
+    peek.classList.add('show');
+    avatarPeekTarget = avatar;
+  }
+
+  function hideAvatarPeek() {
+    if (avatarPeekEl) avatarPeekEl.classList.remove('show');
+    avatarPeekTarget = null;
+  }
+
+  (function initAvatarPeek() {
+    if (!window.matchMedia || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    const SEL = '.emp-avatar, .my-status-avatar';
+    document.addEventListener('mouseover', (e) => {
+      const avatar = e.target.closest && e.target.closest(SEL);
+      if (avatar && avatar !== avatarPeekTarget) showAvatarPeek(avatar);
+    });
+    document.addEventListener('mouseout', (e) => {
+      if (!avatarPeekTarget) return;
+      const to = e.relatedTarget;
+      if (!to || !avatarPeekTarget.contains(to)) hideAvatarPeek();
+    });
+    window.addEventListener('scroll', hideAvatarPeek, { passive: true });
+    document.addEventListener('click', hideAvatarPeek, true);
+  })();
+
   function renderGrid() {
+    hideAvatarPeek();
     updateGridFilterCounts();
     const grid = document.getElementById('empGrid');
     grid.innerHTML = '';
