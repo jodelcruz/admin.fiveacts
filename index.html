@@ -3523,6 +3523,19 @@
   @media (prefers-reduced-motion: reduce) {
     .avatar-peek { transition: opacity 0.1s; transform: none; }
   }
+
+  /* ── My Status card: never squeeze the name/status behind the buttons ──
+     The card sits between the title and the clock, so on mid-size or
+     zoomed-in windows it can get narrow. When it does, the Time In /
+     Time Out buttons drop to their own row instead of covering the
+     name and status. Based on the card's own width, not the screen's. */
+  .my-status-card { container-type: inline-size; flex-wrap: wrap; row-gap: 10px; }
+  .my-status-info { flex: 1 1 0; min-width: 120px; }
+  .my-status-line { overflow: hidden; text-overflow: ellipsis; }
+  @container (max-width: 360px) {
+    .my-status-actions { flex: 1 1 100%; }
+    .my-status-actions .mini-btn { flex: 1; text-align: center; }
+  }
 </style>
 </head>
 <body>
