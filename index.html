@@ -3559,6 +3559,31 @@
   }
   .app-footer-link:hover { border-bottom-color: currentColor; }
   [data-theme="dark"] .app-footer-link { color: #8fe0a3; }
+
+  /* ── Upcoming Events: first in the sidebar, compact one-line rows ──
+     It used to sit below the announcement and the proctoring link, so on
+     a laptop it started below the fold. Now it's the first thing on the
+     right, with name and "in N days" on one line to keep it short. */
+  .upcoming-list { gap: 6px; }
+  .upcoming-event-row { padding: 8px 12px; }
+  .upcoming-event-info { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .upcoming-event-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .upcoming-event-when { flex-shrink: 0; white-space: nowrap; }
+
+  /* Tablet & phone: one column. Events go above the attendance grid
+     (instead of after all 22 cards); announcement and proctoring link
+     follow the grid as before. */
+  @media (max-width: 1024px) {
+    #dashboardView .dashboard-sidebar { display: contents; }
+    #dashboardView .upcoming-card { order: -1; width: 100%; }
+    #dashboardView .dashboard-main { order: 0; width: 100%; }
+    #dashboardView .announcement-section { order: 1; width: 100%; }
+    #dashboardView .proctoring-log-card { order: 2; width: 100%; }
+  }
+  @media (max-width: 640px) {
+    /* Next three on phones; "View All" has the rest */
+    .upcoming-event-row:nth-child(n+4) { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -3742,6 +3767,19 @@
         </div>
 
         <div class="dashboard-sidebar">
+          <div class="upcoming-card" id="upcomingCard">
+            <div class="upcoming-header">
+              <span class="upcoming-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-.8 1-1.4 1.8-1.4 2.6a1.4 1.4 0 0 0 2.8 0C13.4 4.8 12.8 4 12 3Z"/><path d="M4 21v-6.5a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3V21"/><path d="M3 21h18"/><path d="M9 11.5v9.5M15 11.5v9.5"/><path d="M4 17c1 .7 2 .7 3 0s2-.7 3 0 2 .7 3 0 2-.7 3 0 2 .7 3 0"/></svg>
+              </span>
+              <h3>Upcoming Events</h3>
+              <button type="button" class="upcoming-view-all-btn" onclick="showBirthdayCalendarPage()">View All</button>
+            </div>
+            <div class="upcoming-list" id="upcomingEventsList">
+              <div class="loading">Loading…</div>
+            </div>
+          </div>
+
           <div class="announcement-section" id="announcementSection" style="display:none;">
             <div class="announcement-card" id="announcementCard"></div>
           </div>
@@ -3758,19 +3796,6 @@
               Click here to see announcements
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </a>
-          </div>
-
-          <div class="upcoming-card">
-            <div class="upcoming-header">
-              <span class="upcoming-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-.8 1-1.4 1.8-1.4 2.6a1.4 1.4 0 0 0 2.8 0C13.4 4.8 12.8 4 12 3Z"/><path d="M4 21v-6.5a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3V21"/><path d="M3 21h18"/><path d="M9 11.5v9.5M15 11.5v9.5"/><path d="M4 17c1 .7 2 .7 3 0s2-.7 3 0 2 .7 3 0 2-.7 3 0 2 .7 3 0"/></svg>
-              </span>
-              <h3>Upcoming Events</h3>
-              <button type="button" class="upcoming-view-all-btn" onclick="showBirthdayCalendarPage()">View All</button>
-            </div>
-            <div class="upcoming-list" id="upcomingEventsList">
-              <div class="loading">Loading…</div>
-            </div>
           </div>
         </div>
       </div>
