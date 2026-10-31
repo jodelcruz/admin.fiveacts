@@ -3536,6 +3536,29 @@
     .my-status-actions { flex: 1 1 100%; }
     .my-status-actions .mini-btn { flex: 1; text-align: center; }
   }
+
+  /* ── Footer ── */
+  .app-footer {
+    max-width: 1280px; margin: 0 auto; padding: 4px 20px 28px;
+    display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+    gap: 4px 8px; text-align: center;
+    font-size: 12px; color: var(--gray-mid);
+  }
+  .app-main { padding-bottom: 32px; }
+  .app-footer-version { font-variant-numeric: tabular-nums; }
+  [data-theme="dark"] .app-footer { color: #8fa39d; }
+  @media (max-width: 640px) {
+    /* Stack into lines on phones; the dot separators would dangle at line ends */
+    .app-footer { flex-direction: column; gap: 2px; padding-bottom: 22px; font-size: 11.5px; }
+    .app-footer-sep { display: none; }
+  }
+
+  .app-footer-link {
+    color: var(--green-dark); font-weight: 700; text-decoration: none;
+    border-bottom: 1px solid transparent; transition: border-color 0.15s, color 0.15s;
+  }
+  .app-footer-link:hover { border-bottom-color: currentColor; }
+  [data-theme="dark"] .app-footer-link { color: #8fe0a3; }
 </style>
 </head>
 <body>
@@ -3584,7 +3607,7 @@
       are set in the Apps Script backend) before using it.
     </div>
   </div>
-  <div class="login-footnote">Five Acts Services Corp. &middot; Internal use only</div>
+  <div class="login-footnote">Five Acts Services Corp. &middot; Internal use only &middot; v2026.10.31</div>
 </div>
 
 <!-- ══════════════ MAIN APP (post-login) ══════════════ -->
@@ -4028,6 +4051,15 @@
       </div>
     </div>
   </div>
+  <!-- Portal version: bump this (and the one on the sign-in screen) on each release.
+       Format: vYYYY.MM.DD, plus .2, .3 for a second release on the same day. -->
+  <footer class="app-footer">
+    <span>&copy; 2024 <a class="app-footer-link" href="https://fiveactsservices.com/" target="_blank" rel="noopener">Five Acts Services Corp.</a> All rights reserved.</span>
+    <span class="app-footer-sep" aria-hidden="true">&middot;</span>
+    <span>Alabang, Muntinlupa, Philippines</span>
+    <span class="app-footer-sep" aria-hidden="true">&middot;</span>
+    <span class="app-footer-version">Staff Portal v2026.10.31</span>
+  </footer>
 </div>
 
 <!-- PROFILE MODAL -->
