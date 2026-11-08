@@ -5456,27 +5456,40 @@
       reader.onerror = () => reject(new Error('Could not read the selected file.'));
       reader.onload = () => {
         const img = new Image();
-        img.onerror = () => reject(new Error('Could not read that image.'));
+        img.onerror = () => reject(new Error(
+          /heic|heif/i.test(file.type + file.name)
+            ? 'iPhone HEIC photos can\'t be read by the browser. Please use a JPG or PNG (or a screenshot of the photo).'
+            : 'Could not read that image. Please try a JPG or PNG.'));
         img.onload = () => {
-          const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1); // never upscale
-          const w = Math.round(img.width * scale);
-          const h = Math.round(img.height * scale);
-          const canvas = document.createElement('canvas');
-          canvas.width = w;
-          canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-
+          // The stored image has to fit one Google Sheets cell
+          // (ANNOUNCEMENT_MAX_IMAGE_BASE64_JS). Detailed pictures, like
+          // posters or screenshots with text, often didn't fit at 900px
+          // even at low quality, and were rejected. Now it steps the size
+          // down as well as the quality before giving up, so nearly any
+          // image ends up fitting.
+          const baseScale = Math.min(maxWidth / img.width, maxHeight / img.height, 1); // never upscale
+          const sizeSteps = [1, 0.8, 0.65, 0.5, 0.4];
           const qualitySteps = [0.82, 0.65, 0.5, 0.35];
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
           let base64 = null;
-          for (const q of qualitySteps) {
-            const candidate = canvas.toDataURL('image/jpeg', q).split(',')[1];
-            if (candidate.length <= ANNOUNCEMENT_MAX_IMAGE_BASE64_JS) {
-              base64 = candidate;
-              break;
+          outer:
+          for (const sizeStep of sizeSteps) {
+            canvas.width = Math.max(1, Math.round(img.width * baseScale * sizeStep));
+            canvas.height = Math.max(1, Math.round(img.height * baseScale * sizeStep));
+            ctx.fillStyle = '#ffffff'; // transparent PNGs would otherwise turn black as JPEG
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            for (const q of qualitySteps) {
+              const candidate = canvas.toDataURL('image/jpeg', q).split(',')[1];
+              if (candidate.length <= ANNOUNCEMENT_MAX_IMAGE_BASE64_JS) {
+                base64 = candidate;
+                break outer;
+              }
             }
           }
           if (!base64) {
-            reject(new Error('That image is too large even after compressing — please choose a smaller one.'));
+            reject(new Error('That image is too detailed to attach, even after shrinking it. Please try a simpler or cropped image.'));
             return;
           }
           resolve(base64);
@@ -7578,6 +7591,8 @@
     const file = event.target.files && event.target.files[0];
     event.target.value = ''; // reset so choosing the same file again still fires 'change'
     if (!file || !editingAnnouncement) return;
+    const errEl = document.getElementById('announcementError');
+    if (errEl) errEl.classList.remove('show');
 
     if (!file.type || file.type.indexOf('image/') !== 0) {
       showToast('Please choose an image file.', 'error');
@@ -7593,6 +7608,10 @@
     } catch (err) {
       console.error('[Announcement] image processing failed:', err);
       showToast(err.message || 'Could not process that image.', 'error');
+      // Also show it in the editor itself: the toast disappears after a
+      // few seconds and is easy to miss, which made it look like
+      // "nothing happened" after choosing a file.
+      showAnnouncementError(err.message || 'Could not process that image.');
       if (attachBtn) { attachBtn.disabled = false; attachBtn.textContent = 'Attach Image'; }
     }
   }
