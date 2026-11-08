@@ -4319,25 +4319,73 @@
     'getProctoringAnnouncements'
   ]);
 
-  function jsonp(params) {
-    if (!params || !RETRY_SAFE_ACTIONS.has(params.action)) return jsonpOnce(params);
-    return jsonpOnce(params).catch(() => jsonpOnce(params));
+  function jsonp(params, opts) {
+    if (!params || !RETRY_SAFE_ACTIONS.has(params.action)) return jsonpOnce(params, opts);
+    return jsonpOnce(params, opts).catch(() => jsonpOnce(params, opts));
   }
 
-  function jsonpOnce(params) {
+  /* Request queue.
+     Apps Script only runs a handful of requests at once; the rest wait
+     in line on Google's side. The portal used to fire everything at once
+     on load (attendance, events, comments, plus one request per profile
+     photo, ~25 in total), so requests sat in Google's queue past the 10s
+     timeout, failed, were retried, and piled up further. That is what
+     made the announcement image upload (35+ requests in a row) fail.
+
+     Now at most JSONP_MAX_CONCURRENT requests are out at a time and the
+     rest wait here. The 10s timeout starts when a request is actually
+     sent, not while it waits. Profile photos are low priority, so a
+     clock-in or an upload never waits behind them. */
+  const JSONP_MAX_CONCURRENT = 4;
+  const JSONP_LOW_PRIORITY = new Set(['getEmployeePhoto']);
+  let jsonpActive = 0;
+  const jsonpQueueHigh = [];
+  const jsonpQueueLow = [];
+
+  function jsonpPump() {
+    while (jsonpActive < JSONP_MAX_CONCURRENT && (jsonpQueueHigh.length || jsonpQueueLow.length)) {
+      const job = jsonpQueueHigh.length ? jsonpQueueHigh.shift() : jsonpQueueLow.shift();
+      jsonpActive++;
+      jsonpSend(job.params, job.timeoutMs)
+        .then(job.resolve, job.reject)
+        .finally(() => { jsonpActive--; jsonpPump(); });
+    }
+  }
+
+  function jsonpOnce(params, opts) {
+    return new Promise((resolve, reject) => {
+      const job = { params, timeoutMs: (opts && opts.timeoutMs) || 10000, resolve, reject };
+      (params && JSONP_LOW_PRIORITY.has(params.action) ? jsonpQueueLow : jsonpQueueHigh).push(job);
+      jsonpPump();
+    });
+  }
+
+  function jsonpSend(params, timeoutMs) {
     return new Promise((resolve, reject) => {
       const callbackName = "jsonp_cb_" + Math.random().toString(36).slice(2);
       params = Object.assign({}, params, { callback: callbackName });
       const qs = Object.entries(params).map(([k, v]) => encodeURIComponent(k) + "=" + encodeURIComponent(v)).join("&");
       const script = document.createElement("script");
       script.src = GAS_WEB_APP_URL + "?" + qs;
-      const cleanup = () => { delete window[callbackName]; script.remove(); };
-      window[callbackName] = (data) => { resolve(data); cleanup(); };
-      script.onerror = () => { reject(new Error("Network error contacting the server.")); cleanup(); };
+      let settled = false;
+      const cleanup = () => {
+        // A reply that arrives after we gave up still calls this name.
+        // Leave a no-op behind for a while instead of deleting it, so a
+        // late reply is ignored quietly rather than throwing
+        // "jsonp_cb_... is not defined" in the console.
+        window[callbackName] = function () {};
+        setTimeout(() => { delete window[callbackName]; }, 120000);
+        script.remove();
+      };
+      window[callbackName] = (data) => { if (settled) return; settled = true; resolve(data); cleanup(); };
+      script.onerror = () => { if (settled) return; settled = true; reject(new Error("Network error contacting the server.")); cleanup(); };
       document.body.appendChild(script);
       setTimeout(() => {
-        if (window[callbackName]) { reject(new Error("The server is taking too long to respond. Please try again in a moment.")); cleanup(); }
-      }, 10000);
+        if (settled) return;
+        settled = true;
+        reject(new Error("The server is taking too long to respond. Please try again in a moment."));
+        cleanup();
+      }, timeoutMs);
     });
   }
 
@@ -4499,7 +4547,7 @@
     loadBirthdays();
     if (!window.__attendancePollStarted) {
       window.__attendancePollStarted = true;
-      setInterval(() => loadAttendance(true), 15000);
+      setInterval(() => { if (!announcementUploadInProgress) loadAttendance(true); }, 15000);
     }
   }
 
@@ -4730,8 +4778,28 @@
   // re-transfer everyone's full photo data, whether it had changed or
   // not). Real bytes are fetched here only for whichever photos this
   // cache doesn't have yet, or has a stale version of.
-  let photoCache = {};
+  // Kept in localStorage too, so returning visitors don't re-download
+  // every profile photo on each page load (that was ~22 requests per
+  // visit, per person). Entries carry their version, so a changed photo
+  // is still fetched fresh.
+  const PHOTO_CACHE_KEY = 'fa_photo_cache_v1';
+  let photoCache = (() => {
+    try { return JSON.parse(localStorage.getItem(PHOTO_CACHE_KEY)) || {}; } catch (e) { return {}; }
+  })();
   let photoFetchInFlight = {};
+  // After a failed fetch, wait before trying that photo again. Without
+  // this, every grid refresh retried every failed photo, adding load to
+  // a server that was already too slow.
+  const PHOTO_RETRY_AFTER_MS = 60000;
+  let photoFetchFailedAt = {};
+  let photoCacheSaveTimer = null;
+  function savePhotoCacheSoon() {
+    clearTimeout(photoCacheSaveTimer);
+    photoCacheSaveTimer = setTimeout(() => {
+      try { localStorage.setItem(PHOTO_CACHE_KEY, JSON.stringify(photoCache)); }
+      catch (e) { /* storage full or blocked: in-memory cache still works */ }
+    }, 1000);
+  }
 
   function avatarHtmlFor(name) {
     const version = currentData.photoVersions && currentData.photoVersions[name];
@@ -4748,11 +4816,14 @@
 
   async function ensurePhotoCached(name, version) {
     if (photoFetchInFlight[name] === version) return; // already fetching this exact version
+    if (photoFetchFailedAt[name] && Date.now() - photoFetchFailedAt[name] < PHOTO_RETRY_AFTER_MS) return;
     photoFetchInFlight[name] = version;
     try {
       const result = await jsonp({ action: 'getEmployeePhoto', name: name });
       if (result.success) {
         photoCache[name] = { dataUri: 'data:image/jpeg;base64,' + result.photoBase64, updatedAt: result.updatedAt };
+        delete photoFetchFailedAt[name];
+        savePhotoCacheSoon();
         // Only re-render if this is still the version currently expected —
         // guards against a slow response clobbering a newer one that
         // already arrived and rendered first.
@@ -4766,6 +4837,7 @@
       }
     } catch (err) {
       console.error('[Photo] fetch failed for ' + name + ':', err);
+      photoFetchFailedAt[name] = Date.now();
     }
     delete photoFetchInFlight[name];
   }
@@ -6934,6 +7006,7 @@
     '</svg>';
 
   let editingAnnouncement = false;
+  let announcementUploadInProgress = false; // pauses the 15s refresh while an image uploads
 
   // Caches the fetched announcement image (as a ready-to-use data URI)
   // so the 15-second poll doesn't re-fetch tens of KB of image data
@@ -7477,14 +7550,22 @@
     announcementImageFetchInFlight = true;
     try {
       const result = await jsonp({ action: 'getAnnouncementImage' });
-      if (!result.success) return; // image may have been removed between poll and fetch — fine, just skip
-      cachedAnnouncementImageDataUri = 'data:image/jpeg;base64,' + result.imageBase64;
-      cachedAnnouncementImageUpdatedAt = ann.imageUpdatedAt;
-      renderAnnouncement(); // re-render now that the image is ready
+      console.debug('[Announcement] getAnnouncementImage response:', result && result.success, result && result.message);
+      if (result.success && result.imageBase64) {
+        cachedAnnouncementImageDataUri = 'data:image/jpeg;base64,' + result.imageBase64;
+        cachedAnnouncementImageUpdatedAt = ann.imageUpdatedAt;
+        renderAnnouncement(); // re-render now that the image is ready
+      }
+      // On failure, fall through: the next 15s refresh tries again.
     } catch (err) {
       console.error('[Announcement] image fetch failed:', err);
+    } finally {
+      // Previously an unsuccessful response returned early and skipped
+      // this reset, so after one failed fetch the image was never
+      // requested again and stayed on "Loading attachment…" (or blank)
+      // until a full page reload.
+      announcementImageFetchInFlight = false;
     }
-    announcementImageFetchInFlight = false;
   }
 
   function openAnnouncementImageLightbox(dataUri) {
@@ -7637,27 +7718,46 @@
   // CacheService (same pattern as uploadPhotoChunk) and only writes to
   // the AnnouncementImage sheet once the final chunk arrives. Unlike
   // profile photos, this is admin-gated — it carries adminToken.
-  async function uploadAnnouncementImageChunks(base64Data) {
+  async function uploadAnnouncementImageChunks(base64Data, onProgress) {
     const CHUNK_SIZE = 1200;
     const chunks = [];
     for (let i = 0; i < base64Data.length; i += CHUNK_SIZE) {
       chunks.push(base64Data.slice(i, i + CHUNK_SIZE));
     }
     const uploadId = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    announcementUploadInProgress = true;
+    try {
     for (let i = 0; i < chunks.length; i++) {
-      const result = await jsonp({
-        action: 'uploadAnnouncementImageChunk',
-        email: currentUserEmail,
-        adminToken: currentAdminToken,
-        uploadId: uploadId,
-        chunkIndex: i,
-        totalChunks: chunks.length,
-        chunkData: chunks[i]
-      });
+      // Each piece is retried up to twice if the server is slow. Resending
+      // a piece is safe: it carries the same uploadId and chunkIndex, so
+      // the backend just stores the same piece again.
+      let result = null;
+      let lastErr = null;
+      for (let attempt = 0; attempt < 3 && !result; attempt++) {
+        try {
+          result = await jsonpOnce({
+            action: 'uploadAnnouncementImageChunk',
+            email: currentUserEmail,
+            adminToken: currentAdminToken,
+            uploadId: uploadId,
+            chunkIndex: i,
+            totalChunks: chunks.length,
+            chunkData: chunks[i]
+          }, { timeoutMs: 25000 });
+        } catch (err) {
+          lastErr = err;
+          console.warn('[Announcement] image chunk ' + (i + 1) + '/' + chunks.length + ' attempt ' + (attempt + 1) + ' failed:', err.message);
+        }
+      }
+      if (!result) throw lastErr || new Error('Image upload failed.');
       console.debug('[Announcement] image chunk ' + (i + 1) + '/' + chunks.length + ' response:', result);
       if (!result.success) {
         throw new Error(result.message || 'Image upload failed.');
       }
+      if (onProgress) onProgress(i + 1, chunks.length);
+    }
+    } finally {
+      announcementUploadInProgress = false;
     }
   }
 
@@ -7701,7 +7801,11 @@
       if (pendingAnnouncementImageBase64) {
         saveBtn.textContent = 'Uploading image…';
         try {
-          await uploadAnnouncementImageChunks(pendingAnnouncementImageBase64);
+          // An image goes up in ~30-40 small pieces, one request each, so
+          // this can take a minute. Show progress so it doesn't look stuck.
+          await uploadAnnouncementImageChunks(pendingAnnouncementImageBase64, (done, total) => {
+            saveBtn.textContent = 'Uploading image… ' + Math.round(done / total * 100) + '%';
+          });
         } catch (imgErr) {
           console.error('[Announcement] image upload failed:', imgErr);
           showToast(imgErr.message || 'Announcement saved, but the image failed to upload.', 'error');
