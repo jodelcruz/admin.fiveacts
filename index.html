@@ -3584,6 +3584,14 @@
     /* Next three on phones; "View All" has the rest */
     .upcoming-event-row:nth-child(n+4) { display: none; }
   }
+
+  /* ── Attendance freshness note ── */
+  .section-heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
+  .attendance-sync-note { font-size: 12px; color: var(--gray-mid); font-variant-numeric: tabular-nums; }
+  .attendance-sync-note.pending { color: var(--gray-mid); font-style: italic; }
+  .attendance-sync-note.warn { color: #b7791f; font-weight: 600; }
+  [data-theme="dark"] .attendance-sync-note { color: #8fa39d; }
+  [data-theme="dark"] .attendance-sync-note.warn { color: #f0c56a; }
 </style>
 </head>
 <body>
@@ -3632,7 +3640,7 @@
       are set in the Apps Script backend) before using it.
     </div>
   </div>
-  <div class="login-footnote">Five Acts Services Corp. &middot; Internal use only &middot; v2026.10.31</div>
+  <div class="login-footnote">Five Acts Services Corp. &middot; Internal use only &middot; v2026.11.10</div>
 </div>
 
 <!-- ══════════════ MAIN APP (post-login) ══════════════ -->
@@ -3746,6 +3754,7 @@
                 <circle cx="22" cy="27" r="3.5" fill="#e0284f"/>
               </svg>
             </span></h2>
+            <span class="attendance-sync-note" id="attendanceSyncNote" aria-live="polite"></span>
           </div>
 
           <div class="grid-toolbar">
@@ -4083,7 +4092,7 @@
     <span class="app-footer-sep" aria-hidden="true">&middot;</span>
     <span>Alabang, Muntinlupa, Philippines</span>
     <span class="app-footer-sep" aria-hidden="true">&middot;</span>
-    <span class="app-footer-version">Staff Portal v2026.10.31</span>
+    <span class="app-footer-version">Staff Portal v2026.11.10</span>
   </footer>
 </div>
 
@@ -4543,6 +4552,7 @@
     const adminLink = document.getElementById('adminNavLink');
     if (adminLink) adminLink.style.display = currentIsAdmin ? 'flex' : 'none';
 
+    showCachedAttendanceIfAny();
     loadAttendance();
     loadBirthdays();
     if (!window.__attendancePollStarted) {
@@ -4554,6 +4564,9 @@
   function handleLogout() {
     sessionStorage.removeItem(SESSION_KEY);
     clearPersistedSession();
+    clearAttendanceCache();
+    currentData.names = [];
+    attendanceLastUpdatedAt = 0;
     sessionStorage.removeItem('fa_birthday_popup_shown');
     document.getElementById('appPage').classList.remove('open');
     // Clearing the inline override (rather than hardcoding 'block')
@@ -5690,19 +5703,34 @@
 
   function showAttendanceLoadFailure(message, isBackground) {
     console.error('[Attendance] load failed:', message);
-    // Background polls stay quiet — a toast every 15 seconds during an
-    // outage would just be noise. Only a person-initiated load toasts.
-    if (!isBackground) showToast(message, 'error');
-    // If the very first load never succeeded, the grid would otherwise sit
-    // on its placeholder forever — give it a way out.
+    const haveData = currentData.names && currentData.names.length > 0;
+    if (haveData) {
+      // Keep showing what we have, and say how old it is. No toast:
+      // during a slow spell that would pop up every 15 seconds.
+      setAttendanceSyncNote('Couldn\u2019t refresh · showing ' + formatSyncTime(attendanceLastUpdatedAt) + ' data', 'warn');
+      return;
+    }
+    // Nothing on screen yet: retry automatically a few times before
+    // asking the person to press Retry.
     const grid = document.getElementById('empGrid');
-    if (grid && (!currentData.names || currentData.names.length === 0)) {
-      grid.innerHTML = '<div class="grid-load-error"><span>Couldn\u2019t load attendance.</span>' +
+    if (attendanceAutoRetryCount < ATTENDANCE_AUTO_RETRY_MS.length) {
+      const wait = ATTENDANCE_AUTO_RETRY_MS[attendanceAutoRetryCount++];
+      if (grid) grid.innerHTML = skeletonGridHtml();
+      setAttendanceSyncNote('Server is slow · trying again in ' + Math.round(wait / 1000) + 's…', 'pending');
+      clearTimeout(attendanceAutoRetryTimer);
+      attendanceAutoRetryTimer = setTimeout(() => loadAttendance(), wait);
+      return;
+    }
+    if (!isBackground) showToast(message, 'error');
+    setAttendanceSyncNote('', '');
+    if (grid) {
+      grid.innerHTML = '<div class="grid-load-error"><span>Couldn\u2019t load attendance. The server is busy.</span>' +
         '<button type="button" class="grid-retry-btn" onclick="retryLoadAttendance()">Retry</button></div>';
     }
   }
 
   function retryLoadAttendance() {
+    attendanceAutoRetryCount = 0;
     const grid = document.getElementById('empGrid');
     if (grid) grid.innerHTML = skeletonGridHtml();
     loadAttendance();
@@ -5715,13 +5743,97 @@
     if (grid) grid.innerHTML = skeletonGridHtml();
   })();
 
-  async function loadAttendance(isBackground) {
-    if (!isConfigured()) return;
+  /* Attendance loading.
+     getAttendanceToday is the slowest request the portal makes (it reads
+     today's punches plus everyone's last punch across all dates), and it
+     regularly needed more than the 10 seconds the portal allowed, so it
+     failed and showed "Couldn't load attendance". Now:
+       - it gets 30 seconds (plus the existing one retry);
+       - the last good copy of today's attendance is kept in the browser,
+         so the dashboard appears instantly on the next visit and then
+         updates when fresh data arrives;
+       - only one load runs at a time (a 15s refresh doesn't stack on
+         top of a slow load still in progress);
+       - if the very first load fails, it retries by itself after 5s,
+         15s and 30s, and the Retry button still works.
+     A small note beside "Team Attendance" says how fresh the data is. */
+  const ATTENDANCE_TIMEOUT_MS = 30000;
+  const ATTENDANCE_CACHE_KEY = 'fa_attendance_cache_v1';
+  const ATTENDANCE_AUTO_RETRY_MS = [5000, 15000, 30000];
+  let attendanceLoadPromise = null;
+  let attendanceLastUpdatedAt = 0;
+  let attendanceAutoRetryCount = 0;
+  let attendanceAutoRetryTimer = null;
+
+  function manilaTodayIso() {
     try {
-      const result = await jsonp({ action: 'getAttendanceToday', email: currentUserEmail });
+      return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    } catch (e) { return ''; }
+  }
+
+  function setAttendanceSyncNote(text, kind) {
+    const el = document.getElementById('attendanceSyncNote');
+    if (!el) return;
+    el.textContent = text || '';
+    el.className = 'attendance-sync-note' + (kind ? ' ' + kind : '');
+  }
+
+  function formatSyncTime(ms) {
+    return new Date(ms).toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' });
+  }
+
+  function saveAttendanceCache(data) {
+    try {
+      localStorage.setItem(ATTENDANCE_CACHE_KEY, JSON.stringify({ email: currentUserEmail, savedAt: Date.now(), data: data }));
+    } catch (e) { /* storage full or blocked: not critical */ }
+  }
+
+  function clearAttendanceCache() {
+    try { localStorage.removeItem(ATTENDANCE_CACHE_KEY); } catch (e) {}
+  }
+
+  // Show the last saved copy right away, but only if it is today's
+  // (Manila) attendance for this same signed-in person. Yesterday's
+  // punches must never appear as today's.
+  function showCachedAttendanceIfAny() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(ATTENDANCE_CACHE_KEY));
+      if (!saved || saved.email !== currentUserEmail || !saved.data || !saved.data.names) return false;
+      if (saved.data.date !== manilaTodayIso()) return false;
+      currentData = saved.data;
+      attendanceLastUpdatedAt = saved.savedAt;
+      document.getElementById('dateTag').textContent = formatFullDate(saved.data.date);
+      renderGrid();
+      renderMyStatus();
+      renderAnnouncement();
+      setAttendanceSyncNote('Showing ' + formatSyncTime(saved.savedAt) + ' data · updating…', 'pending');
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function loadAttendance(isBackground) {
+    if (!isConfigured()) return Promise.resolve();
+    if (attendanceLoadPromise) {
+      // A load is already running: a background refresh just skips; a
+      // person-initiated one waits for the same result.
+      return isBackground ? Promise.resolve() : attendanceLoadPromise;
+    }
+    attendanceLoadPromise = loadAttendanceNow(isBackground).finally(() => { attendanceLoadPromise = null; });
+    return attendanceLoadPromise;
+  }
+
+  async function loadAttendanceNow(isBackground) {
+    if (!attendanceLastUpdatedAt) setAttendanceSyncNote('Loading…', 'pending');
+    try {
+      const result = await jsonp({ action: 'getAttendanceToday', email: currentUserEmail }, { timeoutMs: ATTENDANCE_TIMEOUT_MS });
       console.debug('[Attendance] getAttendanceToday response:', result);
       if (!result.success) { showAttendanceLoadFailure(result.message || 'Could not load attendance.', isBackground); return; }
       currentData = result;
+      attendanceLastUpdatedAt = Date.now();
+      attendanceAutoRetryCount = 0;
+      clearTimeout(attendanceAutoRetryTimer);
+      saveAttendanceCache(result);
+      setAttendanceSyncNote('Updated ' + formatSyncTime(attendanceLastUpdatedAt), '');
       document.getElementById('dateTag').textContent = formatFullDate(result.date);
       renderGrid();
       renderMyStatus();
