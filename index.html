@@ -3592,7 +3592,23 @@
   .attendance-sync-note.warn { color: #b7791f; font-weight: 600; }
   [data-theme="dark"] .attendance-sync-note { color: #8fa39d; }
   [data-theme="dark"] .attendance-sync-note.warn { color: #f0c56a; }
+
+  /* ── Google sign-in ── */
+  .login-card .google-btn {
+    display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%;
+    margin-top: 6px; padding: 13px 16px; border-radius: 10px; cursor: pointer;
+    background: #fff; color: #1f1f1f; border: 1px solid #dadce0;
+    font-family: inherit; font-size: 15px; font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06); transition: background 0.15s, box-shadow 0.15s, border-color 0.15s;
+  }
+  .login-card .google-btn:hover { background: #f8faf9; border-color: var(--green); box-shadow: 0 2px 8px rgba(58,181,74,0.18); }
+  .login-card .google-btn:disabled { opacity: 0.7; cursor: wait; }
+  .login-card .google-btn svg { flex-shrink: 0; }
+  [data-theme="dark"] .login-card .google-btn { background: #1f2b28; color: #e8efec; border-color: #3a4a46; }
+  .login-card .google-note { text-align: center; font-size: 12.5px; color: var(--gray-mid); margin: 10px 0 0; }
+  [data-theme="dark"] .login-card .google-note { color: #8fa39d; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
 </head>
 <body>
 
@@ -3603,6 +3619,12 @@
     <h1>Staff Portal</h1>
     <p class="sub">Five Acts Services Corp. employees only.</p>
 
+    <button type="button" class="primary google-btn" id="googleSignInBtn" onclick="signInWithGoogle()">
+      <svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+      <span>Sign in with Google</span>
+    </button>
+    <p class="google-note">Use your @fiveactsservices.com account.</p>
+    <div class="legacy-auth" hidden>
     <div class="auth-tabs">
       <button type="button" id="tabSignIn" class="active" onclick="showTab('signin')">Sign In</button>
       <button type="button" id="tabCreate" onclick="showTab('create')">Create Account</button>
@@ -3633,6 +3655,7 @@
       <button type="button" onclick="handleResendVerification()">Resend email</button>
     </div>
 
+    </div>
     <div class="login-status" id="loginStatus"></div>
     <div class="config-warning" id="configWarning">
       This portal isn't configured yet. Set <code>GAS_WEB_APP_URL</code> below
@@ -3640,7 +3663,7 @@
       are set in the Apps Script backend) before using it.
     </div>
   </div>
-  <div class="login-footnote">Five Acts Services Corp. &middot; Internal use only &middot; v2026.11.10</div>
+  <div class="login-footnote">Five Acts Services Corp. &middot; Internal use only &middot; v2026.11.16</div>
 </div>
 
 <!-- ══════════════ MAIN APP (post-login) ══════════════ -->
@@ -4092,7 +4115,7 @@
     <span class="app-footer-sep" aria-hidden="true">&middot;</span>
     <span>Alabang, Muntinlupa, Philippines</span>
     <span class="app-footer-sep" aria-hidden="true">&middot;</span>
-    <span class="app-footer-version">Staff Portal v2026.11.10</span>
+    <span class="app-footer-version">Staff Portal v2026.11.16</span>
   </footer>
 </div>
 
@@ -4264,6 +4287,282 @@
   }
 
   const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx6QqqY7RYbdeHmX03kSF8gbnSAQn9aceLYBKXHyQ7i_avcXb8o3LF6DLQlW4C9FOC4/exec";
+
+  /* =====================================================================
+     SUPABASE BACKEND (replaces the Google Apps Script / Sheets backend)
+     ---------------------------------------------------------------------
+     Every screen in the portal still asks for data the same way it always
+     has (jsonp({ action: 'getAttendanceToday', ... })). Instead of going to
+     Google Apps Script, those requests now come here and are answered by
+     Supabase. That keeps all existing screens and features unchanged.
+
+     Security is enforced by the database itself (see supabase_setup.sql):
+     sign-in is via the person's Google account, and the database decides
+     what each signed-in person may read or change. The key below is the
+     PUBLIC "publishable" key, designed to be in website code.
+     ===================================================================== */
+  const SUPABASE_URL = 'https://frwlywcmagiheihdgjjy.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Yz8DFu6H6rEur2vjJSEUlw_oAGMy1Nq';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' }
+  });
+  const ALLOWED_GOOGLE_DOMAIN = 'fiveactsservices.com';
+  const sbUploadBuffers = {}; // chunked uploads are reassembled here, then sent in one request
+
+  // Supabase errors come in two kinds: the server said no (permission,
+  // validation...), which becomes { success: false, message }, the same
+  // as before; or the request never got an answer (network), which is
+  // thrown so the existing retry logic still kicks in.
+  function sbIsNetworkError(error) {
+    const msg = String((error && (error.message || error)) || '');
+    return /Failed to fetch|NetworkError|Load failed|network|fetch/i.test(msg) && !(error && error.code);
+  }
+  function sbFail(error, fallback) {
+    if (sbIsNetworkError(error)) throw new Error('Network error contacting the server.');
+    let msg = (error && error.message) || fallback || 'Something went wrong.';
+    if (error && error.code === '42501') msg = 'You don\u2019t have access to do that.';
+    if (error && error.code === '23503') msg = fallback || 'That record is still linked to attendance history.';
+    if (error && error.code === '23505') msg = fallback || 'That already exists.';
+    return { success: false, message: msg };
+  }
+  function sbMe() { return (currentUserEmail || '').toLowerCase(); }
+  function sbManilaTime(iso) {
+    return new Date(iso).toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', hour12: true });
+  }
+  async function sbRpc(fn, args, fallback) {
+    const { data, error } = await sb.rpc(fn, args || {});
+    if (error) return sbFail(error, fallback);
+    return data;
+  }
+
+  async function supabaseAction(p) {
+    const a = p.action;
+
+    if (a === 'getAttendanceToday') return sbRpc('get_board');
+
+    if (a === 'getEmployeePhoto') {
+      const { data, error } = await sb.from('photos').select('photo_base64, updated_at').eq('employee_name', p.name).maybeSingle();
+      if (error) return sbFail(error);
+      if (!data) return { success: false, message: 'No photo on file.' };
+      return { success: true, photoBase64: data.photo_base64, updatedAt: data.updated_at };
+    }
+
+    if (a === 'uploadPhotoChunk' || a === 'uploadAnnouncementImageChunk') {
+      const key = a + ':' + p.uploadId;
+      const idx = parseInt(p.chunkIndex, 10), total = parseInt(p.totalChunks, 10);
+      (sbUploadBuffers[key] = sbUploadBuffers[key] || [])[idx] = p.chunkData;
+      if (idx < total - 1) return { success: true, done: false };
+      const full = sbUploadBuffers[key].join('');
+      delete sbUploadBuffers[key];
+      if (a === 'uploadPhotoChunk') {
+        const { error } = await sb.from('photos').upsert({ employee_name: p.name, photo_base64: full }, { onConflict: 'employee_name' });
+        if (error) return sbFail(error, 'You can only change your own photo.');
+        return { success: true, done: true };
+      }
+      const r = await sbRpc('set_announcement_image', { p_base64: full });
+      return r && r.success ? { success: true, done: true } : r;
+    }
+
+    if (a === 'setPin') return sbRpc('set_pin', { p_pin_hash: p.pinHash });
+    if (a === 'resetPin') return sbRpc('reset_pin');
+    if (a === 'punch') return sbRpc('clock', { p_type: p.type, p_note: p.note || '', p_pin_hash: p.pinHash });
+    if (a === 'getEmployeeHistory') return sbRpc('get_employee_history', { p_name: p.name, p_month: p.month || '' });
+
+    if (a === 'getAnnouncementImage') {
+      const { data, error } = await sb.from('announcement_image').select('image_base64').eq('id', 1).maybeSingle();
+      if (error) return sbFail(error);
+      return data && data.image_base64 ? { success: true, imageBase64: data.image_base64 } : { success: false, message: 'No announcement image.' };
+    }
+    if (a === 'setAnnouncement') return sbRpc('save_announcement', { p_body: p.text || '' });
+    if (a === 'clearAnnouncementImage') return sbRpc('clear_announcement_image');
+
+    if (a === 'setAnnouncementReaction') {
+      const { error } = await sb.from('announcement_reactions').upsert({ email: sbMe(), emoji: p.emoji }, { onConflict: 'email' });
+      return error ? sbFail(error, 'Could not update reaction.') : { success: true };
+    }
+    if (a === 'removeAnnouncementReaction') {
+      const { error } = await sb.from('announcement_reactions').delete().eq('email', sbMe());
+      return error ? sbFail(error, 'Could not update reaction.') : { success: true };
+    }
+
+    if (a === 'getAnnouncementComments') {
+      const { data, error } = await sb.from('announcement_comments').select('*').order('created_at', { ascending: true });
+      if (error) return sbFail(error);
+      return { success: true, comments: (data || []).map(c => ({
+        id: c.id, text: c.body, postedByName: c.posted_by_name || c.posted_by_email,
+        createdAt: c.created_at || '', updatedAt: c.updated_at || '', canEdit: c.posted_by_email === sbMe()
+      })) };
+    }
+    if (a === 'addAnnouncementComment') {
+      const { data, error } = await sb.from('announcement_comments').insert({ body: String(p.text || '').trim() }).select('id').single();
+      return error ? sbFail(error, 'Could not post comment.') : { success: true, id: data.id };
+    }
+    if (a === 'updateAnnouncementComment') {
+      const { data, error } = await sb.from('announcement_comments').update({ body: String(p.text || '').trim() }).eq('id', p.id).select('id');
+      if (error) return sbFail(error, 'Could not update comment.');
+      return data && data.length ? { success: true } : { success: false, message: 'You can only edit your own comments.' };
+    }
+    if (a === 'deleteAnnouncementComment') {
+      const { error } = await sb.from('announcement_comments').delete().eq('id', p.id);
+      return error ? sbFail(error, 'Could not delete comment.') : { success: true };
+    }
+
+    if (a === 'getBirthdays') {
+      const { data, error } = await sb.from('birthdays').select('*');
+      if (error) return sbFail(error);
+      return { success: true, birthdays: (data || []).map(b => ({ id: b.id, name: b.name, month: b.month, day: b.day, isAnniversary: !!b.is_anniversary })) };
+    }
+    if (a === 'addBirthday' || a === 'updateBirthday') {
+      const row = { name: String(p.name || '').trim(), month: parseInt(p.month, 10), day: parseInt(p.day, 10), is_anniversary: p.isAnniversary === true || p.isAnniversary === 'true' };
+      if (!row.name) return { success: false, message: 'Name is required.' };
+      if (!(row.month >= 1 && row.month <= 12)) return { success: false, message: 'Please choose a valid month.' };
+      if (!(row.day >= 1 && row.day <= 31)) return { success: false, message: 'Please enter a valid day (1-31).' };
+      const q = a === 'addBirthday' ? sb.from('birthdays').insert(row).select('id') : sb.from('birthdays').update(row).eq('id', p.id).select('id');
+      const { data, error } = await q;
+      if (error) return sbFail(error, 'Could not save this entry.');
+      if (!data || !data.length) return { success: false, message: 'Admin access required.' };
+      return { success: true, id: data[0].id };
+    }
+    if (a === 'deleteBirthday') {
+      const { data, error } = await sb.from('birthdays').delete().eq('id', p.id).select('id');
+      if (error) return sbFail(error, 'Could not remove this entry.');
+      return data && data.length ? { success: true } : { success: false, message: 'Admin access required.' };
+    }
+
+    if (a === 'getApacSchedule') {
+      const { data, error } = await sb.from('apac_schedule').select('schedule').eq('id', 1).maybeSingle();
+      if (error) return sbFail(error);
+      return data ? { success: true, schedule: data.schedule } : { success: false, message: 'No schedule saved yet.' };
+    }
+    if (a === 'setApacSchedule') {
+      let schedule;
+      try { schedule = JSON.parse(p.scheduleJson); } catch (e) { return { success: false, message: 'Malformed schedule data.' }; }
+      const { data, error } = await sb.from('apac_schedule').upsert({ id: 1, schedule: schedule, updated_by: sbMe(), updated_at: new Date().toISOString() }, { onConflict: 'id' }).select('id');
+      if (error) return sbFail(error, 'Admin access required.');
+      return data && data.length ? { success: true } : { success: false, message: 'Admin access required.' };
+    }
+
+    if (a === 'getManagedEmployees') {
+      const { data, error } = await sb.from('staff').select('*').order('display_name');
+      if (error) return sbFail(error);
+      return { success: true, employees: (data || [])
+        .filter(s => s.display_name && !/@no-login\.invalid$/.test(s.email))
+        .map(s => ({ name: s.display_name, email: s.email, isAdmin: !!s.is_admin, source: s.added_via_admin ? 'added' : 'base', active: !!s.active })) };
+    }
+    if (a === 'addEmployee') {
+      const name = String(p.newName || '').trim(), email = String(p.newEmail || '').trim().toLowerCase();
+      if (!name) return { success: false, message: 'Name is required.' };
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { success: false, message: 'A valid email is required.' };
+      const { error } = await sb.from('staff').insert({ email: email, display_name: name, is_admin: p.makeAdmin === true || p.makeAdmin === 'true', active: true, added_via_admin: true });
+      return error ? sbFail(error, 'That name or email is already on the staff list.') : { success: true };
+    }
+    if (a === 'removeEmployee') {
+      const { data, error } = await sb.from('staff').delete().eq('email', String(p.targetEmail || '').toLowerCase()).select('email');
+      if (error) return sbFail(error, 'This person already has attendance history, so they can\u2019t be removed. Deactivate them instead.');
+      return data && data.length ? { success: true } : { success: false, message: 'Only people added through this page can be removed. Use Deactivate instead.' };
+    }
+    if (a === 'deactivateEmployee' || a === 'reactivateEmployee') {
+      const { data, error } = await sb.from('staff').update({ active: a === 'reactivateEmployee' }).eq('display_name', p.targetName).select('email');
+      if (error) return sbFail(error);
+      return data && data.length ? { success: true } : { success: false, message: 'Admin access required.' };
+    }
+
+    if (a === 'getAttendanceHistory') {
+      const PAGE = 500;
+      const page = Math.max(parseInt(p.page, 10) || 1, 1);
+      let q = sb.from('punches').select('punch_date, employee_name, punch_type, punched_at, note', { count: 'exact' });
+      if (p.name) q = q.eq('employee_name', p.name);
+      if (p.from) q = q.gte('punch_date', p.from);
+      if (p.to) q = q.lte('punch_date', p.to);
+      const { data, error, count } = await q.order('punched_at', { ascending: false }).order('id', { ascending: false }).range((page - 1) * PAGE, page * PAGE - 1);
+      if (error) return sbFail(error);
+      const totalMatched = count || 0;
+      return {
+        success: true,
+        rows: (data || []).map(r => ({ date: r.punch_date, name: r.employee_name, type: r.punch_type, time: sbManilaTime(r.punched_at), note: r.note || '' })),
+        names: (currentData && currentData.names) || [],
+        totalMatched: totalMatched, page: page, totalPages: Math.max(1, Math.ceil(totalMatched / PAGE)), pageSize: PAGE
+      };
+    }
+
+    if (a === 'login' || a === 'register' || a === 'forgotPassword' || a === 'resendVerification') {
+      return { success: false, message: 'Please use \u201cSign in with Google\u201d.' };
+    }
+    return { success: false, message: 'Unknown action: ' + a };
+  }
+
+  /* ---------- Google sign-in ---------- */
+  async function signInWithGoogle() {
+    const btn = document.getElementById('googleSignInBtn');
+    if (btn) { btn.disabled = true; btn.querySelector('span').textContent = 'Opening Google\u2026'; }
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + window.location.pathname,
+        queryParams: { hd: ALLOWED_GOOGLE_DOMAIN, prompt: 'select_account' }
+      }
+    });
+    if (error) {
+      if (btn) { btn.disabled = false; btn.querySelector('span').textContent = 'Sign in with Google'; }
+      setStatus(error.message || 'Could not start Google sign-in.', 'error');
+    }
+  }
+
+  // Called with the current Supabase session (or none). Asks the database
+  // who this person is; only people on the staff list get in.
+  let sbStartedFor = null;
+  async function startFromSupabaseSession(session) {
+    if (!session) return;
+    const email = (session.user && session.user.email || '').toLowerCase();
+    if (sbStartedFor === email) return;
+    let who;
+    try {
+      who = await sbRpc('whoami');
+    } catch (e) {
+      setStatus('Could not reach the server. Please try again.', 'error');
+      return;
+    }
+    if (!who || !who.allowed) {
+      setStatus(email + ' isn\u2019t on the staff list. Sign in with your @' + ALLOWED_GOOGLE_DOMAIN + ' account, or ask an admin to add you.', 'error');
+      await sb.auth.signOut();
+      return;
+    }
+    sbStartedFor = email;
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+      email: who.email, matchedName: who.name || null, isAdmin: !!who.isAdmin, adminToken: who.isAdmin ? 'supabase' : null
+    }));
+    // Tidy the address bar after returning from Google (?code=...)
+    if (/[?&](code|error)=/.test(window.location.search)) {
+      try { history.replaceState(null, '', window.location.pathname + window.location.hash); } catch (e) {}
+    }
+    showApp(who.email);
+    startRealtime();
+  }
+
+  /* ---------- Live updates ----------
+     When anyone clocks in/out, reacts or comments, the database tells every
+     open portal straight away, so the board updates without waiting for
+     the next refresh. */
+  let sbRealtimeChannel = null;
+  let sbRealtimeTimer = null;
+  function sbScheduleRefresh() {
+    clearTimeout(sbRealtimeTimer);
+    sbRealtimeTimer = setTimeout(() => { if (currentUserEmail) loadAttendance(true); }, 400);
+  }
+  function startRealtime() {
+    if (sbRealtimeChannel) return;
+    sbRealtimeChannel = sb.channel('portal-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'punches' }, sbScheduleRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'announcement' }, sbScheduleRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'announcement_reactions' }, sbScheduleRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'announcement_comments' }, () => {
+        try { commentsLoadedForUpdatedAt = null; loadAnnouncementComments(currentData.announcement.updatedAt); } catch (e) {}
+      })
+      .subscribe();
+  }
+  function stopRealtime() {
+    if (sbRealtimeChannel) { try { sb.removeChannel(sbRealtimeChannel); } catch (e) {} sbRealtimeChannel = null; }
+  }
   const SESSION_KEY = "fa_staff_session";
   // Opt-in "Keep me signed in": a copy of the session in localStorage so
   // a new tab or browser restart skips the sign-in screen. Everything
@@ -4303,7 +4602,7 @@
   let currentAdminToken = null;
 
   function isConfigured() {
-    return GAS_WEB_APP_URL && !GAS_WEB_APP_URL.startsWith("REPLACE_");
+    return true; // Supabase backend
   }
   if (!isConfigured()) {
     window.addEventListener('DOMContentLoaded', function () {
@@ -4330,7 +4629,19 @@
 
   function jsonp(params, opts) {
     if (!params || !RETRY_SAFE_ACTIONS.has(params.action)) return jsonpOnce(params, opts);
-    return jsonpOnce(params, opts).catch(() => jsonpOnce(params, opts));
+    // Read-only requests are retried up to 3 times, waiting a little
+    // longer each time (about 2s, 4s, 8s, randomised). When Google is at
+    // its limit it turns extra requests away; an instant retry would just
+    // be turned away again, and a random wait spreads everyone out.
+    // Photos don't retry here at all: a failed photo just waits a minute
+    // (see PHOTO_RETRY_AFTER_MS), which matters far less than the extra load.
+    const maxRetries = JSONP_LOW_PRIORITY.has(params.action) ? 0 : 3;
+    const attempt = (n) => jsonpOnce(params, opts).catch(err => {
+      if (n >= maxRetries) throw err;
+      const wait = (2000 * Math.pow(2, n)) * (0.6 + Math.random() * 0.8);
+      return new Promise(r => setTimeout(r, wait)).then(() => attempt(n + 1));
+    });
+    return attempt(0);
   }
 
   /* Request queue.
@@ -4345,7 +4656,12 @@
      rest wait here. The 10s timeout starts when a request is actually
      sent, not while it waits. Profile photos are low priority, so a
      clock-in or an upload never waits behind them. */
-  const JSONP_MAX_CONCURRENT = 4;
+  // Google runs at most ~30 requests at once for the whole script (it
+  // executes as the owner's account, so every employee's tab shares that
+  // one limit). With 25 people each sending 4 at once at the start of a
+  // shift, requests beyond the limit were rejected outright. 2 per tab
+  // keeps the whole team under it.
+  const JSONP_MAX_CONCURRENT = 6; // Supabase has no shared 30-request limit
   const JSONP_LOW_PRIORITY = new Set(['getEmployeePhoto']);
   let jsonpActive = 0;
   const jsonpQueueHigh = [];
@@ -4353,6 +4669,10 @@
 
   function jsonpPump() {
     while (jsonpActive < JSONP_MAX_CONCURRENT && (jsonpQueueHigh.length || jsonpQueueLow.length)) {
+      // Profile photos only go out one at a time, and only when nothing
+      // else from this tab is in flight, so they never crowd out a
+      // clock-in or the attendance list (on Google's side as well as here).
+      if (!jsonpQueueHigh.length && jsonpActive > 0) break;
       const job = jsonpQueueHigh.length ? jsonpQueueHigh.shift() : jsonpQueueLow.shift();
       jsonpActive++;
       jsonpSend(job.params, job.timeoutMs)
@@ -4370,6 +4690,13 @@
   }
 
   function jsonpSend(params, timeoutMs) {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error("The server is taking too long to respond. Please try again in a moment.")), timeoutMs);
+      supabaseAction(params).then(r => { clearTimeout(timer); resolve(r); }, e => { clearTimeout(timer); reject(e); });
+    });
+  }
+
+  function legacyJsonpSend(params, timeoutMs) {
     return new Promise((resolve, reject) => {
       const callbackName = "jsonp_cb_" + Math.random().toString(36).slice(2);
       params = Object.assign({}, params, { callback: callbackName });
@@ -4557,11 +4884,45 @@
     loadBirthdays();
     if (!window.__attendancePollStarted) {
       window.__attendancePollStarted = true;
-      setInterval(() => { if (!announcementUploadInProgress) loadAttendance(true); }, 15000);
+      startAttendancePolling();
     }
   }
 
+  /* Background refresh.
+     Every open tab used to ask the server for attendance every 15s,
+     including tabs left open in the background all day, all in lockstep.
+     Now:
+       - a hidden tab (minimised, other tab in front, phone locked) stops
+         asking, and refreshes right away when it's looked at again;
+       - each tab waits 15-20s at random, so 25 tabs don't all hit the
+         server in the same second. */
+  const POLL_BASE_MS = 60000; // live updates do the real work now
+  const POLL_JITTER_MS = 5000;
+  let attendancePollTimer = null;
+
+  function scheduleNextAttendancePoll() {
+    clearTimeout(attendancePollTimer);
+    attendancePollTimer = setTimeout(() => {
+      if (!document.hidden && !announcementUploadInProgress && currentUserEmail) loadAttendance(true);
+      scheduleNextAttendancePoll();
+    }, POLL_BASE_MS + Math.random() * POLL_JITTER_MS);
+  }
+
+  function startAttendancePolling() {
+    scheduleNextAttendancePoll();
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden || !currentUserEmail) return;
+      if (Date.now() - attendanceLastUpdatedAt > 10000) loadAttendance(true);
+      scheduleNextAttendancePoll();
+    });
+  }
+
   function handleLogout() {
+    try { sb.auth.signOut(); } catch (e) {}
+    stopRealtime();
+    sbStartedFor = null;
+    const gBtn = document.getElementById('googleSignInBtn');
+    if (gBtn) { gBtn.disabled = false; gBtn.querySelector('span').textContent = 'Sign in with Google'; }
     sessionStorage.removeItem(SESSION_KEY);
     clearPersistedSession();
     clearAttendanceCache();
@@ -4644,7 +5005,11 @@
   });
 
   (function restoreSession() {
-    try {
+    sb.auth.getSession().then(({ data }) => startFromSupabaseSession(data && data.session));
+    sb.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) startFromSupabaseSession(session);
+    });
+    if (false) try {
       let existing = JSON.parse(sessionStorage.getItem(SESSION_KEY));
       if (!existing || !existing.email) {
         const saved = JSON.parse(localStorage.getItem(PERSIST_KEY));
@@ -4795,7 +5160,7 @@
   // every profile photo on each page load (that was ~22 requests per
   // visit, per person). Entries carry their version, so a changed photo
   // is still fetched fresh.
-  const PHOTO_CACHE_KEY = 'fa_photo_cache_v1';
+  const PHOTO_CACHE_KEY = 'fa_photo_cache_sb1';
   let photoCache = (() => {
     try { return JSON.parse(localStorage.getItem(PHOTO_CACHE_KEY)) || {}; } catch (e) { return {}; }
   })();
@@ -5591,7 +5956,7 @@
   // via CacheService (see uploadPhotoChunk in Code.gs) and only writes
   // to the Photos sheet once the final chunk arrives.
   async function uploadPhotoChunks(name, base64Data) {
-    const CHUNK_SIZE = 1200;
+    const CHUNK_SIZE = 200000; // reassembled in the browser and sent in one request
     const chunks = [];
     for (let i = 0; i < base64Data.length; i += CHUNK_SIZE) {
       chunks.push(base64Data.slice(i, i + CHUNK_SIZE));
@@ -5758,7 +6123,7 @@
          15s and 30s, and the Retry button still works.
      A small note beside "Team Attendance" says how fresh the data is. */
   const ATTENDANCE_TIMEOUT_MS = 30000;
-  const ATTENDANCE_CACHE_KEY = 'fa_attendance_cache_v1';
+  const ATTENDANCE_CACHE_KEY = 'fa_attendance_cache_sb1';
   const ATTENDANCE_AUTO_RETRY_MS = [5000, 15000, 30000];
   let attendanceLoadPromise = null;
   let attendanceLastUpdatedAt = 0;
@@ -6855,6 +7220,44 @@
     return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
   }
 
+  // After a punch request errors out: reload attendance fresh and see if
+  // this person's latest punch today is the one just attempted, made in
+  // the last few minutes.
+  //   { confirmed: true, result }  the punch is saved
+  //   { confirmed: false }         server answered; the punch is NOT there
+  //   { unknown: true }            couldn't reach the server to check
+  async function confirmPunchAfterError(name, type, startedAt) {
+    await new Promise(r => setTimeout(r, 1500 + Math.random() * 1500));
+    let fresh;
+    try {
+      fresh = await jsonp({ action: 'getAttendanceToday', email: currentUserEmail }, { timeoutMs: 30000 }); // jsonp retries this read itself
+    } catch (e) {
+      return { unknown: true };
+    }
+    if (!fresh || !fresh.success) return { unknown: true };
+    const entries = (fresh.records && fresh.records[name]) || [];
+    const last = entries[entries.length - 1];
+    if (last && last.type === type && punchTimeIsRecent(last.time, fresh.date, startedAt)) {
+      currentData = fresh;
+      attendanceLastUpdatedAt = Date.now();
+      saveAttendanceCache(fresh);
+      return { confirmed: true, result: { success: true, time: last.time, type: type, confirmedAfterError: true } };
+    }
+    return { confirmed: false };
+  }
+
+  // "hh:mm AM" on the attendance date (Manila) within 5 minutes of when
+  // the punch was sent.
+  function punchTimeIsRecent(timeStr, isoDate, startedAt) {
+    const m = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(timeStr || '').trim());
+    const d = String(isoDate || '').split('-').map(Number);
+    if (!m || d.length !== 3) return false;
+    let h = parseInt(m[1], 10) % 12;
+    if (m[3].toUpperCase() === 'PM') h += 12;
+    const punchMs = Date.UTC(d[0], d[1] - 1, d[2], h - 8, parseInt(m[2], 10)); // Manila = UTC+8
+    return Math.abs(punchMs - startedAt) < 5 * 60 * 1000;
+  }
+
   async function handlePunch(type) {
     if (!activeEmployee) return;
     if (!isOwnProfile(activeEmployee)) {
@@ -6882,10 +7285,42 @@
     btnIn.disabled = true; btnOut.disabled = true;
     try {
       const pinHash = await sha256Hex(activeEmployee + ':' + pin);
-      const result = await jsonp({ action: 'punch', name: activeEmployee, type, note, pinHash });
+      const punchStartedAt = Date.now();
+      let result = null;
+      // Up to 5 tries over about a minute. After a failed send we first CHECK whether the
+      // punch was saved anyway (the server can finish after we stop
+      // waiting). Only if the server confirms it is NOT there do we send
+      // again, so a punch can never be recorded twice. If Google turned
+      // the request away (it does when too many requests arrive at
+      // once), it never ran, and the resend is what gets it through.
+      for (let sendAttempt = 0; sendAttempt < 5 && !result; sendAttempt++) {
+        if (sendAttempt > 0) {
+          btnIn.textContent = 'Retrying…'; btnOut.textContent = 'Retrying…';
+          await new Promise(r => setTimeout(r, Math.min(2000 * Math.pow(2, sendAttempt - 1), 12000) * (0.7 + Math.random() * 0.6)));
+        }
+        try {
+          result = await jsonpOnce({ action: 'punch', name: activeEmployee, type, note, pinHash }, { timeoutMs: 30000 });
+        } catch (sendErr) {
+          console.warn('[Attendance] punch send attempt ' + (sendAttempt + 1) + ' failed:', sendErr.message);
+          const check = await confirmPunchAfterError(activeEmployee, type, punchStartedAt);
+          if (check.confirmed) result = check.result;
+          else if (check.unknown) break; // couldn't even check: don't risk a double punch
+          // else: server says it's not there, so loop and send again
+        }
+      }
+      btnIn.textContent = 'Time In'; btnOut.textContent = 'Time Out';
+      if (!result) throw new Error('Your ' + (type === 'in' ? 'time in' : 'time out') + ' could not be confirmed. The server is busy. Please check your status in a moment before trying again.');
       console.debug('[Attendance] punch response:', result);
       if (result.success) {
         showToast(activeEmployee + (type === 'in' ? ' timed in at ' : ' timed out at ') + result.time, 'info');
+        if (result.confirmedAfterError) {
+          // currentData already holds the fresh server copy with this punch in it
+          document.getElementById('noteInput').value = '';
+          pinInput.value = '';
+          renderGrid(); renderMyStatus(); updateModalPunchButtons(activeEmployee);
+          refreshPunchLogIfCurrentMonth(activeEmployee);
+          return;
+        }
         document.getElementById('noteInput').value = '';
         pinInput.value = '';
 
@@ -7108,7 +7543,7 @@
   const ANNOUNCEMENT_MAX_LENGTH_JS = 500;
 
   // Matches Code.gs's MAX_ANNOUNCEMENT_IMAGE_BASE64_LENGTH.
-  const ANNOUNCEMENT_MAX_IMAGE_BASE64_JS = 45000;
+  const ANNOUNCEMENT_MAX_IMAGE_BASE64_JS = 1500000; // ~1.1 MB image
 
   const ANNOUNCEMENT_ICON_SVG =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
@@ -7795,7 +8230,7 @@
     const attachBtn = document.getElementById('announcementAttachBtn');
     if (attachBtn) { attachBtn.disabled = true; attachBtn.textContent = 'Processing…'; }
     try {
-      pendingAnnouncementImageBase64 = await resizeAnnouncementImageToBase64(file, 900, 900);
+      pendingAnnouncementImageBase64 = await resizeAnnouncementImageToBase64(file, 1600, 1600);
       pendingAnnouncementImageRemoved = false;
       renderAnnouncementImageEditor();
     } catch (err) {
@@ -7831,7 +8266,7 @@
   // the AnnouncementImage sheet once the final chunk arrives. Unlike
   // profile photos, this is admin-gated — it carries adminToken.
   async function uploadAnnouncementImageChunks(base64Data, onProgress) {
-    const CHUNK_SIZE = 1200;
+    const CHUNK_SIZE = 200000; // reassembled in the browser and sent in one request
     const chunks = [];
     for (let i = 0; i < base64Data.length; i += CHUNK_SIZE) {
       chunks.push(base64Data.slice(i, i + CHUNK_SIZE));
